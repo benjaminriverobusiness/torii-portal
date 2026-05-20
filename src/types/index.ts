@@ -39,6 +39,7 @@ export interface ClientPhase {
   phase_order: number
   phase_name: string
   phase_description: string | null
+  video_url?: string
 }
 
 export interface RegistroSemanal {
