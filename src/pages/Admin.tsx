@@ -104,7 +104,7 @@ export function Admin() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', display: 'flex', flexDirection: 'column' }}>
-      <Navbar isAdmin />
+      <Navbar isAdmin showNav={false} />
       <div style={{ display: 'flex', flex: 1 }}>
         {/* Sidebar */}
         <aside

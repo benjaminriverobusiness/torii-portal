@@ -263,7 +263,7 @@ export function AdminClient() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#08090f' }}>
-        <Navbar isAdmin />
+        <Navbar isAdmin showNav={false} />
         <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
           <Spinner size={36} />
         </div>

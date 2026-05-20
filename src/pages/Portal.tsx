@@ -271,7 +271,7 @@ export function Portal() {
   return (
     <PortalErrorBoundary>
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
-      <Navbar clientName={client?.name} />
+      <Navbar clientName={client?.name} showNav />
 
       <div ref={containerRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px', display: 'block', visibility: 'visible', opacity: 1 }}>
 

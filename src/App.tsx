@@ -5,6 +5,9 @@ import { Portal } from './pages/Portal'
 import { Admin } from './pages/Admin'
 import { AdminClient } from './pages/AdminClient'
 import { NewClient } from './pages/NewClient'
+import { ReportesPage } from './pages/ReportesPage'
+import { RecorridoPage } from './pages/RecorridoPage'
+import { VentasPage } from './pages/VentasPage'
 import { Spinner } from './components/Spinner'
 
 function ProtectedRoute({
@@ -79,6 +82,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="client">
             <Portal />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal/informes"
+        element={
+          <ProtectedRoute requiredRole="client">
+            <ReportesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal/recorrido"
+        element={
+          <ProtectedRoute requiredRole="client">
+            <RecorridoPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal/ventas"
+        element={
+          <ProtectedRoute requiredRole="client">
+            <VentasPage />
           </ProtectedRoute>
         }
       />
