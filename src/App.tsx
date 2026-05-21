@@ -8,7 +8,7 @@ import { NewClient } from './pages/NewClient'
 import { ReportesPage } from './pages/ReportesPage'
 import { RecorridoPage } from './pages/RecorridoPage'
 import { VentasPage } from './pages/VentasPage'
-import { CreativosPage } from './pages/CreativosPage'
+// import { CreativosPage } from './pages/CreativosPage'
 import { Spinner } from './components/Spinner'
 
 function ProtectedRoute({
@@ -110,14 +110,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/portal/creativos"
         element={
           <ProtectedRoute requiredRole="client">
             <CreativosPage />
           </ProtectedRoute>
         }
-      />
+      /> */}
       <Route
         path="/admin"
         element={

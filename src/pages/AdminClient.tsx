@@ -1641,7 +1641,8 @@ export function AdminClient() {
               </button>
             </div>
 
-            {/* CREATIVOS */}
+            {/* CREATIVOS — temporalmente oculto */}
+            {(false as boolean) && (
             <div style={{ marginBottom: 32 }}>
               <p style={sectionTitle}>CREATIVOS</p>
 
@@ -1832,6 +1833,7 @@ export function AdminClient() {
                 </button>
               )}
             </div>
+            )}
 
             <button
               onClick={handleSave}
