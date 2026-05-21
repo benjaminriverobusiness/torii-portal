@@ -129,6 +129,7 @@ export function AdminClient() {
   const [editingPhaseId, setEditingPhaseId] = useState<string | null>(null)
   const [editPhaseName, setEditPhaseName] = useState('')
   const [editPhaseDesc, setEditPhaseDesc] = useState('')
+  const [editPhaseVideoUrl, setEditPhaseVideoUrl] = useState('')
   const [addingPhase, setAddingPhase] = useState(false)
   const [newPhaseName, setNewPhaseName] = useState('')
   const [newPhaseDesc, setNewPhaseDesc] = useState('')
@@ -277,11 +278,11 @@ export function AdminClient() {
   async function savePhaseEdit(phase: ClientPhase) {
     await supabase
       .from('client_phases')
-      .update({ phase_name: editPhaseName, phase_description: editPhaseDesc })
+      .update({ phase_name: editPhaseName, phase_description: editPhaseDesc, video_url: editPhaseVideoUrl || null })
       .eq('id', phase.id)
     setPhases((prev) =>
       prev.map((p) =>
-        p.id === phase.id ? { ...p, phase_name: editPhaseName, phase_description: editPhaseDesc } : p
+        p.id === phase.id ? { ...p, phase_name: editPhaseName, phase_description: editPhaseDesc, video_url: editPhaseVideoUrl || undefined } : p
       )
     )
     setEditingPhaseId(null)
@@ -739,6 +740,18 @@ export function AdminClient() {
                       rows={3}
                       style={{ ...inputStyle, resize: 'vertical', marginBottom: 12 }}
                     />
+                    <div style={{ marginTop: 12, marginBottom: 12 }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: '#8a8c9e', marginBottom: 6, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        URL del video explicativo (YouTube o Loom) — opcional
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="https://youtube.com/watch?v=... o https://loom.com/share/..."
+                        value={editPhaseVideoUrl}
+                        onChange={(e) => setEditPhaseVideoUrl(e.target.value)}
+                        style={{ ...inputStyle }}
+                      />
+                    </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => savePhaseEdit(phase)}
@@ -790,7 +803,7 @@ export function AdminClient() {
                         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '4px 8px', color: i === phases.length - 1 ? '#333' : '#8a8c9e', cursor: i === phases.length - 1 ? 'default' : 'pointer', fontSize: 12 }}
                       >↓</button>
                       <button
-                        onClick={() => { setEditingPhaseId(phase.id); setEditPhaseName(phase.phase_name); setEditPhaseDesc(phase.phase_description ?? '') }}
+                        onClick={() => { setEditingPhaseId(phase.id); setEditPhaseName(phase.phase_name); setEditPhaseDesc(phase.phase_description ?? ''); setEditPhaseVideoUrl(phase.video_url ?? '') }}
                         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '4px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12 }}
                       >
                         Editar
