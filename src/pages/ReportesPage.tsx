@@ -405,7 +405,6 @@ function PreviewModal({ doc, onClose }: { doc: Document; onClose: () => void }) 
 
 export function ReportesPage() {
   const { user } = useAuth()
-  useScrollFade()
   const [loading, setLoading] = useState(true)
   const [videos, setVideos] = useState<ClientVideo[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
@@ -464,7 +463,7 @@ export function ReportesPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
 
           {/* Hero */}
-          <div className="fade-in" style={{ marginBottom: 48 }}>
+          <div className="fade-in visible" style={{ marginBottom: 48 }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
@@ -512,7 +511,7 @@ export function ReportesPage() {
 
           {/* Videos section */}
           {videos.length > 0 && (
-            <div className="fade-in" style={{ marginBottom: 48 }}>
+            <div className="fade-in visible" style={{ marginBottom: 48 }}>
               <SectionPill text="INFORMES EN VIDEO" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }} className="reports-video-grid">
                 {videos.map((v) => <VideoCard key={v.id} video={v} onPlay={(url, title) => setPlayingVideo({ url, title })} />)}
@@ -522,7 +521,7 @@ export function ReportesPage() {
 
           {/* Documents section */}
           {documents.length > 0 && (
-            <div className="fade-in">
+            <div className="fade-in visible">
               <SectionPill text="DOCUMENTOS E INFORMES" />
               <div>
                 {documents.map((d) => (

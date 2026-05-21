@@ -227,7 +227,6 @@ function PhaseCard({
 
 export function RecorridoPage() {
   const { user } = useAuth()
-  useScrollFade()
   const [loading, setLoading] = useState(true)
   const [phases, setPhases] = useState<ClientPhase[]>([])
   const [status, setStatus] = useState<ClientPortalStatus | null>(null)
@@ -286,7 +285,7 @@ export function RecorridoPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
 
           {/* Hero */}
-          <div className="fade-in" style={{ marginBottom: 48 }}>
+          <div className="fade-in visible" style={{ marginBottom: 48 }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
@@ -323,7 +322,7 @@ export function RecorridoPage() {
           ) : (
             <>
               {/* Journey Map overview */}
-              <div className="fade-in" style={{
+              <div className="fade-in visible" style={{
                 background: 'rgba(255,255,255,0.02)',
                 border: '1px solid rgba(255,255,255,0.07)',
                 borderRadius: 20,
@@ -354,7 +353,7 @@ export function RecorridoPage() {
                 {phases.map((phase, index) => (
                   <div
                     key={phase.id}
-                    className="fade-in"
+                    className="fade-in visible"
                     style={{ transitionDelay: `${index * 0.08}s` }}
                   >
                     <PhaseCard
