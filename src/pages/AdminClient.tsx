@@ -94,6 +94,7 @@ export function AdminClient() {
   })
   const [configSaveSuccess, setConfigSaveSuccess] = useState(false)
   const [weekSaveSuccess, setWeekSaveSuccess] = useState(false)
+  const [confirmDeleteHistoryId, setConfirmDeleteHistoryId] = useState<string | null>(null)
 
   // Form state
   const [activePhaseId, setActivePhaseId] = useState('')
@@ -202,7 +203,20 @@ export function AdminClient() {
         updated_at: new Date().toISOString(),
       }
 
-      await supabase.from('client_portal_status').insert(payload)
+      const today = new Date().toISOString().split('T')[0]
+      const { data: existingToday } = await supabase
+        .from('client_portal_status')
+        .select('id')
+        .eq('client_id', id)
+        .gte('updated_at', today + 'T00:00:00')
+        .lte('updated_at', today + 'T23:59:59')
+        .maybeSingle()
+
+      if (existingToday) {
+        await supabase.from('client_portal_status').update(payload).eq('id', existingToday.id)
+      } else {
+        await supabase.from('client_portal_status').insert(payload)
+      }
 
       // Save new videos
       const validVideos = newVideos.filter((v) => v.title && v.video_url)
@@ -261,7 +275,14 @@ export function AdminClient() {
       setTimeout(() => setError(''), 3000)
       return
     }
-    await supabase.from('client_phases').delete().eq('id', phase.id)
+    const { error: deleteError } = await supabase.from('client_phases').delete().eq('id', phase.id)
+    if (deleteError) {
+      setError(
+        'No podés eliminar esta etapa porque está siendo usada como etapa activa del cliente. Primero cambiá la etapa activa desde la sección Actualizar.'
+      )
+      setTimeout(() => setError(''), 4000)
+      return
+    }
     setPhases((prev) => prev.filter((p) => p.id !== phase.id))
   }
 
@@ -410,6 +431,12 @@ export function AdminClient() {
       li_booking_rate: m.li_booking_rate?.toString() ?? '',
       li_bookings: m.li_bookings?.toString() ?? '',
     })
+  }
+
+  async function deleteHistoryEntry(entryId: string) {
+    await supabase.from('client_portal_status').delete().eq('id', entryId)
+    setHistory((prev) => prev.filter((h) => h.id !== entryId))
+    setConfirmDeleteHistoryId(null)
   }
 
   const inputStyle: React.CSSProperties = {
@@ -1592,23 +1619,47 @@ export function AdminClient() {
               <div>
                 <p style={sectionTitle}>HISTORIAL</p>
                 {history.map((h) => (
-                  <div
-                    key={h.id}
-                    style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', alignItems: 'flex-start' }}
-                  >
-                    <span style={{ color: '#555669', fontSize: 12, whiteSpace: 'nowrap', minWidth: 80 }}>
-                      {formatDate(h.updated_at)}
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ color: '#8a8c9e', fontSize: 12 }}>
-                        CPBC: ${h.cpbc_current ?? '—'} · Fase: {phases.find((p) => p.id === h.active_phase_id)?.phase_name ?? '—'}
+                  <div key={h.id}>
+                    <div
+                      style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: confirmDeleteHistoryId === h.id ? 'none' : '1px solid rgba(255,255,255,0.05)', alignItems: 'flex-start' }}
+                    >
+                      <span style={{ color: '#555669', fontSize: 12, whiteSpace: 'nowrap', minWidth: 80 }}>
+                        {formatDate(h.updated_at)}
                       </span>
-                      {h.current_win && (
-                        <p style={{ color: '#555669', fontSize: 12, margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {h.current_win.slice(0, 80)}{h.current_win.length > 80 ? '...' : ''}
-                        </p>
-                      )}
+                      <div style={{ flex: 1 }}>
+                        <span style={{ color: '#8a8c9e', fontSize: 12 }}>
+                          CPBC: ${h.cpbc_current ?? '—'} · Fase: {phases.find((p) => p.id === h.active_phase_id)?.phase_name ?? '—'}
+                        </span>
+                        {h.current_win && (
+                          <p style={{ color: '#555669', fontSize: 12, margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {h.current_win.slice(0, 80)}{h.current_win.length > 80 ? '...' : ''}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setConfirmDeleteHistoryId(confirmDeleteHistoryId === h.id ? null : h.id)}
+                        style={{ background: 'none', border: 'none', color: '#555669', cursor: 'pointer', fontSize: 14, padding: '0 4px', lineHeight: 1, flexShrink: 0 }}
+                      >
+                        ✕
+                      </button>
                     </div>
+                    {confirmDeleteHistoryId === h.id && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <span style={{ color: '#8a8c9e', fontSize: 12 }}>¿Eliminar esta entrada?</span>
+                        <button
+                          onClick={() => deleteHistoryEntry(h.id)}
+                          style={{ background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 6, padding: '3px 10px', color: '#f87171', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          Sí
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteHistoryId(null)}
+                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          No
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
