@@ -72,7 +72,7 @@ export function AdminClient() {
   const [weekForm, setWeekForm] = useState({
     week_number: 1,
     year: new Date().getFullYear(),
-    week_start: '',
+    week_start: new Date().toISOString().split('T')[0],
     ads_investment: '',
     ads_leads: '',
     ads_cpl: '',
@@ -298,16 +298,17 @@ export function AdminClient() {
     if (!id) return
     console.log('Saving config:', { clientId: id, metricsConfig })
     try {
-      if (metricsConfig.id) {
+      if (metricsConfig.id && metricsConfig.id !== '') {
         const { data, error } = await supabase
           .from('client_metrics_config')
           .update({ ...metricsConfig, updated_at: new Date().toISOString() } as Record<string, unknown>)
           .eq('id', metricsConfig.id)
         console.log('Supabase result:', { data, error })
       } else {
+        const { id: _configId, ...configWithoutId } = metricsConfig
         const { data, error } = await supabase
           .from('client_metrics_config')
-          .insert({ ...metricsConfig, client_id: id })
+          .insert({ ...configWithoutId, client_id: id })
           .select()
           .single()
         console.log('Supabase result:', { data, error })
@@ -329,7 +330,7 @@ export function AdminClient() {
         client_id: id,
         week_number: weekForm.week_number,
         year: weekForm.year,
-        week_start: weekForm.week_start || null,
+        week_start: weekForm.week_start || new Date().toISOString().split('T')[0],
         ads_investment: n(weekForm.ads_investment),
         ads_leads: n(weekForm.ads_leads),
         ads_cpl: n(weekForm.ads_cpl),
