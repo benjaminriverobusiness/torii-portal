@@ -21,15 +21,20 @@ function getYouTubeId(url: string): string | null {
 
 interface VideoCardProps {
   video: ClientVideo
+  onPlay?: (url: string, title: string) => void
 }
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, onPlay }: VideoCardProps) {
   const isYouTube = video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be')
   const isLoom = video.video_url.includes('loom.com')
   const ytId = isYouTube ? getYouTubeId(video.video_url) : null
 
   function openVideo() {
-    window.open(video.video_url, '_blank', 'noopener,noreferrer')
+    if (onPlay) {
+      onPlay(video.video_url, video.title)
+    } else {
+      window.open(video.video_url, '_blank', 'noopener,noreferrer')
+    }
   }
 
   return (

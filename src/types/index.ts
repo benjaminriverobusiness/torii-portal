@@ -84,3 +84,73 @@ export interface ClientVideo {
   description: string | null
   sent_at: string | null
 }
+
+export interface ClientMetrics {
+  id: string
+  client_id: string
+  week_number: number
+  year: number
+  week_start: string
+  ads_investment?: number
+  ads_leads?: number
+  ads_cpl?: number
+  ads_qualified_leads?: number
+  ads_bookings?: number
+  ads_cpbc?: number
+  ads_show_rate?: number
+  ads_close_rate?: number
+  li_connections_sent?: number
+  li_connections_accepted?: number
+  li_accept_rate?: number
+  li_messages_sent?: number
+  li_replies?: number
+  li_reply_rate?: number
+  li_offer_rate?: number
+  li_calendly_rate?: number
+  li_booking_rate?: number
+  li_bookings?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ClientMetricsConfig {
+  id: string
+  client_id: string
+  show_ads_section: boolean
+  show_li_section: boolean
+  show_ads_investment: boolean
+  show_ads_leads: boolean
+  show_ads_cpl: boolean
+  show_ads_qualified: boolean
+  show_ads_cpbc: boolean
+  show_ads_show_rate: boolean
+  show_ads_close_rate: boolean
+  show_li_accept_rate: boolean
+  show_li_reply_rate: boolean
+  show_li_offer_rate: boolean
+  show_li_calendly_rate: boolean
+  show_li_booking_rate: boolean
+  show_li_bookings: boolean
+  template_name?: string
+}
+
+export interface MetricsTemplate {
+  id: string
+  name: string
+  description?: string
+  show_ads_section: boolean
+  show_li_section: boolean
+  show_ads_investment: boolean
+  show_ads_leads: boolean
+  show_ads_cpl: boolean
+  show_ads_qualified: boolean
+  show_ads_cpbc: boolean
+  show_ads_show_rate: boolean
+  show_ads_close_rate: boolean
+  show_li_accept_rate: boolean
+  show_li_reply_rate: boolean
+  show_li_offer_rate: boolean
+  show_li_calendly_rate: boolean
+  show_li_booking_rate: boolean
+  show_li_bookings: boolean
+}

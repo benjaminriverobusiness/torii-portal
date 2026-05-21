@@ -27,6 +27,20 @@ function getDriveEmbedUrl(url: string): string {
   return url
 }
 
+function getEmbedUrl(url: string): string {
+  if (url.includes('youtu')) {
+    const match = url.match(
+      /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbedded)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/
+    )
+    if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0&modestbranding=1`
+  }
+  if (url.includes('loom.com/share')) {
+    const loomMatch = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)
+    if (loomMatch) return `https://www.loom.com/embed/${loomMatch[1]}?autoplay=1`
+  }
+  return url
+}
+
 // ─── Sub-components ─────────────────────────────────────────
 
 function SectionPill({ text }: { text: string }) {
@@ -53,7 +67,56 @@ function SectionPill({ text }: { text: string }) {
   )
 }
 
-function VideoCard({ video }: { video: ClientVideo }) {
+function VideoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2000,
+        background: 'rgba(0,0,0,0.92)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: '100%', maxWidth: 960,
+          background: '#0d0e17',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 20,
+          overflow: 'hidden',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#e5182b', boxShadow: '0 0 8px #e5182b' }} />
+            <span style={{ color: '#f0f1f7', fontSize: 15, fontWeight: 600 }}>{title}</span>
+          </div>
+          <button
+            style={{ background: 'none', border: 'none', color: '#555669', fontSize: 22, cursor: 'pointer', lineHeight: 1, fontFamily: 'DM Sans, sans-serif' }}
+            onClick={onClose}
+          >✕</button>
+        </div>
+        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+          <iframe
+            src={getEmbedUrl(url)}
+            allow="autoplay; fullscreen"
+            allowFullScreen
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string, title: string) => void }) {
   const [hovered, setHovered] = useState(false)
   const ytId = getYoutubeId(video.video_url)
   const isLoom = video.video_url.includes('loom.com')
@@ -72,7 +135,7 @@ function VideoCard({ video }: { video: ClientVideo }) {
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => window.open(video.video_url, '_blank')}
+      onClick={() => onPlay(video.video_url, video.title)}
     >
       {/* Thumbnail */}
       <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#0d0e17', overflow: 'hidden' }}>
@@ -345,6 +408,7 @@ export function ReportesPage() {
   const [videos, setVideos] = useState<ClientVideo[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [previewDoc, setPreviewDoc] = useState<Document | null>(null)
+  const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -449,7 +513,7 @@ export function ReportesPage() {
             <div style={{ marginBottom: 48 }}>
               <SectionPill text="INFORMES EN VIDEO" />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }} className="reports-video-grid">
-                {videos.map((v) => <VideoCard key={v.id} video={v} />)}
+                {videos.map((v) => <VideoCard key={v.id} video={v} onPlay={(url, title) => setPlayingVideo({ url, title })} />)}
               </div>
             </div>
           )}
@@ -470,6 +534,9 @@ export function ReportesPage() {
 
       {/* Preview modal */}
       {previewDoc && <PreviewModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />}
+
+      {/* Video modal */}
+      {playingVideo && <VideoModal url={playingVideo.url} title={playingVideo.title} onClose={() => setPlayingVideo(null)} />}
 
       <style>{`
         @media (max-width: 900px) {

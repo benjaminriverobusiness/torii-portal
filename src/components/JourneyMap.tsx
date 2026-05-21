@@ -193,7 +193,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                   Día {days_in_phase ?? 1} en esta etapa
                 </div>
                 {phase.phase_description && (
-                  <div style={{ color: '#f0f1f7', fontSize: 13, lineHeight: 1.5 }}>
+                  <div style={{ color: '#f0f1f7', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                     {phase.phase_description}
                   </div>
                 )}

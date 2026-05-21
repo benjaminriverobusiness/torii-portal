@@ -14,6 +14,9 @@ import type {
   ClientVideo,
   Document,
   RegistroSemanal,
+  ClientMetrics,
+  ClientMetricsConfig,
+  MetricsTemplate,
 } from '../types'
 
 function formatDate(d: string | null | undefined) {
@@ -43,6 +46,54 @@ export function AdminClient() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [registros, setRegistros] = useState<RegistroSemanal[]>([])
   const [history, setHistory] = useState<ClientPortalStatus[]>([])
+
+  // Metrics state
+  const [templates, setTemplates] = useState<MetricsTemplate[]>([])
+  const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig>({
+    id: '',
+    client_id: '',
+    show_ads_section: false,
+    show_li_section: false,
+    show_ads_investment: false,
+    show_ads_leads: false,
+    show_ads_cpl: false,
+    show_ads_qualified: false,
+    show_ads_cpbc: false,
+    show_ads_show_rate: false,
+    show_ads_close_rate: false,
+    show_li_accept_rate: false,
+    show_li_reply_rate: false,
+    show_li_offer_rate: false,
+    show_li_calendly_rate: false,
+    show_li_booking_rate: false,
+    show_li_bookings: false,
+  })
+  const [metricsHistory, setMetricsHistory] = useState<ClientMetrics[]>([])
+  const [weekForm, setWeekForm] = useState({
+    week_number: 1,
+    year: new Date().getFullYear(),
+    week_start: '',
+    ads_investment: '',
+    ads_leads: '',
+    ads_cpl: '',
+    ads_qualified_leads: '',
+    ads_bookings: '',
+    ads_cpbc: '',
+    ads_show_rate: '',
+    ads_close_rate: '',
+    li_connections_sent: '',
+    li_connections_accepted: '',
+    li_accept_rate: '',
+    li_messages_sent: '',
+    li_replies: '',
+    li_reply_rate: '',
+    li_offer_rate: '',
+    li_calendly_rate: '',
+    li_booking_rate: '',
+    li_bookings: '',
+  })
+  const [configSaveSuccess, setConfigSaveSuccess] = useState(false)
+  const [weekSaveSuccess, setWeekSaveSuccess] = useState(false)
 
   // Form state
   const [activePhaseId, setActivePhaseId] = useState('')
@@ -82,6 +133,9 @@ export function AdminClient() {
         docsRes,
         registrosRes,
         historyRes,
+        templatesRes,
+        metricsConfigRes,
+        metricsHistoryRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('id', id).single(),
         supabase
@@ -96,6 +150,9 @@ export function AdminClient() {
         supabase.from('documents').select('*').eq('client_id', id).order('upload_date', { ascending: false }),
         supabase.from('registro_semanal_fullfillment').select('*').eq('client_id', id).order('fecha_inicio', { ascending: false }).limit(4),
         supabase.from('client_portal_status').select('*').eq('client_id', id).order('updated_at', { ascending: false }).limit(8),
+        supabase.from('metrics_templates').select('*').order('name'),
+        supabase.from('client_metrics_config').select('*').eq('client_id', id).maybeSingle(),
+        supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }).limit(8),
       ])
 
       setClient(clientRes.data as Client)
@@ -104,6 +161,13 @@ export function AdminClient() {
       setDocuments((docsRes.data ?? []) as Document[])
       setRegistros((registrosRes.data ?? []) as RegistroSemanal[])
       setHistory((historyRes.data ?? []) as ClientPortalStatus[])
+      setTemplates((templatesRes.data ?? []) as MetricsTemplate[])
+      setMetricsHistory((metricsHistoryRes.data ?? []) as ClientMetrics[])
+      if (metricsConfigRes.data) {
+        setMetricsConfig(metricsConfigRes.data as ClientMetricsConfig)
+      } else {
+        setMetricsConfig((prev) => ({ ...prev, client_id: id ?? '' }))
+      }
 
       const st = statusRes.data as ClientPortalStatus | null
       setStatus(st)
@@ -228,6 +292,116 @@ export function AdminClient() {
     setAddingPhase(false)
     setNewPhaseName('')
     setNewPhaseDesc('')
+  }
+
+  async function handleSaveMetricsConfig() {
+    if (!id) return
+    try {
+      if (metricsConfig.id) {
+        await supabase
+          .from('client_metrics_config')
+          .update({ ...metricsConfig, updated_at: new Date().toISOString() } as Record<string, unknown>)
+          .eq('id', metricsConfig.id)
+      } else {
+        const { data } = await supabase
+          .from('client_metrics_config')
+          .insert({ ...metricsConfig, client_id: id })
+          .select()
+          .single()
+        if (data) setMetricsConfig(data as ClientMetricsConfig)
+      }
+      setConfigSaveSuccess(true)
+      setTimeout(() => setConfigSaveSuccess(false), 2000)
+    } catch (err) {
+      console.error('Error guardando config de métricas:', err)
+    }
+  }
+
+  async function handleSaveWeek() {
+    if (!id) return
+    try {
+      const n = (v: string) => (v !== '' ? parseFloat(v) : null)
+      const payload = {
+        client_id: id,
+        week_number: weekForm.week_number,
+        year: weekForm.year,
+        week_start: weekForm.week_start || null,
+        ads_investment: n(weekForm.ads_investment),
+        ads_leads: n(weekForm.ads_leads),
+        ads_cpl: n(weekForm.ads_cpl),
+        ads_qualified_leads: n(weekForm.ads_qualified_leads),
+        ads_bookings: n(weekForm.ads_bookings),
+        ads_cpbc: n(weekForm.ads_cpbc),
+        ads_show_rate: n(weekForm.ads_show_rate),
+        ads_close_rate: n(weekForm.ads_close_rate),
+        li_connections_sent: n(weekForm.li_connections_sent),
+        li_connections_accepted: n(weekForm.li_connections_accepted),
+        li_accept_rate: n(weekForm.li_accept_rate),
+        li_messages_sent: n(weekForm.li_messages_sent),
+        li_replies: n(weekForm.li_replies),
+        li_reply_rate: n(weekForm.li_reply_rate),
+        li_offer_rate: n(weekForm.li_offer_rate),
+        li_calendly_rate: n(weekForm.li_calendly_rate),
+        li_booking_rate: n(weekForm.li_booking_rate),
+        li_bookings: n(weekForm.li_bookings),
+      }
+
+      const { data: existing } = await supabase
+        .from('client_metrics')
+        .select('id')
+        .eq('client_id', id)
+        .eq('week_number', weekForm.week_number)
+        .eq('year', weekForm.year)
+        .maybeSingle()
+
+      if (existing) {
+        await supabase
+          .from('client_metrics')
+          .update({ ...payload, updated_at: new Date().toISOString() })
+          .eq('id', existing.id)
+      } else {
+        await supabase.from('client_metrics').insert(payload)
+      }
+
+      setWeekSaveSuccess(true)
+      setTimeout(() => setWeekSaveSuccess(false), 2000)
+
+      const { data: refreshed } = await supabase
+        .from('client_metrics')
+        .select('*')
+        .eq('client_id', id)
+        .order('week_start', { ascending: false })
+        .limit(8)
+      setMetricsHistory((refreshed ?? []) as ClientMetrics[])
+    } catch (err) {
+      console.error('Error guardando métricas:', err)
+    }
+  }
+
+  function editWeek(m: ClientMetrics) {
+    setWeekForm({
+      week_number: m.week_number,
+      year: m.year,
+      week_start: m.week_start ?? '',
+      ads_investment: m.ads_investment?.toString() ?? '',
+      ads_leads: m.ads_leads?.toString() ?? '',
+      ads_cpl: m.ads_cpl?.toString() ?? '',
+      ads_qualified_leads: m.ads_qualified_leads?.toString() ?? '',
+      ads_bookings: m.ads_bookings?.toString() ?? '',
+      ads_cpbc: m.ads_cpbc?.toString() ?? '',
+      ads_show_rate: m.ads_show_rate?.toString() ?? '',
+      ads_close_rate: m.ads_close_rate?.toString() ?? '',
+      li_connections_sent: m.li_connections_sent?.toString() ?? '',
+      li_connections_accepted: m.li_connections_accepted?.toString() ?? '',
+      li_accept_rate: m.li_accept_rate?.toString() ?? '',
+      li_messages_sent: m.li_messages_sent?.toString() ?? '',
+      li_replies: m.li_replies?.toString() ?? '',
+      li_reply_rate: m.li_reply_rate?.toString() ?? '',
+      li_offer_rate: m.li_offer_rate?.toString() ?? '',
+      li_calendly_rate: m.li_calendly_rate?.toString() ?? '',
+      li_booking_rate: m.li_booking_rate?.toString() ?? '',
+      li_bookings: m.li_bookings?.toString() ?? '',
+    })
   }
 
   const inputStyle: React.CSSProperties = {
@@ -607,6 +781,477 @@ export function AdminClient() {
         {/* TAB: UPDATE */}
         {tab === 'update' && (
           <div>
+            {/* CONFIGURACIÓN DE MÉTRICAS */}
+            <div style={{ marginBottom: 32 }}>
+              <p style={sectionTitle}>CONFIGURACIÓN DE MÉTRICAS</p>
+
+              {/* Selector de plantilla */}
+              {templates.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ color: '#8a8c9e', fontSize: '12px', marginBottom: '8px' }}>
+                    Aplicar plantilla:
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {templates.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() =>
+                          setMetricsConfig((prev) => ({
+                            ...prev,
+                            show_ads_section: t.show_ads_section,
+                            show_li_section: t.show_li_section,
+                            show_ads_investment: t.show_ads_investment,
+                            show_ads_leads: t.show_ads_leads,
+                            show_ads_cpl: t.show_ads_cpl,
+                            show_ads_qualified: t.show_ads_qualified,
+                            show_ads_cpbc: t.show_ads_cpbc,
+                            show_ads_show_rate: t.show_ads_show_rate,
+                            show_ads_close_rate: t.show_ads_close_rate,
+                            show_li_accept_rate: t.show_li_accept_rate,
+                            show_li_reply_rate: t.show_li_reply_rate,
+                            show_li_offer_rate: t.show_li_offer_rate,
+                            show_li_calendly_rate: t.show_li_calendly_rate,
+                            show_li_booking_rate: t.show_li_booking_rate,
+                            show_li_bookings: t.show_li_bookings,
+                            template_name: t.name,
+                          }))
+                        }
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '99px',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          border: 'none',
+                          fontFamily: 'DM Sans, sans-serif',
+                          ...(t.name === metricsConfig.template_name
+                            ? {
+                                background: 'rgba(229,24,43,0.15)',
+                                outline: '1px solid rgba(229,24,43,0.4)',
+                                color: '#e5182b',
+                              }
+                            : {
+                                background: 'rgba(255,255,255,0.04)',
+                                outline: '1px solid rgba(255,255,255,0.1)',
+                                color: '#8a8c9e',
+                              }),
+                        }}
+                      >
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Toggles de secciones */}
+              {[
+                { key: 'show_ads_section' as const, label: 'Mostrar sección Meta Ads' },
+                { key: 'show_li_section' as const, label: 'Mostrar sección LinkedIn' },
+              ].map(({ key, label }) => (
+                <div
+                  key={key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: '10px',
+                    marginBottom: '8px',
+                  }}
+                >
+                  <span style={{ color: '#f0f1f7', fontSize: 14 }}>{label}</span>
+                  <div
+                    onClick={() => setMetricsConfig((p) => ({ ...p, [key]: !p[key] }))}
+                    style={{
+                      width: 40,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: metricsConfig[key] ? '#e5182b' : 'rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'background-color 0.2s',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        backgroundColor: 'white',
+                        position: 'absolute',
+                        top: 2,
+                        left: metricsConfig[key] ? 20 : 2,
+                        transition: 'left 0.2s',
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {/* Toggles métricas Ads */}
+              {metricsConfig.show_ads_section && (
+                <div style={{ marginTop: 16, marginBottom: 8 }}>
+                  <div style={{ color: '#8a8c9e', fontSize: '12px', marginBottom: '10px' }}>
+                    Métricas de Ads a mostrar:
+                  </div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0 24px',
+                    }}
+                  >
+                    {([
+                      ['show_ads_investment', 'Inversión'],
+                      ['show_ads_leads', 'Leads'],
+                      ['show_ads_cpl', 'CPL'],
+                      ['show_ads_qualified', 'Leads cal.'],
+                      ['show_ads_cpbc', 'CPBC'],
+                      ['show_ads_show_rate', 'Show rate'],
+                      ['show_ads_close_rate', 'Close rate'],
+                    ] as [keyof ClientMetricsConfig, string][]).map(([key, label]) => (
+                      <div
+                        key={key}
+                        onClick={() =>
+                          setMetricsConfig((p) => ({ ...p, [key]: !p[key] }))
+                        }
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '6px 0',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 3,
+                            backgroundColor: metricsConfig[key] ? '#e5182b' : 'transparent',
+                            border: metricsConfig[key]
+                              ? '1px solid #e5182b'
+                              : '1px solid rgba(255,255,255,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {metricsConfig[key] && (
+                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                              <path
+                                d="M1 4l3 3 5-5"
+                                stroke="white"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <span style={{ color: '#8a8c9e', fontSize: 13 }}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Toggles métricas LinkedIn */}
+              {metricsConfig.show_li_section && (
+                <div style={{ marginTop: 16, marginBottom: 8 }}>
+                  <div style={{ color: '#8a8c9e', fontSize: '12px', marginBottom: '10px' }}>
+                    Métricas de LinkedIn a mostrar:
+                  </div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '0 24px',
+                    }}
+                  >
+                    {([
+                      ['show_li_accept_rate', 'Accept rate'],
+                      ['show_li_reply_rate', 'Reply rate'],
+                      ['show_li_offer_rate', 'Offer rate'],
+                      ['show_li_calendly_rate', 'Calendly rate'],
+                      ['show_li_booking_rate', 'Booking rate'],
+                      ['show_li_bookings', 'Agendas'],
+                    ] as [keyof ClientMetricsConfig, string][]).map(([key, label]) => (
+                      <div
+                        key={key}
+                        onClick={() =>
+                          setMetricsConfig((p) => ({ ...p, [key]: !p[key] }))
+                        }
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '6px 0',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 3,
+                            backgroundColor: metricsConfig[key] ? '#e5182b' : 'transparent',
+                            border: metricsConfig[key]
+                              ? '1px solid #e5182b'
+                              : '1px solid rgba(255,255,255,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {metricsConfig[key] && (
+                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                              <path
+                                d="M1 4l3 3 5-5"
+                                stroke="white"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <span style={{ color: '#8a8c9e', fontSize: 13 }}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Botón guardar config */}
+              {configSaveSuccess && (
+                <div style={{ color: '#4ade80', fontSize: 13, marginTop: 12 }}>
+                  ✓ Configuración guardada
+                </div>
+              )}
+              <button
+                onClick={handleSaveMetricsConfig}
+                style={{
+                  width: '100%',
+                  marginTop: 16,
+                  marginBottom: 32,
+                  backgroundColor: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 8,
+                  padding: '12px',
+                  color: '#f0f1f7',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'DM Sans, sans-serif',
+                }}
+              >
+                Guardar configuración de métricas
+              </button>
+
+              {/* Carga de métricas semanales */}
+              <p style={sectionTitle}>MÉTRICAS DE ESTA SEMANA</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div>
+                  <label style={labelStyle}>Semana número</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={52}
+                    value={weekForm.week_number}
+                    onChange={(e) =>
+                      setWeekForm((p) => ({ ...p, week_number: parseInt(e.target.value) || 1 }))
+                    }
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Año</label>
+                  <input
+                    type="number"
+                    value={weekForm.year}
+                    onChange={(e) =>
+                      setWeekForm((p) => ({ ...p, year: parseInt(e.target.value) || new Date().getFullYear() }))
+                    }
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Fecha inicio semana</label>
+                  <input
+                    type="date"
+                    value={weekForm.week_start}
+                    onChange={(e) => setWeekForm((p) => ({ ...p, week_start: e.target.value }))}
+                    style={{ ...inputStyle, colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
+
+              {metricsConfig.show_ads_section && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ color: '#8a8c9e', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Meta Ads
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {([
+                      ['ads_investment', 'Inversión ($)'],
+                      ['ads_leads', 'Leads generados'],
+                      ['ads_cpl', 'CPL ($)'],
+                      ['ads_qualified_leads', 'Leads calificados'],
+                      ['ads_bookings', 'Agendas'],
+                      ['ads_cpbc', 'CPBC ($)'],
+                      ['ads_show_rate', 'Show rate (%)'],
+                      ['ads_close_rate', 'Close rate (%)'],
+                    ] as [keyof typeof weekForm, string][]).map(([key, label]) => (
+                      <div key={key}>
+                        <label style={labelStyle}>{label}</label>
+                        <input
+                          type="number"
+                          value={weekForm[key] as string}
+                          onChange={(e) => setWeekForm((p) => ({ ...p, [key]: e.target.value }))}
+                          style={inputStyle}
+                          step="any"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {metricsConfig.show_li_section && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ color: '#8a8c9e', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    LinkedIn
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {([
+                      ['li_connections_sent', 'Conexiones enviadas'],
+                      ['li_connections_accepted', 'Conexiones aceptadas'],
+                      ['li_accept_rate', 'Accept rate (%)'],
+                      ['li_messages_sent', 'Mensajes enviados'],
+                      ['li_replies', 'Respuestas'],
+                      ['li_reply_rate', 'Reply rate (%)'],
+                      ['li_offer_rate', 'Offer rate (%)'],
+                      ['li_calendly_rate', 'Calendly rate (%)'],
+                      ['li_booking_rate', 'Booking rate (%)'],
+                      ['li_bookings', 'Agendas'],
+                    ] as [keyof typeof weekForm, string][]).map(([key, label]) => (
+                      <div key={key}>
+                        <label style={labelStyle}>{label}</label>
+                        <input
+                          type="number"
+                          value={weekForm[key] as string}
+                          onChange={(e) => setWeekForm((p) => ({ ...p, [key]: e.target.value }))}
+                          style={inputStyle}
+                          step="any"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {weekSaveSuccess && (
+                <div style={{ color: '#4ade80', fontSize: 13, marginBottom: 8 }}>
+                  ✓ Métricas guardadas
+                </div>
+              )}
+              <button
+                onClick={handleSaveWeek}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#e5182b',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '14px',
+                  color: 'white',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'DM Sans, sans-serif',
+                  marginBottom: 24,
+                }}
+              >
+                Guardar métricas de la semana
+              </button>
+
+              {/* Historial semanas */}
+              {metricsHistory.length > 0 && (
+                <div>
+                  <div style={{ color: '#8a8c9e', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Semanas cargadas
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr>
+                        {['Semana', 'Agendas', 'CPBC', 'Fecha', ''].map((h) => (
+                          <th
+                            key={h}
+                            style={{
+                              textAlign: 'left',
+                              color: '#555669',
+                              fontWeight: 600,
+                              padding: '8px 12px',
+                              borderBottom: '1px solid rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metricsHistory.map((m) => (
+                        <tr key={m.id}>
+                          <td style={{ padding: '10px 12px', color: '#f0f1f7' }}>
+                            S{m.week_number} / {m.year}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
+                            {m.ads_bookings ?? m.li_bookings ?? '—'}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
+                            {m.ads_cpbc ? `$${m.ads_cpbc}` : '—'}
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#555669' }}>
+                            {m.week_start
+                              ? new Date(m.week_start).toLocaleDateString('es-ES', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                })
+                              : '—'}
+                          </td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <button
+                              onClick={() => editWeek(m)}
+                              style={{
+                                background: 'none',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 6,
+                                padding: '4px 10px',
+                                color: '#8a8c9e',
+                                cursor: 'pointer',
+                                fontSize: 12,
+                                fontFamily: 'DM Sans, sans-serif',
+                              }}
+                            >
+                              Editar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
             {success && (
               <div style={{ backgroundColor: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, padding: '12px 20px', color: '#4ade80', fontSize: 14, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                 Dashboard actualizado ✓

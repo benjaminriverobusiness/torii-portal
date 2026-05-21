@@ -173,7 +173,7 @@ function PhaseCard({
 
         {/* Description */}
         {phase.phase_description && (
-          <p style={{ fontSize: 15, color: descColor, lineHeight: 1.7, margin: '0 0 20px' }}>
+          <p style={{ fontSize: 15, color: descColor, lineHeight: 1.7, margin: '0 0 20px', whiteSpace: 'pre-line' }}>
             {phase.phase_description}
           </p>
         )}

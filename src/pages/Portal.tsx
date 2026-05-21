@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Component, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useScrollFade } from '../hooks/useScrollFade'
 import { Navbar } from '../components/Navbar'
@@ -7,8 +7,10 @@ import { KpiCard } from '../components/KpiCard'
 import { VideoCard } from '../components/VideoCard'
 import { DocumentCard } from '../components/DocumentCard'
 import { Spinner } from '../components/Spinner'
+import { MetricsSection } from '../components/MetricsSection'
 import { useClient } from '../hooks/useClient'
-import type { HitosCliente } from '../types'
+import { supabase } from '../lib/supabase'
+import type { HitosCliente, ClientMetrics, ClientMetricsConfig } from '../types'
 
 class PortalErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -172,6 +174,30 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
 export function Portal() {
   const { client, status, phases, videos, documents, registros, hitos, loading, error } = useClient()
   const containerRef = useScrollFade()
+
+  const [metrics, setMetrics] = useState<ClientMetrics[]>([])
+  const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig | null>(null)
+
+  useEffect(() => {
+    if (!client?.id) return
+    async function fetchMetrics() {
+      const [metricsRes, configRes] = await Promise.all([
+        supabase
+          .from('client_metrics')
+          .select('*')
+          .eq('client_id', client!.id)
+          .order('week_start', { ascending: true }),
+        supabase
+          .from('client_metrics_config')
+          .select('*')
+          .eq('client_id', client!.id)
+          .maybeSingle(),
+      ])
+      setMetrics((metricsRes.data ?? []) as ClientMetrics[])
+      setMetricsConfig(configRes.data as ClientMetricsConfig | null)
+    }
+    fetchMetrics()
+  }, [client?.id])
 
   console.log('Portal data:', { client, status, phases, loading, error })
 
@@ -414,6 +440,15 @@ export function Portal() {
           </div>
         </div>
         )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}
+
+        {/* METRICS */}
+        {(() => { try { return (
+        <MetricsSection
+          metrics={metrics}
+          config={metricsConfig}
+          cpbc_objective={status?.cpbc_objective ?? undefined}
+        />
+        ) } catch(e) { console.error('Metrics error:', e); return null } })()}
 
         {/* HITOS */}
         {(() => { try { return hitos ? <HitosSection hitos={hitos} /> : null } catch(e) { console.error('Hitos error:', e); return null } })()}
