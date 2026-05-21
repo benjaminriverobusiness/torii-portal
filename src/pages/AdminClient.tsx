@@ -269,13 +269,32 @@ export function AdminClient() {
     setEditingPhaseId(null)
   }
 
+  async function reloadAndRenumberPhases() {
+    const { data: remainingPhases } = await supabase
+      .from('client_phases')
+      .select('*')
+      .eq('client_id', id)
+      .order('phase_order', { ascending: true })
+    if (remainingPhases && remainingPhases.length > 0) {
+      for (const [index, phase] of remainingPhases.entries()) {
+        await supabase
+          .from('client_phases')
+          .update({ phase_order: index + 1 })
+          .eq('id', phase.id)
+      }
+      setPhases(remainingPhases.map((phase, index) => ({ ...phase, phase_order: index + 1 })) as ClientPhase[])
+    } else {
+      setPhases([])
+    }
+  }
+
   async function deletePhase(phase: ClientPhase) {
     await supabase
       .from('client_portal_status')
       .update({ active_phase_id: null })
       .eq('active_phase_id', phase.id)
     await supabase.from('client_phases').delete().eq('id', phase.id)
-    setPhases((prev) => prev.filter((p) => p.id !== phase.id))
+    await reloadAndRenumberPhases()
   }
 
   async function reorderPhase(phase: ClientPhase, dir: 'up' | 'down') {
@@ -283,14 +302,11 @@ export function AdminClient() {
     const swapIdx = dir === 'up' ? idx - 1 : idx + 1
     if (swapIdx < 0 || swapIdx >= phases.length) return
     const other = phases[swapIdx]
-    const newPhases = [...phases]
-    newPhases[idx] = { ...phase, phase_order: other.phase_order }
-    newPhases[swapIdx] = { ...other, phase_order: phase.phase_order }
     await Promise.all([
       supabase.from('client_phases').update({ phase_order: other.phase_order }).eq('id', phase.id),
       supabase.from('client_phases').update({ phase_order: phase.phase_order }).eq('id', other.id),
     ])
-    setPhases(newPhases.sort((a, b) => a.phase_order - b.phase_order))
+    await reloadAndRenumberPhases()
   }
 
   async function addPhase() {
@@ -1159,11 +1175,7 @@ export function AdminClient() {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     {([
-                      ['li_connections_sent', 'Conexiones enviadas'],
-                      ['li_connections_accepted', 'Conexiones aceptadas'],
                       ['li_accept_rate', 'Accept rate (%)'],
-                      ['li_messages_sent', 'Mensajes enviados'],
-                      ['li_replies', 'Respuestas'],
                       ['li_reply_rate', 'Reply rate (%)'],
                       ['li_offer_rate', 'Offer rate (%)'],
                       ['li_calendly_rate', 'Calendly rate (%)'],

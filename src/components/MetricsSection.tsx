@@ -527,6 +527,13 @@ export function MetricsSection({ metrics, config, cpbc_objective }: MetricsSecti
                   name="Reply rate %"
                 />
                 <Line
+                  dataKey="offer_rate"
+                  stroke="#c9a84c"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  name="Offer rate %"
+                />
+                <Line
                   dataKey="booking_rate"
                   stroke="#4ade80"
                   strokeWidth={2}

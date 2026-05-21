@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
+import { useScrollFade } from '../hooks/useScrollFade'
 import type { Client } from '../types'
 
 // ─── Local types ─────────────────────────────────────────────
@@ -342,6 +343,7 @@ function LeadModal({
 
 export function VentasPage() {
   const { user } = useAuth()
+  useScrollFade()
   const [loading, setLoading] = useState(true)
   const [client, setClient] = useState<Client | null>(null)
   const [leads, setLeads] = useState<CrmLead[]>([])
@@ -466,7 +468,7 @@ export function VentasPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
 
           {/* Hero */}
-          <div style={{ marginBottom: 40 }}>
+          <div className="fade-in" style={{ marginBottom: 40 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e5182b', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
               VENTAS
             </div>
@@ -479,7 +481,7 @@ export function VentasPage() {
           </div>
 
           {/* Metrics */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }} className="ventas-metrics-grid">
+          <div className="fade-in ventas-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
             {[
               { label: 'TOTAL LLAMADAS', value: totalLeads, color: '#f0f1f7', sub: null },
               { label: 'SHOW RATE', value: `${showRate}%`, color: showRateColor, sub: null },
@@ -503,7 +505,7 @@ export function VentasPage() {
           </div>
 
           {/* Leads table */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+          <div className="fade-in" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
             {/* Table header */}
             <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {['NOMBRE', 'ETAPA', 'LLAMADA', 'ASISTIÓ', 'CALIFICADO', 'CERRADO', 'ACCIONES'].map((h) => (
@@ -568,7 +570,7 @@ export function VentasPage() {
 
           {/* Materials */}
           {materials.length > 0 && (
-            <div style={{ marginTop: 48 }}>
+            <div className="fade-in" style={{ marginTop: 48 }}>
               <div style={{ marginBottom: 24 }}>
                 <SectionPill text="MATERIAL DE APOYO" />
               </div>

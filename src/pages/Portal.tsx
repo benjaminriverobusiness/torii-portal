@@ -173,7 +173,7 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
 
 export function Portal() {
   const { client, status, phases, videos, documents, registros, hitos, loading, error } = useClient()
-  const containerRef = useScrollFade()
+  useScrollFade()
 
   const [metrics, setMetrics] = useState<ClientMetrics[]>([])
   const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig | null>(null)
@@ -299,11 +299,12 @@ export function Portal() {
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar clientName={client?.name} showNav />
 
-      <div ref={containerRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px', display: 'block', visibility: 'visible', opacity: 1 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px', display: 'block', visibility: 'visible', opacity: 1 }}>
 
         {/* HERO */}
         {(() => { try { return (
         <div
+          className="fade-in"
           style={{
             position: 'relative',
             overflow: 'hidden',
@@ -420,7 +421,7 @@ export function Portal() {
 
         {/* JOURNEY MAP */}
         {(() => { try { return (
-        <div style={{ display: 'block', marginBottom: 32 }}>
+        <div className="fade-in" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="TU RECORRIDO" />
           <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '48px 40px', overflow: 'visible' }}>
             <JourneyMap phases={phases} active_phase_id={status.active_phase_id} days_in_phase={status.days_in_phase} />
@@ -430,7 +431,7 @@ export function Portal() {
 
         {/* KPIs */}
         {(() => { try { return (
-        <div style={{ display: 'block', marginBottom: 32 }}>
+        <div className="fade-in" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="MÉTRICAS DE LA SEMANA" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
             <KpiCard label="AGENDAS ESTA SEMANA" value={latestRegistro?.agendas_generadas ?? null} colorLogic="neutral" delay={0} />
@@ -443,11 +444,13 @@ export function Portal() {
 
         {/* METRICS */}
         {(() => { try { return (
-        <MetricsSection
-          metrics={metrics}
-          config={metricsConfig}
-          cpbc_objective={status?.cpbc_objective ?? undefined}
-        />
+        <div className="fade-in">
+          <MetricsSection
+            metrics={metrics}
+            config={metricsConfig}
+            cpbc_objective={status?.cpbc_objective ?? undefined}
+          />
+        </div>
         ) } catch(e) { console.error('Metrics error:', e); return null } })()}
 
         {/* HITOS */}
@@ -455,7 +458,7 @@ export function Portal() {
 
         {/* WIN + NEXT STEP */}
         {(() => { try { return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }} id="win-grid">
+        <div className="fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }} id="win-grid">
           {/* Último resultado */}
           <div style={{
             position: 'relative',
@@ -500,7 +503,7 @@ export function Portal() {
 
         {/* VIDEOS */}
         {(() => { try { return videos.length > 0 ? (
-        <div style={{ display: 'block', marginBottom: 32 }}>
+        <div className="fade-in" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="INFORMES EN VIDEO" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="video-grid">
             {videos.map((v) => <VideoCard key={v.id} video={v} />)}
@@ -510,7 +513,7 @@ export function Portal() {
 
         {/* DOCUMENTS */}
         {(() => { try { return documents.length > 0 ? (
-        <div style={{ display: 'block', marginBottom: 32 }}>
+        <div className="fade-in" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="INFORMES Y DOCUMENTOS" />
           <div>{documents.map((d) => <DocumentCard key={d.id} document={d} />)}</div>
         </div>
@@ -518,7 +521,7 @@ export function Portal() {
 
         {/* HISTORY */}
         {(() => { try { return registros.length > 0 ? (
-        <div style={{ display: 'block', marginBottom: 32 }}>
+        <div className="fade-in" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="HISTORIAL DE SEMANAS" />
           <div style={{ position: 'relative' }}>
             {registros.map((r, i) => (

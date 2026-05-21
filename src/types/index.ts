@@ -99,10 +99,14 @@ export interface ClientMetrics {
   ads_cpbc?: number
   ads_show_rate?: number
   ads_close_rate?: number
+  // Legacy - no mostrar en UI
   li_connections_sent?: number
+  // Legacy - no mostrar en UI
   li_connections_accepted?: number
   li_accept_rate?: number
+  // Legacy - no mostrar en UI
   li_messages_sent?: number
+  // Legacy - no mostrar en UI
   li_replies?: number
   li_reply_rate?: number
   li_offer_rate?: number
