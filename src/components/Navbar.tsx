@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: 'Informes', to: '/portal/informes' },
   { label: 'Mi Recorrido', to: '/portal/recorrido' },
   { label: 'Ventas', to: '/portal/ventas' },
+  { label: 'Creativos', to: '/portal/creativos' },
 ]
 
 export function Navbar({ clientName, isAdmin = false, showNav = false }: NavbarProps) {

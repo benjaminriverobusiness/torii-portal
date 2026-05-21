@@ -138,6 +138,22 @@ export interface ClientMetricsConfig {
   template_name?: string
 }
 
+export interface ClientCreative {
+  id: string
+  client_id: string
+  title: string
+  type: 'image' | 'video' | 'copy'
+  channel?: string
+  status: 'active' | 'paused' | 'archived'
+  url: string
+  thumbnail_url?: string
+  notes?: string
+  cpl?: number
+  ctr?: number
+  created_at: string
+  updated_at: string
+}
+
 export interface MetricsTemplate {
   id: string
   name: string

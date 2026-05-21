@@ -17,6 +17,7 @@ import type {
   ClientMetrics,
   ClientMetricsConfig,
   MetricsTemplate,
+  ClientCreative,
 } from '../types'
 
 function formatDate(d: string | null | undefined) {
@@ -96,6 +97,20 @@ export function AdminClient() {
   const [weekSaveSuccess, setWeekSaveSuccess] = useState(false)
   const [confirmDeleteHistoryId, setConfirmDeleteHistoryId] = useState<string | null>(null)
 
+  // Creatives state
+  const [creatives, setCreatives] = useState<ClientCreative[]>([])
+  const [addingCreative, setAddingCreative] = useState(false)
+  const [creativeForm, setCreativeForm] = useState({
+    title: '',
+    type: 'image' as ClientCreative['type'],
+    channel: '',
+    status: 'active' as ClientCreative['status'],
+    url: '',
+    cpl: '',
+    ctr: '',
+    notes: '',
+  })
+
   // Form state
   const [activePhaseId, setActivePhaseId] = useState('')
   const [daysInPhase, setDaysInPhase] = useState('')
@@ -137,6 +152,7 @@ export function AdminClient() {
         templatesRes,
         metricsConfigRes,
         metricsHistoryRes,
+        creativesRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('id', id).single(),
         supabase
@@ -154,6 +170,7 @@ export function AdminClient() {
         supabase.from('metrics_templates').select('*').order('name'),
         supabase.from('client_metrics_config').select('*').eq('client_id', id).maybeSingle(),
         supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }).limit(8),
+        supabase.from('client_creatives').select('*').eq('client_id', id).order('created_at', { ascending: false }),
       ])
 
       setClient(clientRes.data as Client)
@@ -164,6 +181,7 @@ export function AdminClient() {
       setHistory((historyRes.data ?? []) as ClientPortalStatus[])
       setTemplates((templatesRes.data ?? []) as MetricsTemplate[])
       setMetricsHistory((metricsHistoryRes.data ?? []) as ClientMetrics[])
+      setCreatives((creativesRes.data ?? []) as ClientCreative[])
       if (metricsConfigRes.data) {
         setMetricsConfig(metricsConfigRes.data as ClientMetricsConfig)
       } else {
@@ -445,6 +463,36 @@ export function AdminClient() {
     await supabase.from('client_portal_status').delete().eq('id', entryId)
     setHistory((prev) => prev.filter((h) => h.id !== entryId))
     setConfirmDeleteHistoryId(null)
+  }
+
+  async function deleteCreative(creativeId: string) {
+    if (!window.confirm('¿Eliminar este creativo?')) return
+    await supabase.from('client_creatives').delete().eq('id', creativeId)
+    setCreatives((prev) => prev.filter((c) => c.id !== creativeId))
+  }
+
+  async function handleAddCreative() {
+    if (!id || !creativeForm.title || !creativeForm.url) return
+    const { data } = await supabase
+      .from('client_creatives')
+      .insert({
+        client_id: id,
+        title: creativeForm.title,
+        type: creativeForm.type,
+        channel: creativeForm.channel || null,
+        status: creativeForm.status,
+        url: creativeForm.url,
+        cpl: creativeForm.cpl ? parseFloat(creativeForm.cpl) : null,
+        ctr: creativeForm.ctr ? parseFloat(creativeForm.ctr) : null,
+        notes: creativeForm.notes || null,
+      })
+      .select()
+      .single()
+    if (data) {
+      setCreatives((prev) => [data as ClientCreative, ...prev])
+      setCreativeForm({ title: '', type: 'image', channel: '', status: 'active', url: '', cpl: '', ctr: '', notes: '' })
+      setAddingCreative(false)
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -1591,6 +1639,198 @@ export function AdminClient() {
               >
                 + Agregar documento
               </button>
+            </div>
+
+            {/* CREATIVOS */}
+            <div style={{ marginBottom: 32 }}>
+              <p style={sectionTitle}>CREATIVOS</p>
+
+              {creatives.map((c) => (
+                <div
+                  key={c.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '8px' }}
+                >
+                  {/* Type badge */}
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4, flexShrink: 0,
+                    ...(c.type === 'image' ? { background: '#1a0807', color: '#fb923c' }
+                      : c.type === 'video' ? { background: '#071228', color: '#60a5fa' }
+                      : { background: '#0f0720', color: '#c084fc' }),
+                  }}>
+                    {c.type === 'image' ? 'Imagen' : c.type === 'video' ? 'Video' : 'Copy'}
+                  </span>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: '#f0f1f7', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{c.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase',
+                        ...(c.status === 'active' ? { background: 'rgba(74,222,128,0.15)', color: '#4ade80' }
+                          : c.status === 'paused' ? { background: 'rgba(252,211,77,0.15)', color: '#fcd34d' }
+                          : { background: 'rgba(255,255,255,0.06)', color: '#555669' }),
+                      }}>
+                        {c.status === 'active' ? 'Activo' : c.status === 'paused' ? 'Pausado' : 'Archivado'}
+                      </span>
+                      <span style={{ color: '#555669', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {c.url}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => deleteCreative(c.id)}
+                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 16, padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+
+              {addingCreative ? (
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, marginTop: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div>
+                      <label style={labelStyle}>Título *</label>
+                      <input
+                        value={creativeForm.title}
+                        onChange={(e) => setCreativeForm((p) => ({ ...p, title: e.target.value }))}
+                        style={inputStyle}
+                        placeholder="Nombre del creativo"
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Tipo *</label>
+                      <select
+                        value={creativeForm.type}
+                        onChange={(e) => setCreativeForm((p) => ({ ...p, type: e.target.value as ClientCreative['type'] }))}
+                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                      >
+                        <option value="image">Imagen</option>
+                        <option value="video">Video</option>
+                        <option value="copy">Copy</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Canal</label>
+                      <select
+                        value={creativeForm.channel}
+                        onChange={(e) => setCreativeForm((p) => ({ ...p, channel: e.target.value }))}
+                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                      >
+                        <option value="">Sin canal</option>
+                        <option value="Meta Ads">Meta Ads</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="Ambos">Ambos</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Estado</label>
+                      <select
+                        value={creativeForm.status}
+                        onChange={(e) => setCreativeForm((p) => ({ ...p, status: e.target.value as ClientCreative['status'] }))}
+                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                      >
+                        <option value="active">Activo</option>
+                        <option value="paused">Pausado</option>
+                        <option value="archived">Archivado</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={labelStyle}>
+                      URL *{' '}
+                      <span style={{ color: '#555669', fontWeight: 400 }}>
+                        {creativeForm.type === 'image' ? '— https://drive.google.com/... o URL directa'
+                          : creativeForm.type === 'video' ? '— https://youtube.com/... o https://loom.com/...'
+                          : '— Pegá el copy aquí o link a Google Doc'}
+                      </span>
+                    </label>
+                    <input
+                      value={creativeForm.url}
+                      onChange={(e) => setCreativeForm((p) => ({ ...p, url: e.target.value }))}
+                      style={inputStyle}
+                      placeholder={
+                        creativeForm.type === 'image' ? 'https://drive.google.com/... o URL directa'
+                          : creativeForm.type === 'video' ? 'https://youtube.com/... o https://loom.com/...'
+                          : 'Pegá el copy aquí o link a Google Doc'
+                      }
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                    <div>
+                      <label style={labelStyle}>CPL (opcional)</label>
+                      <input
+                        type="number"
+                        value={creativeForm.cpl}
+                        onChange={(e) => setCreativeForm((p) => ({ ...p, cpl: e.target.value }))}
+                        style={inputStyle}
+                        placeholder="$0"
+                        step="any"
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>CTR (opcional)</label>
+                      <input
+                        type="number"
+                        value={creativeForm.ctr}
+                        onChange={(e) => setCreativeForm((p) => ({ ...p, ctr: e.target.value }))}
+                        style={inputStyle}
+                        placeholder="0%"
+                        step="any"
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={labelStyle}>Notas (opcional)</label>
+                    <textarea
+                      value={creativeForm.notes}
+                      onChange={(e) => setCreativeForm((p) => ({ ...p, notes: e.target.value }))}
+                      rows={3}
+                      style={{ ...inputStyle, resize: 'vertical' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={handleAddCreative}
+                      style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      Agregar
+                    </button>
+                    <button
+                      onClick={() => setAddingCreative(false)}
+                      style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddingCreative(true)}
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'transparent',
+                    border: '2px dashed rgba(255,255,255,0.12)',
+                    borderRadius: 8,
+                    padding: '10px 16px',
+                    color: '#555669',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: 'DM Sans, sans-serif',
+                    marginTop: creatives.length > 0 ? 8 : 0,
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                >
+                  + Agregar creativo
+                </button>
+              )}
             </div>
 
             <button
