@@ -1,6 +1,5 @@
 import { Component, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { useScrollFade } from '../hooks/useScrollFade'
 import { Navbar } from '../components/Navbar'
 import { JourneyMap } from '../components/JourneyMap'
 import { KpiCard } from '../components/KpiCard'

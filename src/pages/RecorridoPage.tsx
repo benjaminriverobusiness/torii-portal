@@ -10,7 +10,6 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import { JourneyMap } from '../components/JourneyMap'
-import { useScrollFade } from '../hooks/useScrollFade'
 import type { Client, ClientPhase, ClientPortalStatus } from '../types'
 
 // ─── Helpers ────────────────────────────────────────────────

@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
-import { useScrollFade } from '../hooks/useScrollFade'
 import type { Client } from '../types'
 
 // ─── Local types ─────────────────────────────────────────────
