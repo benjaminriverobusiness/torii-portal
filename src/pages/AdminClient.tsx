@@ -270,19 +270,11 @@ export function AdminClient() {
   }
 
   async function deletePhase(phase: ClientPhase) {
-    if (phase.id === activePhaseId) {
-      setError('No puedes eliminar la etapa activa')
-      setTimeout(() => setError(''), 3000)
-      return
-    }
-    const { error: deleteError } = await supabase.from('client_phases').delete().eq('id', phase.id)
-    if (deleteError) {
-      setError(
-        'No podés eliminar esta etapa porque está siendo usada como etapa activa del cliente. Primero cambiá la etapa activa desde la sección Actualizar.'
-      )
-      setTimeout(() => setError(''), 4000)
-      return
-    }
+    await supabase
+      .from('client_portal_status')
+      .update({ active_phase_id: null })
+      .eq('active_phase_id', phase.id)
+    await supabase.from('client_phases').delete().eq('id', phase.id)
     setPhases((prev) => prev.filter((p) => p.id !== phase.id))
   }
 
