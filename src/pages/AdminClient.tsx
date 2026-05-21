@@ -296,18 +296,21 @@ export function AdminClient() {
 
   async function handleSaveMetricsConfig() {
     if (!id) return
+    console.log('Saving config:', { clientId: id, metricsConfig })
     try {
       if (metricsConfig.id) {
-        await supabase
+        const { data, error } = await supabase
           .from('client_metrics_config')
           .update({ ...metricsConfig, updated_at: new Date().toISOString() } as Record<string, unknown>)
           .eq('id', metricsConfig.id)
+        console.log('Supabase result:', { data, error })
       } else {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('client_metrics_config')
           .insert({ ...metricsConfig, client_id: id })
           .select()
           .single()
+        console.log('Supabase result:', { data, error })
         if (data) setMetricsConfig(data as ClientMetricsConfig)
       }
       setConfigSaveSuccess(true)
@@ -319,6 +322,7 @@ export function AdminClient() {
 
   async function handleSaveWeek() {
     if (!id) return
+    console.log('Saving week:', { clientId: id, weekForm })
     try {
       const n = (v: string) => (v !== '' ? parseFloat(v) : null)
       const payload = {
@@ -346,21 +350,24 @@ export function AdminClient() {
         li_bookings: n(weekForm.li_bookings),
       }
 
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('client_metrics')
         .select('id')
         .eq('client_id', id)
         .eq('week_number', weekForm.week_number)
         .eq('year', weekForm.year)
         .maybeSingle()
+      console.log('Supabase result:', { data: existing, error: existingError })
 
       if (existing) {
-        await supabase
+        const { data, error } = await supabase
           .from('client_metrics')
           .update({ ...payload, updated_at: new Date().toISOString() })
           .eq('id', existing.id)
+        console.log('Supabase result:', { data, error })
       } else {
-        await supabase.from('client_metrics').insert(payload)
+        const { data, error } = await supabase.from('client_metrics').insert(payload)
+        console.log('Supabase result:', { data, error })
       }
 
       setWeekSaveSuccess(true)
