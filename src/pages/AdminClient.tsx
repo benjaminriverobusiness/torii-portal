@@ -728,7 +728,7 @@ export function AdminClient() {
                 }}
               >
                 {editingPhaseId === phase.id ? (
-                  <div>
+                  <div style={{ overflow: 'visible', height: 'auto' }}>
                     <input
                       value={editPhaseName}
                       onChange={(e) => setEditPhaseName(e.target.value)}
@@ -737,8 +737,7 @@ export function AdminClient() {
                     <textarea
                       value={editPhaseDesc}
                       onChange={(e) => setEditPhaseDesc(e.target.value)}
-                      rows={3}
-                      style={{ ...inputStyle, resize: 'vertical', marginBottom: 12 }}
+                      style={{ ...inputStyle, resize: 'vertical', height: '80px', marginBottom: 12 }}
                     />
                     <div style={{ marginTop: 12, marginBottom: 12 }}>
                       <label style={{ fontSize: 12, fontWeight: 600, color: '#8a8c9e', marginBottom: 6, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
