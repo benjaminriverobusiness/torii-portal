@@ -531,13 +531,13 @@ export function AdminClient() {
 
   async function handleAddAnalysisVideo() {
     if (!id || !analysisForm.title || !analysisForm.url) return
-    const videoCount = salesMaterials.filter((m) => m.type === 'video').length
+    const videoCount = salesMaterials.filter((m) => m.type === 'analysis_video').length
     const { data } = await supabase
       .from('sales_materials')
       .insert({
         client_id: id,
         title: analysisForm.title,
-        type: 'video',
+        type: 'analysis_video',
         url: analysisForm.url,
         description: analysisForm.description || null,
         order_index: videoCount,
@@ -1916,7 +1916,7 @@ export function AdminClient() {
                 ANÁLISIS DE LLAMADAS
               </p>
 
-              {salesMaterials.filter((m) => m.type === 'video').map((m) => (
+              {salesMaterials.filter((m) => m.type === 'analysis_video').map((m) => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '8px' }}>
                   <span style={{ background: '#071228', color: '#60a5fa', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '4px', flexShrink: 0 }}>Video</span>
                   <div style={{ flex: 1, minWidth: 0 }}>

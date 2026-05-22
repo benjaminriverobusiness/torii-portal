@@ -530,7 +530,7 @@ export function VentasPage() {
   const closeRateColor = closeRate >= 25 ? '#4ade80' : closeRate >= 15 ? '#fcd34d' : '#f87171'
 
   const leadsConGrabacion = leads.filter((l) => l.recording_url)
-  const analysisVideos = materials.filter((m) => m.type === 'video')
+  const analysisVideos = materials.filter((m) => m.type === 'analysis_video')
 
   const monthlyData = (() => {
     const map = new Map<string, { month: string; llamadas: number; cerrados: number; ingresos: number }>()
