@@ -54,7 +54,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
 
   if (isMobile) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', padding: '0 16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', padding: '0 16px', width: '100%', boxSizing: 'border-box', paddingRight: '16px' }}>
         {/* Vertical connector line */}
         <div style={{ position: 'absolute', left: '36px', top: 0, bottom: 0, width: '2px', background: 'linear-gradient(to bottom, #e5182b, rgba(229,24,43,0.1))' }} />
 
@@ -87,7 +87,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
               </div>
 
               {/* Content */}
-              <div style={{ flex: 1, paddingTop: 6 }}>
+              <div style={{ flex: 1, paddingTop: 6, minWidth: 0, overflow: 'hidden', paddingRight: '8px' }}>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: isActive ? '#f0f1f7' : isCompleted ? '#f0f1f7' : '#555669', marginBottom: '4px' }}>
                   {phase.phase_name}
                 </div>
@@ -97,7 +97,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                       Día {days_in_phase ?? 1} en esta etapa
                     </div>
                     {phase.phase_description && (
-                      <div style={{ fontSize: '13px', color: '#8a8c9e', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                      <div style={{ fontSize: '13px', color: '#8a8c9e', lineHeight: 1.5, whiteSpace: 'pre-line', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                         {phase.phase_description}
                       </div>
                     )}
@@ -109,7 +109,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                   </span>
                 )}
                 {!isActive && !isCompleted && phase.phase_description && (
-                  <div style={{ fontSize: '12px', color: '#555669', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: '12px', color: '#555669', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                     {phase.phase_description}
                   </div>
                 )}

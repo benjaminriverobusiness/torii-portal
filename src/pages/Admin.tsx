@@ -73,6 +73,13 @@ export function Admin() {
   const [statuses, setStatuses] = useState<Record<string, ClientPortalStatus>>({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -115,7 +122,7 @@ export function Admin() {
             minHeight: 'calc(100vh - 64px)',
             position: 'sticky',
             top: 64,
-            display: 'flex',
+            display: isMobile ? 'none' : 'flex',
             flexDirection: 'column',
             padding: '20px 12px',
           }}
@@ -171,7 +178,23 @@ export function Admin() {
         </aside>
 
         {/* Main */}
-        <main style={{ flex: 1, padding: 40, overflowX: 'auto' }}>
+        <main style={{ flex: 1, padding: isMobile ? 16 : 40, overflowX: 'auto', width: isMobile ? '100%' : undefined }}>
+          {isMobile && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              {[
+                { label: 'Clientes', path: '/admin' },
+                { label: 'Nuevo Cliente', path: '/admin/new' },
+              ].map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  style={{ padding: '8px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f1f7', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <h2 style={{ color: '#f0f1f7', fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 24, margin: 0 }}>
               Clientes
