@@ -208,7 +208,8 @@ export function Admin() {
                 overflow: 'hidden',
               }}
             >
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <div className="hide-scrollbar" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#0d0e17' }}>
                     {['CLIENTE', 'PLATAFORMA', 'FASE', 'DÍA', 'ESTADO', 'ACTUALIZADO', 'ACCIÓN'].map((col) => (
@@ -299,6 +300,7 @@ export function Admin() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </main>

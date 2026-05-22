@@ -105,6 +105,7 @@ export function Navbar({ clientName, isAdmin = false, showNav = false }: NavbarP
 
       {showNav && (
         <div
+          className="hide-scrollbar"
           style={{
             height: 48,
             background: 'rgba(8,9,15,0.95)',
@@ -113,6 +114,9 @@ export function Navbar({ clientName, isAdmin = false, showNav = false }: NavbarP
             alignItems: 'center',
             padding: '0 32px',
             gap: 8,
+            overflowX: 'auto',
+            flexWrap: 'nowrap',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           {NAV_LINKS.map((link) => (
@@ -130,6 +134,8 @@ export function Navbar({ clientName, isAdmin = false, showNav = false }: NavbarP
                 color: isActive ? '#f0f1f7' : '#555669',
                 background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
                 fontFamily: 'DM Sans, sans-serif',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
               })}
               onMouseEnter={(e) => {
                 const el = e.currentTarget

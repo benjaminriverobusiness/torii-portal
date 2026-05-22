@@ -432,6 +432,13 @@ export function VentasPage() {
 
   const [previewMaterial, setPreviewMaterial] = useState<SalesMaterial | null>(null)
   const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -653,28 +660,67 @@ export function VentasPage() {
             </button>
           </div>
 
-          {/* Leads table */}
-          <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-            {/* Table header */}
-            <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              {['NOMBRE', 'ETAPA', 'LLAMADA', 'ASISTIÓ', 'CALIFICADO', 'CERRADO', 'ACCIONES'].map((h) => (
-                <div key={h}>{h}</div>
+          {/* Leads table / cards */}
+          {leads.length === 0 ? (
+            <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 16px', display: 'block' }}>
+                <rect x="6" y="10" width="36" height="32" rx="4" stroke="#333" strokeWidth="2"/>
+                <path d="M6 20h36" stroke="#333" strokeWidth="2"/>
+                <rect x="14" y="6" width="4" height="8" rx="2" fill="#333"/>
+                <rect x="30" y="6" width="4" height="8" rx="2" fill="#333"/>
+              </svg>
+              <p style={{ color: '#8a8c9e', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Aún no hay llamadas registradas.</p>
+              <p style={{ color: '#555669', fontSize: 13, margin: 0 }}>Hacé click en '+ Nueva llamada' para empezar.</p>
+            </div>
+          ) : isMobile ? (
+            <div style={{ marginBottom: 12 }}>
+              {leads.map((lead) => (
+                <div key={lead.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
+                    <StageBadge etapa={lead.etapa} />
+                  </div>
+                  {lead.fecha_llamada && (
+                    <div style={{ color: '#8a8c9e', fontSize: 13, marginBottom: 10 }}>
+                      📅 {formatDate(lead.fecha_llamada)}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <span style={{ fontSize: 12, color: lead.asistio ? '#4ade80' : '#f87171' }}>
+                      {lead.asistio ? '✓' : '✗'} Asistió
+                    </span>
+                    <span style={{ fontSize: 12, color: lead.calificado ? '#4ade80' : '#f87171' }}>
+                      {lead.calificado ? '✓' : '✗'} Calificado
+                    </span>
+                    {lead.cerrado
+                      ? <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: '#071a0f', color: '#4ade80' }}>Cerrado</span>
+                      : <span style={{ fontSize: 12, color: '#555669' }}>Pendiente</span>}
+                  </div>
+                  {lead.recording_url && (
+                    <div
+                      style={{ fontSize: 13, color: '#c084fc', fontWeight: 600, marginBottom: 10, cursor: 'pointer' }}
+                      onClick={() => {
+                        if (lead.recording_url!.includes('fathom')) { window.open(lead.recording_url!, '_blank'); return }
+                        setPlayingVideo({ url: lead.recording_url!, title: lead.lead_nombre })
+                      }}
+                    >
+                      🎙 Ver grabación →
+                    </div>
+                  )}
+                  <button style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => openEdit(lead)}>
+                    Ver / Editar
+                  </button>
+                </div>
               ))}
             </div>
-
-            {leads.length === 0 ? (
-              <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 16px', display: 'block' }}>
-                  <rect x="6" y="10" width="36" height="32" rx="4" stroke="#333" strokeWidth="2"/>
-                  <path d="M6 20h36" stroke="#333" strokeWidth="2"/>
-                  <rect x="14" y="6" width="4" height="8" rx="2" fill="#333"/>
-                  <rect x="30" y="6" width="4" height="8" rx="2" fill="#333"/>
-                </svg>
-                <p style={{ color: '#8a8c9e', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Aún no hay llamadas registradas.</p>
-                <p style={{ color: '#555669', fontSize: 13, margin: 0 }}>Hacé click en '+ Nueva llamada' para empezar.</p>
+          ) : (
+            <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                {['NOMBRE', 'ETAPA', 'LLAMADA', 'ASISTIÓ', 'CALIFICADO', 'CERRADO', 'ACCIONES'].map((h) => (
+                  <div key={h}>{h}</div>
+                ))}
               </div>
-            ) : (
-              leads.map((lead, i) => (
+              {leads.map((lead, i) => (
                 <div
                   key={lead.id}
                   style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)', transition: 'background 0.15s ease', cursor: 'default' }}
@@ -700,9 +746,9 @@ export function VentasPage() {
                     </button>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Section 5 — Análisis de Llamadas */}
           {leadsConGrabacion.length > 0 && (
