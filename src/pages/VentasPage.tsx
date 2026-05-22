@@ -255,29 +255,24 @@ function MaterialPreviewModal({ material, onClose }: { material: SalesMaterial; 
 }
 
 function VideoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
-  const embedUrl = getEmbedUrl(url)
-  const canEmbed = embedUrl !== url
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
-      <div style={{ width: '100%', maxWidth: 900, background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7' }}>{title}</span>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <a href={url} target="_blank" rel="noreferrer" style={{ color: '#c084fc', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Abrir original →</a>
-            <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '960px', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#e5182b', animation: 'glow-pulse 2s ease-in-out infinite' }} />
+            <span style={{ color: '#f0f1f7', fontSize: '15px', fontWeight: 700 }}>{title}</span>
           </div>
+          <button onClick={onClose} style={{ color: '#555669', fontSize: '22px', cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }}>✕</button>
         </div>
-        {canEmbed ? (
-          <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
-            <iframe src={embedUrl} allow="autoplay; fullscreen" title={title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }} />
-          </div>
-        ) : (
-          <div style={{ padding: '56px 24px', textAlign: 'center' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 16px', display: 'block' }}><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
-            <p style={{ color: '#8a8c9e', marginBottom: 20, fontSize: 14 }}>Este video no se puede incrustar en el portal. Abrilo directamente en Fathom.</p>
-            <a href={url} target="_blank" rel="noreferrer" style={{ color: '#c084fc', fontWeight: 700, fontSize: 14 }}>Ver grabación en Fathom →</a>
-          </div>
-        )}
+        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, background: '#000' }}>
+          <iframe
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+            src={getEmbedUrl(url)}
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
       </div>
     </div>
   )
@@ -679,7 +674,11 @@ export function VentasPage() {
                     style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(192,132,252,0.35)'; e.currentTarget.style.background = 'rgba(192,132,252,0.04)' }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
-                    onClick={() => setPlayingVideo({ url: lead.recording_url!, title: lead.lead_nombre })}
+                    onClick={() => {
+                      const url = lead.recording_url!
+                      if (url.includes('fathom')) { window.open(url, '_blank'); return }
+                      setPlayingVideo({ url, title: lead.lead_nombre })
+                    }}
                   >
                     <div style={{ width: 36, height: 36, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
