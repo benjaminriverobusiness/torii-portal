@@ -41,7 +41,6 @@ export function NewClient() {
   const [country, setCountry] = useState('')
   const [platform, setPlatform] = useState('Meta Ads')
   const [startDate, setStartDate] = useState('')
-  const [monthlyAmount, setMonthlyAmount] = useState('')
   const [cpbcObjective, setCpbcObjective] = useState('')
 
   const [createdClientId, setCreatedClientId] = useState('')
@@ -61,13 +60,13 @@ export function NewClient() {
           country: country || null,
           platform,
           start_date: startDate || null,
-          installment_amount: monthlyAmount ? parseFloat(monthlyAmount) : null,
           status: 'active',
           fase: 'Fundación',
         })
         .select()
         .single()
-      if (clientError) throw clientError
+      console.log('Insert result:', { data: clientData, error: clientError })
+      if (clientError) throw new Error(clientError.message ?? clientError.code ?? 'Error creando cliente')
 
       const phases = DEFAULT_PHASES.map((p) => ({ ...p, client_id: clientData.id }))
       const { error: phasesError } = await supabase.from('client_phases').insert(phases)
@@ -202,10 +201,6 @@ export function NewClient() {
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Fecha de inicio</label>
               <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Monto mensual (USD)</label>
-              <input type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} style={inputStyle} min="0" />
             </div>
             <div style={{ marginBottom: 24 }}>
               <label style={labelStyle}>CPBC objetivo (USD)</label>
