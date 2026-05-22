@@ -237,6 +237,48 @@ function LinkCard({ m }: { m: SalesMaterial }) {
   )
 }
 
+function AnalysisVideoCard({ material, onPlay }: { material: SalesMaterial; onPlay: (url: string, title: string) => void }) {
+  const [hov, setHov] = useState(false)
+  const ytId = getYoutubeId(material.url)
+  const isLoom = material.url.includes('loom.com')
+  return (
+    <div
+      style={{ background: 'rgba(255,255,255,0.02)', border: hov ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.25s ease' }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      onClick={() => onPlay(material.url, material.title)}
+    >
+      {/* Thumbnail */}
+      <div style={{ position: 'relative', aspectRatio: '16/9', background: '#0d0e17', overflow: 'hidden' }}>
+        {ytId ? (
+          <img
+            src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
+            onError={(e) => { e.currentTarget.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s', transform: hov ? 'scale(1.05)' : 'scale(1)' }}
+            alt={material.title}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: '#111220', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#555669" strokeWidth="1.5"/><polygon points="10,8 17,12 10,16" fill="#555669"/></svg>
+            <span style={{ color: '#555669', fontSize: 13 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
+          </div>
+        )}
+        {/* Play overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hov ? 1 : 0, transition: 'opacity 0.25s' }}>
+          <div style={{ width: 52, height: 52, background: '#e5182b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(229,24,43,0.6)', transform: hov ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><polygon points="7,4 17,10 7,16" fill="white"/></svg>
+          </div>
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{ padding: '12px 16px' }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f1f7', marginBottom: material.description ? 4 : 0 }}>{material.title}</div>
+        {material.description && <div style={{ fontSize: 12, color: '#8a8c9e', lineHeight: 1.5 }}>{material.description}</div>}
+      </div>
+    </div>
+  )
+}
+
 function MaterialPreviewModal({ material, onClose }: { material: SalesMaterial; onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
@@ -488,6 +530,7 @@ export function VentasPage() {
   const closeRateColor = closeRate >= 25 ? '#4ade80' : closeRate >= 15 ? '#fcd34d' : '#f87171'
 
   const leadsConGrabacion = leads.filter((l) => l.recording_url)
+  const analysisVideos = materials.filter((m) => m.type === 'video')
 
   const monthlyData = (() => {
     const map = new Map<string, { month: string; llamadas: number; cerrados: number; ingresos: number }>()
@@ -691,6 +734,26 @@ export function VentasPage() {
                   </div>
                 ))}
               </div>
+
+              {analysisVideos.length > 0 && (
+                <>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', marginTop: '24px' }}>
+                    Videos de análisis
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="ventas-analysis-grid">
+                    {analysisVideos.map((material) => (
+                      <AnalysisVideoCard
+                        key={material.id}
+                        material={material}
+                        onPlay={(url, title) => {
+                          if (url.includes('fathom')) { window.open(url, '_blank'); return }
+                          setPlayingVideo({ url, title })
+                        }}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -732,6 +795,7 @@ export function VentasPage() {
           .ventas-mats-grid { grid-template-columns: 1fr !important; }
           .ventas-charts-grid { grid-template-columns: 1fr !important; }
           .ventas-recordings-grid { grid-template-columns: 1fr !important; }
+          .ventas-analysis-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
