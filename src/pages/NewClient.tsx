@@ -32,69 +32,23 @@ const DEFAULT_PHASES = [
   },
 ]
 
-function generatePassword(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%'
-  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-}
-
 export function NewClient() {
-  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Step 1
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [createdUserId, setCreatedUserId] = useState('')
-
-  // Step 2
   const [country, setCountry] = useState('')
   const [platform, setPlatform] = useState('Meta Ads')
   const [startDate, setStartDate] = useState('')
-  const [amount, setAmount] = useState('')
+  const [monthlyAmount, setMonthlyAmount] = useState('')
+  const [cpbcObjective, setCpbcObjective] = useState('')
 
-  // Success
   const [createdClientId, setCreatedClientId] = useState('')
   const [done, setDone] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [sqlCopied, setSqlCopied] = useState(false)
 
-  async function handleStep1(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: undefined,
-          data: { name, role: 'client' },
-        },
-      })
-      if (signUpError) throw signUpError
-      const uid = data.user?.id
-      if (!uid) throw new Error('No se pudo crear el usuario')
-
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: uid,
-        email,
-        name,
-        role: 'client',
-      })
-      if (profileError) throw profileError
-
-      setCreatedUserId(uid)
-      setStep(2)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error creando usuario')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleStep2(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -104,12 +58,12 @@ export function NewClient() {
         .insert({
           name,
           email,
-          profile_id: createdUserId,
           country: country || null,
           platform,
           start_date: startDate || null,
+          installment_amount: monthlyAmount ? parseFloat(monthlyAmount) : null,
           status: 'active',
-          installment_amount: amount ? parseFloat(amount) : null,
+          fase: 'Fundación',
         })
         .select()
         .single()
@@ -118,6 +72,13 @@ export function NewClient() {
       const phases = DEFAULT_PHASES.map((p) => ({ ...p, client_id: clientData.id }))
       const { error: phasesError } = await supabase.from('client_phases').insert(phases)
       if (phasesError) throw phasesError
+
+      if (cpbcObjective) {
+        await supabase.from('client_portal_status').insert({
+          client_id: clientData.id,
+          cpbc_objective: parseFloat(cpbcObjective),
+        })
+      }
 
       setCreatedClientId(clientData.id)
       setDone(true)
@@ -128,10 +89,12 @@ export function NewClient() {
     }
   }
 
-  function copyCredentials() {
-    navigator.clipboard.writeText(`Email: ${email}\nContraseña: ${password}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const sqlText = `UPDATE clients \nSET profile_id = '[PEGAR_ID_AQUI]'\nWHERE id = '${createdClientId}';`
+
+  function copySQL() {
+    navigator.clipboard.writeText(sqlText)
+    setSqlCopied(true)
+    setTimeout(() => setSqlCopied(false), 2000)
   }
 
   const inputStyle: React.CSSProperties = {
@@ -159,69 +122,39 @@ export function NewClient() {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#08090f' }}>
         <Navbar isAdmin />
-        <div style={{ maxWidth: 520, margin: '60px auto', padding: '0 24px' }}>
-          <div
-            style={{
-              backgroundColor: 'rgba(74,222,128,0.05)',
-              border: '1px solid rgba(74,222,128,0.2)',
-              borderRadius: 16,
-              padding: 32,
-              textAlign: 'center',
-            }}
-          >
-            <div style={{ fontSize: 32, marginBottom: 12 }}>✓</div>
-            <h2 style={{ color: '#4ade80', fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 22, margin: '0 0 8px' }}>
-              Cliente creado
+        <div style={{ maxWidth: 560, margin: '60px auto', padding: '0 24px' }}>
+          <div style={{ backgroundColor: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 16, padding: 32 }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>✓</div>
+            <h2 style={{ color: '#4ade80', fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, margin: '0 0 4px' }}>
+              Cliente creado exitosamente
             </h2>
-            <div
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 10,
-                padding: 20,
-                marginTop: 20,
-                textAlign: 'left',
-              }}
-            >
-              <p style={{ color: '#8a8c9e', fontSize: 12, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Credenciales
-              </p>
-              <p style={{ color: '#f0f1f7', fontSize: 14, margin: '0 0 4px' }}>Email: {email}</p>
-              <p style={{ color: '#f0f1f7', fontSize: 14, margin: 0 }}>Contraseña: {password}</p>
+            <p style={{ color: '#8a8c9e', fontSize: 13, margin: '0 0 24px' }}>
+              Para dar acceso al portal al cliente, seguí estos pasos:
+            </p>
+
+            <ol style={{ color: '#8a8c9e', fontSize: 13, lineHeight: 1.8, paddingLeft: 18, margin: '0 0 20px' }}>
+              <li>Andá a <strong style={{ color: '#f0f1f7' }}>Supabase → Authentication → Users</strong></li>
+              <li>Click en <strong style={{ color: '#f0f1f7' }}>"Add user"</strong></li>
+              <li>Email: <strong style={{ color: '#f0f1f7' }}>{email}</strong></li>
+              <li>Tildá <strong style={{ color: '#f0f1f7' }}>"Auto Confirm User"</strong></li>
+              <li>Copiá el <strong style={{ color: '#f0f1f7' }}>ID del usuario</strong> creado</li>
+              <li>Ejecutá este SQL:</li>
+            </ol>
+
+            <div style={{ backgroundColor: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '16px', marginBottom: 16, fontFamily: 'monospace', fontSize: 13, color: '#c084fc', whiteSpace: 'pre', overflowX: 'auto' }}>
+              {sqlText}
             </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+
+            <div style={{ display: 'flex', gap: 12 }}>
               <button
-                onClick={copyCredentials}
-                style={{
-                  flex: 1,
-                  backgroundColor: copied ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  borderRadius: 8,
-                  padding: '10px',
-                  color: copied ? '#4ade80' : '#f0f1f7',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  fontFamily: 'DM Sans, sans-serif',
-                }}
+                onClick={copySQL}
+                style={{ flex: 1, backgroundColor: sqlCopied ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px', color: sqlCopied ? '#4ade80' : '#f0f1f7', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
               >
-                {copied ? '¡Copiado!' : 'Copiar credenciales'}
+                {sqlCopied ? '¡Copiado!' : 'Copiar SQL →'}
               </button>
               <Link
                 to={`/admin/client/${createdClientId}`}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#e5182b',
-                  borderRadius: 8,
-                  padding: '10px',
-                  color: 'white',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                style={{ flex: 1, backgroundColor: '#e5182b', borderRadius: 8, padding: '10px', color: 'white', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 Ver perfil del cliente →
               </Link>
@@ -240,214 +173,56 @@ export function NewClient() {
           ← Volver
         </Link>
 
-        <h2
-          style={{
-            fontFamily: 'Bricolage Grotesque, sans-serif',
-            fontSize: 24,
-            color: '#f0f1f7',
-            margin: '0 0 32px',
-          }}
-        >
+        <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 24, color: '#f0f1f7', margin: '0 0 32px' }}>
           Nuevo Cliente
         </h2>
 
-        {/* Step indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32 }}>
-          {[1, 2].map((s, i) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  backgroundColor: step >= s ? '#e5182b' : 'rgba(255,255,255,0.07)',
-                  border: `2px solid ${step >= s ? '#e5182b' : 'rgba(255,255,255,0.12)'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: step >= s ? 'white' : '#555669',
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                {s}
-              </div>
-              <span style={{ color: step >= s ? '#f0f1f7' : '#555669', fontSize: 13 }}>
-                {s === 1 ? 'Cuenta' : 'Datos'}
-              </span>
-              {i < 1 && (
-                <div style={{ width: 40, height: 1, backgroundColor: step > 1 ? '#e5182b' : 'rgba(255,255,255,0.07)' }} />
-              )}
+        <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 32 }}>
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Nombre completo del asesor</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
             </div>
-          ))}
-        </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Email (referencia)</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>País</label>
+              <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} style={inputStyle} />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Canal</label>
+              <select value={platform} onChange={(e) => setPlatform(e.target.value)} style={{ ...inputStyle, backgroundColor: '#0d0e17' }}>
+                <option>Meta Ads</option>
+                <option>LinkedIn Outbound</option>
+                <option>Híbrido</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Fecha de inicio</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }} />
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Monto mensual (USD)</label>
+              <input type="number" value={monthlyAmount} onChange={(e) => setMonthlyAmount(e.target.value)} style={inputStyle} min="0" />
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={labelStyle}>CPBC objetivo (USD)</label>
+              <input type="number" value={cpbcObjective} onChange={(e) => setCpbcObjective(e.target.value)} style={inputStyle} min="0" />
+            </div>
 
-        <div
-          style={{
-            backgroundColor: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            borderRadius: 16,
-            padding: 32,
-          }}
-        >
-          {step === 1 ? (
-            <form onSubmit={handleStep1}>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Nombre completo</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required style={inputStyle} />
-              </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required style={inputStyle} />
-              </div>
-              <div style={{ marginBottom: 24 }}>
-                <label style={labelStyle}>Contraseña</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1, position: 'relative' }}>
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      style={{ ...inputStyle, paddingRight: 40 }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass(!showPass)}
-                      style={{
-                        position: 'absolute',
-                        right: 12,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#555669',
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      {showPass ? (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                          <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                          <line x1="1" y1="1" x2="23" y2="23" />
-                        </svg>
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPassword(generatePassword())}
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.07)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      borderRadius: 8,
-                      padding: '0 16px',
-                      color: '#f0f1f7',
-                      fontSize: 13,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      fontFamily: 'DM Sans, sans-serif',
-                    }}
-                  >
-                    Generar
-                  </button>
-                </div>
-              </div>
-              {error && <p style={{ color: '#e5182b', fontSize: 13, marginBottom: 16 }}>{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#e5182b',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '12px',
-                  color: 'white',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  fontFamily: 'DM Sans, sans-serif',
-                }}
-              >
-                {loading && <Spinner size={16} color="white" />}
-                Continuar →
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleStep2}>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>País</label>
-                <input type="text" value={country} onChange={(e) => setCountry(e.target.value)} style={inputStyle} />
-              </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Plataforma</label>
-                <select
-                  value={platform}
-                  onChange={(e) => setPlatform(e.target.value)}
-                  style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
-                >
-                  <option>Meta Ads</option>
-                  <option>LinkedIn Outbound</option>
-                  <option>Híbrido</option>
-                </select>
-              </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Fecha de inicio</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  style={{ ...inputStyle, colorScheme: 'dark' }}
-                />
-              </div>
-              <div style={{ marginBottom: 24 }}>
-                <label style={labelStyle}>Monto mensual (USD)</label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  style={inputStyle}
-                  min="0"
-                />
-              </div>
-              {error && <p style={{ color: '#e5182b', fontSize: 13, marginBottom: 16 }}>{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#e5182b',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '12px',
-                  color: 'white',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  fontFamily: 'DM Sans, sans-serif',
-                }}
-              >
-                {loading && <Spinner size={16} color="white" />}
-                Crear cliente →
-              </button>
-            </form>
-          )}
+            {error && <p style={{ color: '#e5182b', fontSize: 13, marginBottom: 16 }}>{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ width: '100%', backgroundColor: '#e5182b', border: 'none', borderRadius: 8, padding: '12px', color: 'white', fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'DM Sans, sans-serif' }}
+            >
+              {loading && <Spinner size={16} color="white" />}
+              Crear cliente →
+            </button>
+          </form>
         </div>
       </div>
     </div>

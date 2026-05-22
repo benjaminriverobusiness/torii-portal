@@ -323,7 +323,7 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
 // ─── Lead Modal ───────────────────────────────────────────────
 
 function LeadModal({
-  editingLead, form, setForm, saving, onSave, onClose,
+  editingLead, form, setForm, saving, onSave, onClose, onDelete,
 }: {
   editingLead: CrmLead | null
   form: FormState
@@ -331,7 +331,9 @@ function LeadModal({
   saving: boolean
   onSave: () => void
   onClose: () => void
+  onDelete?: () => void
 }) {
+  const [showConfirm, setShowConfirm] = useState(false)
   const inp: React.CSSProperties = {
     width: '100%', background: '#080910',
     border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
@@ -403,14 +405,48 @@ function LeadModal({
         <input style={{ ...inp, colorScheme: 'dark' }} type="date" value={form.next_followup_date} onChange={(e) => setForm((f) => ({ ...f, next_followup_date: e.target.value }))} />
 
         {/* Footer */}
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
-          <button style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={onClose}>
-            Cancelar
-          </button>
-          <button style={{ padding: '10px 24px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }} onClick={onSave} disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar'}
-          </button>
-        </div>
+        {showConfirm ? (
+          <div style={{ marginTop: 24 }}>
+            <p style={{ color: '#f87171', fontSize: 13, margin: '0 0 12px' }}>¿Eliminar esta llamada?</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                style={{ padding: '9px 18px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontSize: 13 }}
+                onClick={() => { setShowConfirm(false); onDelete?.() }}
+              >
+                Sí, eliminar
+              </button>
+              <button
+                style={{ padding: '9px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontSize: 13 }}
+                onClick={() => setShowConfirm(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
+            <div>
+              {editingLead && (
+                <button
+                  style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontFamily: 'DM Sans, sans-serif' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(248,113,113,0.1)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  onClick={() => setShowConfirm(true)}
+                >
+                  Eliminar llamada
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={onClose}>
+                Cancelar
+              </button>
+              <button style={{ padding: '10px 24px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }} onClick={onSave} disabled={saving}>
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -486,6 +522,14 @@ export function VentasPage() {
       next_followup_date: lead.next_followup_date ?? '',
     })
     setShowModal(true)
+  }
+
+  async function handleDelete() {
+    if (!editingLead) return
+    await supabase.from('crm_clientes').delete().eq('id', editingLead.id)
+    setLeads((prev) => prev.filter((l) => l.id !== editingLead.id))
+    setShowModal(false)
+    setEditingLead(null)
   }
 
   async function handleSave() {
@@ -830,6 +874,7 @@ export function VentasPage() {
           saving={saving}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
+          onDelete={handleDelete}
         />
       )}
       {previewMaterial && <MaterialPreviewModal material={previewMaterial} onClose={() => setPreviewMaterial(null)} />}

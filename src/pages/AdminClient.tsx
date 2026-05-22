@@ -559,6 +559,12 @@ export function AdminClient() {
     setTimeout(() => setNotesSaved((prev) => ({ ...prev, [leadId]: false })), 2000)
   }
 
+  async function handleClearNotes(leadId: string) {
+    await supabase.from('crm_clientes').update({ notas: null }).eq('id', leadId)
+    setClientLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, notas: null } : l))
+    setEditingNotes((prev) => ({ ...prev, [leadId]: '' }))
+  }
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     backgroundColor: 'rgba(255,255,255,0.04)',
@@ -2026,6 +2032,12 @@ export function AdminClient() {
                               style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                             >
                               Guardar notas
+                            </button>
+                            <button
+                              onClick={() => handleClearNotes(lead.id)}
+                              style={{ color: '#f87171', background: 'transparent', border: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            >
+                              Borrar nota
                             </button>
                             {notesSaved[lead.id] && (
                               <span style={{ color: '#4ade80', fontSize: 13, fontWeight: 600 }}>✓ Guardado</span>

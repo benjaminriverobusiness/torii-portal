@@ -171,7 +171,7 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
 }
 
 export function Portal() {
-  const { client, status, phases, videos, documents, registros, hitos, loading, error } = useClient()
+  const { client, status, phases, videos, documents, registros, hitos, latestMetrics, loading, error } = useClient()
   const [metrics, setMetrics] = useState<ClientMetrics[]>([])
   const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig | null>(null)
 
@@ -284,6 +284,27 @@ export function Portal() {
     if (!value) return 0
     return value <= 1 ? value * 100 : value
   }
+
+  const platform = client?.platform
+  const kpiAgendas: number | null = latestMetrics
+    ? platform === 'Meta Ads'
+      ? (latestMetrics.ads_bookings ?? null)
+      : platform === 'LinkedIn Outbound'
+      ? (latestMetrics.li_bookings ?? null)
+      : ((latestMetrics.ads_bookings ?? 0) + (latestMetrics.li_bookings ?? 0))
+    : (latestRegistro?.agendas_generadas ?? null)
+  const kpiShowRate = latestMetrics
+    ? normalizeRate(latestMetrics.ads_show_rate)
+    : normalizeRate(latestRegistro?.show_rate)
+  const kpiCloseRate = latestMetrics
+    ? (platform === 'LinkedIn Outbound' ? null : normalizeRate(latestMetrics.ads_close_rate))
+    : normalizeRate(latestRegistro?.tasa_cierre)
+  const kpiCpbc: number | null = latestMetrics
+    ? (platform === 'LinkedIn Outbound' ? null : (latestMetrics.ads_cpbc ?? null))
+    : (status.cpbc_current ?? null)
+  const totalLiBookings = platform === 'LinkedIn Outbound'
+    ? metrics.reduce((sum, m) => sum + (m.li_bookings ?? 0), 0)
+    : null
 
   console.log('Rendering portal with:', {
     daysActive,
@@ -431,10 +452,13 @@ export function Portal() {
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="MÉTRICAS DE LA SEMANA" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
-            <KpiCard label="AGENDAS ESTA SEMANA" value={latestRegistro?.agendas_generadas ?? null} colorLogic="neutral" delay={0} />
-            <KpiCard label="SHOW RATE" value={normalizeRate(latestRegistro?.show_rate)} suffix="%" objective={60} colorLogic="showRate" delay={100} />
-            <KpiCard label="TASA DE CIERRE" value={normalizeRate(latestRegistro?.tasa_cierre)} suffix="%" objective={25} colorLogic="closingRate" delay={200} />
-            <KpiCard label="CPBC ACTUAL" value={status.cpbc_current ?? null} prefix="$" objective={status.cpbc_objective ?? undefined} colorLogic="cpbc" delay={300} />
+            <KpiCard label="AGENDAS ESTA SEMANA" value={kpiAgendas} colorLogic="neutral" delay={0} />
+            <KpiCard label="SHOW RATE" value={kpiShowRate} suffix="%" objective={60} colorLogic="showRate" delay={100} />
+            <KpiCard label="TASA DE CIERRE" value={kpiCloseRate} suffix="%" objective={25} colorLogic="closingRate" delay={200} />
+            {platform === 'LinkedIn Outbound'
+              ? <KpiCard label="AGENDAS TOTALES" value={totalLiBookings} colorLogic="neutral" delay={300} />
+              : <KpiCard label="CPBC ACTUAL" value={kpiCpbc} prefix="$" objective={status.cpbc_objective ?? undefined} colorLogic="cpbc" delay={300} />
+            }
           </div>
         </div>
         )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}
