@@ -4,6 +4,10 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import type { Client } from '../types'
+import {
+  BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts'
 
 // ─── Local types ─────────────────────────────────────────────
 
@@ -89,6 +93,14 @@ function getYoutubeId(url: string): string | null {
 function getDriveEmbedUrl(url: string): string {
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
   return m ? `https://drive.google.com/file/d/${m[1]}/preview` : url
+}
+
+function getEmbedUrl(url: string): string {
+  const ytId = getYoutubeId(url)
+  if (ytId) return `https://www.youtube.com/embed/${ytId}`
+  const loom = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)
+  if (loom) return `https://www.loom.com/embed/${loom[1]}`
+  return url
 }
 
 // ─── Tiny shared pieces ───────────────────────────────────────
@@ -242,6 +254,35 @@ function MaterialPreviewModal({ material, onClose }: { material: SalesMaterial; 
   )
 }
 
+function VideoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
+  const embedUrl = getEmbedUrl(url)
+  const canEmbed = embedUrl !== url
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1001, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
+      <div style={{ width: '100%', maxWidth: 900, background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7' }}>{title}</span>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+            <a href={url} target="_blank" rel="noreferrer" style={{ color: '#c084fc', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Abrir original →</a>
+            <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
+          </div>
+        </div>
+        {canEmbed ? (
+          <div style={{ position: 'relative', paddingBottom: '56.25%' }}>
+            <iframe src={embedUrl} allow="autoplay; fullscreen" title={title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }} />
+          </div>
+        ) : (
+          <div style={{ padding: '56px 24px', textAlign: 'center' }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 16px', display: 'block' }}><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
+            <p style={{ color: '#8a8c9e', marginBottom: 20, fontSize: 14 }}>Este video no se puede incrustar en el portal. Abrilo directamente en Fathom.</p>
+            <a href={url} target="_blank" rel="noreferrer" style={{ color: '#c084fc', fontWeight: 700, fontSize: 14 }}>Ver grabación en Fathom →</a>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Lead Modal ───────────────────────────────────────────────
 
 function LeadModal({
@@ -353,6 +394,7 @@ export function VentasPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
 
   const [previewMaterial, setPreviewMaterial] = useState<SalesMaterial | null>(null)
+  const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -450,7 +492,24 @@ export function VentasPage() {
   const showRateColor = showRate >= 60 ? '#4ade80' : showRate >= 40 ? '#fcd34d' : '#f87171'
   const closeRateColor = closeRate >= 25 ? '#4ade80' : closeRate >= 15 ? '#fcd34d' : '#f87171'
 
-  const recordings = leads.filter((l) => l.recording_url)
+  const leadsConGrabacion = leads.filter((l) => l.recording_url)
+
+  const monthlyData = (() => {
+    const map = new Map<string, { month: string; llamadas: number; cerrados: number; ingresos: number }>()
+    leads.forEach((l) => {
+      const dateStr = l.fecha_llamada ?? l.created_at
+      const d = new Date(dateStr)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const label = d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' })
+      if (!map.has(key)) map.set(key, { month: label, llamadas: 0, cerrados: 0, ingresos: 0 })
+      const entry = map.get(key)!
+      entry.llamadas++
+      if (l.cerrado) { entry.cerrados++; entry.ingresos += l.monto ?? 0 }
+    })
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([, v]) => ({ ...v, close_rate: v.llamadas > 0 ? Math.round((v.cerrados / v.llamadas) * 100) : 0 }))
+  })()
 
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 80px'
 
@@ -493,6 +552,53 @@ export function VentasPage() {
               </div>
             ))}
           </div>
+
+          {/* Section 3 — Gráficos Históricos */}
+          {monthlyData.length > 1 && (
+            <div className="fade-in visible" style={{ marginBottom: 40 }}>
+              <div style={{ marginBottom: 20 }}>
+                <SectionPill text="GRÁFICOS HISTÓRICOS" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="ventas-charts-grid">
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Llamadas por mes</div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <BarChart data={monthlyData} margin={{ top: 0, right: 0, bottom: 0, left: -24 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 12 }} />
+                      <Bar dataKey="llamadas" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Ingresos por mes</div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <BarChart data={monthlyData} margin={{ top: 0, right: 0, bottom: 0, left: -8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
+                      <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 12 }} formatter={(v) => [`$${Number(v).toLocaleString()}`, 'Ingresos']} />
+                      <Bar dataKey="ingresos" fill="#c9a84c" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Tasa de cierre %</div>
+                  <ResponsiveContainer width="100%" height={160}>
+                    <LineChart data={monthlyData} margin={{ top: 0, right: 0, bottom: 0, left: -24 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
+                      <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 12 }} formatter={(v) => [`${v}%`, 'Close rate']} />
+                      <Line type="monotone" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Pipeline header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -553,16 +659,32 @@ export function VentasPage() {
             )}
           </div>
 
-          {/* Recordings */}
-          {recordings.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              {recordings.map((lead) => (
-                <div key={lead.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, marginTop: 8, cursor: 'pointer' }} onClick={() => window.open(lead.recording_url, '_blank')}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
-                  <span style={{ color: '#8a8c9e', fontSize: 13, flex: 1 }}>Grabación: {lead.lead_nombre}</span>
-                  <span style={{ color: '#c084fc', fontSize: 13, fontWeight: 700 }}>Ver en Fathom →</span>
-                </div>
-              ))}
+          {/* Section 5 — Análisis de Llamadas */}
+          {leadsConGrabacion.length > 0 && (
+            <div className="fade-in visible" style={{ marginBottom: 48, marginTop: 16 }}>
+              <div style={{ marginBottom: 20 }}>
+                <SectionPill text="ANÁLISIS DE LLAMADAS" />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }} className="ventas-recordings-grid">
+                {leadsConGrabacion.map((lead) => (
+                  <div
+                    key={lead.id}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(192,132,252,0.35)'; e.currentTarget.style.background = 'rgba(192,132,252,0.04)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+                    onClick={() => setPlayingVideo({ url: lead.recording_url!, title: lead.lead_nombre })}
+                  >
+                    <div style={{ width: 36, height: 36, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f1f7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.lead_nombre}</div>
+                      {lead.fecha_llamada && <div style={{ fontSize: 12, color: '#555669', marginTop: 2 }}>{formatDate(lead.fecha_llamada)}</div>}
+                    </div>
+                    <span style={{ color: '#c084fc', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>Ver grabación →</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -596,11 +718,14 @@ export function VentasPage() {
         />
       )}
       {previewMaterial && <MaterialPreviewModal material={previewMaterial} onClose={() => setPreviewMaterial(null)} />}
+      {playingVideo && <VideoModal url={playingVideo.url} title={playingVideo.title} onClose={() => setPlayingVideo(null)} />}
 
       <style>{`
         @media (max-width: 900px) {
           .ventas-metrics-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .ventas-mats-grid { grid-template-columns: 1fr !important; }
+          .ventas-charts-grid { grid-template-columns: 1fr !important; }
+          .ventas-recordings-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>
