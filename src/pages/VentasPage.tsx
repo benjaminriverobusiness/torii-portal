@@ -5,8 +5,8 @@ import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import type { Client } from '../types'
 import {
-  BarChart, Bar, LineChart, Line,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, ReferenceLine,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
 // ─── Local types ─────────────────────────────────────────────
@@ -525,7 +525,7 @@ export function VentasPage() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
 
           {/* Hero */}
-          <div className="fade-in visible" style={{ marginBottom: 40 }}>
+          <div className="fade-in visible" style={{ marginBottom: 24 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e5182b', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
               VENTAS
             </div>
@@ -538,7 +538,7 @@ export function VentasPage() {
           </div>
 
           {/* Metrics */}
-          <div className="fade-in ventas-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 40 }}>
+          <div className="fade-in ventas-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
             {[
               { label: 'TOTAL LLAMADAS', value: totalLeads, color: '#f0f1f7', sub: null },
               { label: 'SHOW RATE', value: `${showRate}%`, color: showRateColor, sub: null },
@@ -559,43 +559,50 @@ export function VentasPage() {
               <div style={{ marginBottom: 20 }}>
                 <SectionPill text="GRÁFICOS HISTÓRICOS" />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }} className="ventas-charts-grid">
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Llamadas por mes</div>
-                  <ResponsiveContainer width="100%" height={160}>
-                    <BarChart data={monthlyData} margin={{ top: 0, right: 0, bottom: 0, left: -24 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 12 }} />
-                      <Bar dataKey="llamadas" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Ingresos por mes</div>
-                  <ResponsiveContainer width="100%" height={160}>
-                    <BarChart data={monthlyData} margin={{ top: 0, right: 0, bottom: 0, left: -8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
-                      <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 12 }} formatter={(v) => [`$${Number(v).toLocaleString()}`, 'Ingresos']} />
-                      <Bar dataKey="ingresos" fill="#c9a84c" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 16px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Tasa de cierre %</div>
-                  <ResponsiveContainer width="100%" height={160}>
-                    <LineChart data={monthlyData} margin={{ top: 0, right: 0, bottom: 0, left: -24 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-                      <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 12 }} formatter={(v) => [`${v}%`, 'Close rate']} />
-                      <Line type="monotone" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+
+              {/* Gráfico 1 — Llamadas y cierres */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 24px 16px', marginBottom: 16 }}>
+                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Llamadas por mes</div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="month" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '8px' }} />
+                    <Line type="monotone" dataKey="llamadas" stroke="#60a5fa" strokeWidth={2.5} dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6, fill: '#60a5fa' }} name="Llamadas" />
+                    <Line type="monotone" dataKey="cerrados" stroke="#4ade80" strokeWidth={2.5} dot={{ fill: '#4ade80', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6, fill: '#4ade80' }} name="Cerrados" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Gráfico 2 — Tasa de cierre */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 24px 16px', marginBottom: 16 }}>
+                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Tasa de cierre %</div>
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="month" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
+                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} formatter={(v) => [`${v}%`, 'Close rate %']} />
+                    <ReferenceLine y={25} stroke="rgba(74,222,128,0.5)" strokeDasharray="5 5" label={{ value: 'Objetivo 25%', fill: '#4ade80', fontSize: 10, position: 'insideTopRight' }} />
+                    <Line type="monotone" dataKey="close_rate" stroke="#e5182b" strokeWidth={2.5} dot={{ fill: '#e5182b', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Close rate %" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Gráfico 3 — Ingresos */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 24px 16px', marginBottom: 16 }}>
+                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Ingresos generados ($)</div>
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="month" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
+                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Ingresos']} />
+                    <Line type="monotone" dataKey="ingresos" stroke="#c9a84c" strokeWidth={2.5} dot={{ fill: '#c9a84c', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Ingresos ($)" />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
           )}
