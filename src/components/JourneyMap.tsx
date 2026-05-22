@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { ClientPhase } from '../types'
 
 interface JourneyMapProps {
@@ -7,6 +8,13 @@ interface JourneyMapProps {
 }
 
 export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMapProps) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   if (!phases || phases.length === 0) {
     return (
       <p style={{ color: '#555669', fontSize: 14, textAlign: 'center', padding: '40px 0' }}>
@@ -43,6 +51,75 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
   // The outer station wrapper is at top:0, height≈0 (all children are absolute).
   // CB.bottom = 0. bottom: -X → card bottom at 0 - (-X) = X from JourneyMap top.
   const cardBottomPx = paddingTop - 42
+
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', padding: '0 16px' }}>
+        {/* Vertical connector line */}
+        <div style={{ position: 'absolute', left: '36px', top: 0, bottom: 0, width: '2px', background: 'linear-gradient(to bottom, #e5182b, rgba(229,24,43,0.1))' }} />
+
+        {phases.map((phase, i) => {
+          const status = getStatus(i)
+          const isActive = status === 'active'
+          const isCompleted = status === 'completed'
+          return (
+            <div key={phase.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', paddingBottom: '28px', position: 'relative' }}>
+              {/* Circle */}
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, zIndex: 2,
+                backgroundColor: status === 'future' ? 'rgba(255,255,255,0.04)' : '#e5182b',
+                border: status === 'future' ? '2px solid rgba(255,255,255,0.09)' : 'none',
+                boxShadow: isActive
+                  ? '0 0 20px rgba(229,24,43,0.5), 0 0 40px rgba(229,24,43,0.2)'
+                  : isCompleted ? '0 0 10px rgba(229,24,43,0.3)' : 'none',
+              }}>
+                {isCompleted ? (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8l3.5 3.5L13 5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <span style={{ color: status === 'future' ? '#555669' : 'white', fontWeight: 800, fontSize: 16, fontFamily: 'Bricolage Grotesque, sans-serif' }}>
+                    {phase.phase_order}
+                  </span>
+                )}
+              </div>
+
+              {/* Content */}
+              <div style={{ flex: 1, paddingTop: 6 }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: isActive ? '#f0f1f7' : isCompleted ? '#f0f1f7' : '#555669', marginBottom: '4px' }}>
+                  {phase.phase_name}
+                </div>
+                {isActive && (
+                  <>
+                    <div style={{ fontSize: '12px', color: '#e5182b', fontWeight: 600, marginBottom: '6px' }}>
+                      Día {days_in_phase ?? 1} en esta etapa
+                    </div>
+                    {phase.phase_description && (
+                      <div style={{ fontSize: '13px', color: '#8a8c9e', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                        {phase.phase_description}
+                      </div>
+                    )}
+                  </>
+                )}
+                {isCompleted && (
+                  <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: 700, color: '#4ade80', background: 'rgba(74,222,128,0.1)', borderRadius: 99, padding: '2px 8px' }}>
+                    Completada
+                  </span>
+                )}
+                {!isActive && !isCompleted && phase.phase_description && (
+                  <div style={{ fontSize: '12px', color: '#555669', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {phase.phase_description}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div

@@ -517,14 +517,26 @@ export function Portal() {
         ) : null } catch(e) { console.error('Documents error:', e); return <div style={{color:'red',padding:16}}>Error en Documentos</div> } })()}
 
         {/* HISTORY */}
-        {(() => { try { return registros.length > 0 ? (
+        {(() => { try {
+          const _unique = registros.reduce((acc: Record<string, typeof registros[0]>, reg) => {
+            const k = `${reg.semana}-${reg.año}`
+            if (!acc[k]) acc[k] = reg
+            return acc
+          }, {})
+          const registrosToShow = Object.values(_unique)
+            .sort((a, b) => {
+              if (a.año !== b.año) return (b.año ?? 0) - (a.año ?? 0)
+              return (b.semana ?? 0) - (a.semana ?? 0)
+            })
+            .slice(0, 4)
+          return registrosToShow.length > 0 ? (
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="HISTORIAL DE SEMANAS" />
           <div style={{ position: 'relative' }}>
-            {registros.map((r, i) => (
-              <div key={r.id} style={{ position: 'relative', paddingLeft: 32, paddingBottom: i < registros.length - 1 ? 16 : 0 }}>
+            {registrosToShow.map((r, i) => (
+              <div key={r.id} style={{ position: 'relative', paddingLeft: 32, paddingBottom: i < registrosToShow.length - 1 ? 16 : 0 }}>
                 {/* Timeline vertical line */}
-                {i < registros.length - 1 && (
+                {i < registrosToShow.length - 1 && (
                   <div style={{
                     position: 'absolute', left: 7, top: 20,
                     width: 2, bottom: 0,
