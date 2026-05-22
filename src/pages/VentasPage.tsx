@@ -554,7 +554,7 @@ export function VentasPage() {
           </div>
 
           {/* Section 3 — Gráficos Históricos */}
-          {monthlyData.length > 1 && (
+          {leads.length > 0 && (
             <div className="fade-in visible" style={{ marginBottom: 40 }}>
               <div style={{ marginBottom: 20 }}>
                 <SectionPill text="GRÁFICOS HISTÓRICOS" />
