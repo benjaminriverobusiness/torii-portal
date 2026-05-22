@@ -30,6 +30,16 @@ function pct(val: number | null | undefined) {
   return val > 1 ? val : val * 100
 }
 
+interface SalesMaterialLocal {
+  id: string
+  client_id: string
+  title: string
+  description?: string | null
+  type: string
+  url: string
+  order_index: number
+}
+
 type Tab = 'preview' | 'phases' | 'update'
 
 export function AdminClient() {
@@ -111,6 +121,17 @@ export function AdminClient() {
     notes: '',
   })
 
+  // Analysis videos (sales_materials type='video')
+  const [salesMaterials, setSalesMaterials] = useState<SalesMaterialLocal[]>([])
+  const [addingAnalysisVideo, setAddingAnalysisVideo] = useState(false)
+  const [analysisForm, setAnalysisForm] = useState({ title: '', url: '', description: '' })
+
+  // Client leads (for notes)
+  const [clientLeads, setClientLeads] = useState<Array<{ id: string; lead_nombre: string; fecha_llamada?: string | null; notas?: string | null }>>([])
+  const [expandedLead, setExpandedLead] = useState<string | null>(null)
+  const [editingNotes, setEditingNotes] = useState<Record<string, string>>({})
+  const [notesSaved, setNotesSaved] = useState<Record<string, boolean>>({})
+
   // Form state
   const [activePhaseId, setActivePhaseId] = useState('')
   const [daysInPhase, setDaysInPhase] = useState('')
@@ -154,6 +175,8 @@ export function AdminClient() {
         metricsConfigRes,
         metricsHistoryRes,
         creativesRes,
+        salesMatsRes,
+        leadsRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('id', id).single(),
         supabase
@@ -172,6 +195,8 @@ export function AdminClient() {
         supabase.from('client_metrics_config').select('*').eq('client_id', id).maybeSingle(),
         supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }).limit(8),
         supabase.from('client_creatives').select('*').eq('client_id', id).order('created_at', { ascending: false }),
+        supabase.from('sales_materials').select('*').eq('client_id', id).order('order_index', { ascending: true }),
+        supabase.from('crm_clientes').select('id, lead_nombre, fecha_llamada, notas').eq('client_id', id).order('created_at', { ascending: false }),
       ])
 
       setClient(clientRes.data as Client)
@@ -183,6 +208,8 @@ export function AdminClient() {
       setTemplates((templatesRes.data ?? []) as MetricsTemplate[])
       setMetricsHistory((metricsHistoryRes.data ?? []) as ClientMetrics[])
       setCreatives((creativesRes.data ?? []) as ClientCreative[])
+      setSalesMaterials((salesMatsRes.data ?? []) as SalesMaterialLocal[])
+      setClientLeads((leadsRes.data ?? []) as Array<{ id: string; lead_nombre: string; fecha_llamada?: string | null; notas?: string | null }>)
       if (metricsConfigRes.data) {
         setMetricsConfig(metricsConfigRes.data as ClientMetricsConfig)
       } else {
@@ -494,6 +521,42 @@ export function AdminClient() {
       setCreativeForm({ title: '', type: 'image', channel: '', status: 'active', url: '', cpl: '', ctr: '', notes: '' })
       setAddingCreative(false)
     }
+  }
+
+  async function deleteAnalysisVideo(materialId: string) {
+    if (!window.confirm('¿Eliminar este video?')) return
+    await supabase.from('sales_materials').delete().eq('id', materialId)
+    setSalesMaterials((prev) => prev.filter((m) => m.id !== materialId))
+  }
+
+  async function handleAddAnalysisVideo() {
+    if (!id || !analysisForm.title || !analysisForm.url) return
+    const videoCount = salesMaterials.filter((m) => m.type === 'video').length
+    const { data } = await supabase
+      .from('sales_materials')
+      .insert({
+        client_id: id,
+        title: analysisForm.title,
+        type: 'video',
+        url: analysisForm.url,
+        description: analysisForm.description || null,
+        order_index: videoCount,
+      })
+      .select()
+      .single()
+    if (data) {
+      setSalesMaterials((prev) => [...prev, data as SalesMaterialLocal])
+      setAnalysisForm({ title: '', url: '', description: '' })
+      setAddingAnalysisVideo(false)
+    }
+  }
+
+  async function handleSaveNotes(leadId: string) {
+    const notes = editingNotes[leadId] ?? ''
+    await supabase.from('crm_clientes').update({ notas: notes }).eq('id', leadId)
+    setClientLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, notas: notes } : l))
+    setNotesSaved((prev) => ({ ...prev, [leadId]: true }))
+    setTimeout(() => setNotesSaved((prev) => ({ ...prev, [leadId]: false })), 2000)
   }
 
   const inputStyle: React.CSSProperties = {
@@ -1846,6 +1909,135 @@ export function AdminClient() {
               )}
             </div>
             )}
+
+            {/* ANÁLISIS DE LLAMADAS */}
+            <div style={{ marginBottom: 32 }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', marginTop: '32px' }}>
+                ANÁLISIS DE LLAMADAS
+              </p>
+
+              {salesMaterials.filter((m) => m.type === 'video').map((m) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '8px' }}>
+                  <span style={{ background: '#071228', color: '#60a5fa', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '4px', flexShrink: 0 }}>Video</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: '#f0f1f7', fontSize: 13, fontWeight: 700 }}>{m.title}</div>
+                    {m.description && <div style={{ color: '#555669', fontSize: 11, marginTop: 2 }}>{m.description}</div>}
+                    <div style={{ color: '#555669', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{m.url}</div>
+                  </div>
+                  <button
+                    onClick={() => deleteAnalysisVideo(m.id)}
+                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 16, padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}
+                  >✕</button>
+                </div>
+              ))}
+
+              {addingAnalysisVideo ? (
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={labelStyle}>Título del video *</label>
+                    <input
+                      value={analysisForm.title}
+                      onChange={(e) => setAnalysisForm((p) => ({ ...p, title: e.target.value }))}
+                      style={inputStyle}
+                      placeholder="Ej: Análisis llamada semana 3"
+                    />
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={labelStyle}>URL del video (YouTube o Loom) *</label>
+                    <input
+                      value={analysisForm.url}
+                      onChange={(e) => setAnalysisForm((p) => ({ ...p, url: e.target.value }))}
+                      style={inputStyle}
+                      placeholder="https://youtube.com/... o https://loom.com/share/..."
+                    />
+                  </div>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={labelStyle}>Descripción (opcional)</label>
+                    <textarea
+                      value={analysisForm.description}
+                      onChange={(e) => setAnalysisForm((p) => ({ ...p, description: e.target.value }))}
+                      rows={2}
+                      style={{ ...inputStyle, resize: 'vertical' }}
+                      placeholder="Puntos clave analizados en este video..."
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={handleAddAnalysisVideo}
+                      style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      Agregar
+                    </button>
+                    <button
+                      onClick={() => { setAddingAnalysisVideo(false); setAnalysisForm({ title: '', url: '', description: '' }) }}
+                      style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddingAnalysisVideo(true)}
+                  style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', color: '#555669', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                >
+                  + Agregar video de análisis
+                </button>
+              )}
+
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', marginTop: '24px' }}>
+                NOTAS DE LLAMADAS
+              </p>
+              <p style={{ color: '#555669', fontSize: '12px', marginBottom: '12px', marginTop: 0 }}>
+                Agregá notas de feedback para cada llamada del pipeline del cliente.
+              </p>
+
+              {clientLeads.length === 0 ? (
+                <div style={{ color: '#555669', fontSize: 13 }}>No hay llamadas registradas todavía.</div>
+              ) : (
+                clientLeads.map((lead) => {
+                  const isExpanded = expandedLead === lead.id
+                  return (
+                    <div key={lead.id}>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: isExpanded ? '10px 10px 0 0' : '10px', cursor: 'pointer', marginBottom: isExpanded ? 0 : '8px' }}
+                        onClick={() => setExpandedLead(isExpanded ? null : lead.id)}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
+                          {lead.fecha_llamada && <div style={{ color: '#555669', fontSize: 12 }}>{formatDate(lead.fecha_llamada)}</div>}
+                        </div>
+                        <span style={{ color: '#555669', fontSize: 16 }}>{isExpanded ? '↑' : '↓'}</span>
+                      </div>
+                      {isExpanded && (
+                        <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderTop: 'none', borderRadius: '0 0 10px 10px', marginBottom: '8px' }}>
+                          <textarea
+                            value={editingNotes[lead.id] ?? lead.notas ?? ''}
+                            onChange={(e) => setEditingNotes((prev) => ({ ...prev, [lead.id]: e.target.value }))}
+                            rows={4}
+                            style={{ ...inputStyle, resize: 'vertical', marginBottom: 12 }}
+                            placeholder="Notas de feedback para esta llamada..."
+                          />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <button
+                              onClick={() => handleSaveNotes(lead.id)}
+                              style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            >
+                              Guardar notas
+                            </button>
+                            {notesSaved[lead.id] && (
+                              <span style={{ color: '#4ade80', fontSize: 13, fontWeight: 600 }}>✓ Guardado</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
+            </div>
 
             <button
               onClick={handleSave}
