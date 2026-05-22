@@ -276,7 +276,7 @@ export function Admin() {
                           <div style={{ color: '#555669', fontSize: 12, marginTop: 2 }}>{client.email}</div>
                         </td>
                         <td style={{ padding: '14px 20px', display: isMobile ? 'none' : undefined }}>
-                          <PlatformBadge platform={client.platform} />
+                          <PlatformBadge platform={client.canal ?? null} />
                         </td>
                         <td style={{ padding: '14px 20px', color: '#8a8c9e', fontSize: 13, display: isMobile ? 'none' : undefined }}>
                           {client.fase ?? '—'}

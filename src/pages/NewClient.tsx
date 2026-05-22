@@ -39,7 +39,7 @@ export function NewClient() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [country, setCountry] = useState('')
-  const [platform, setPlatform] = useState('Meta Ads')
+  const [canal, setCanal] = useState('Meta Ads')
   const [startDate, setStartDate] = useState('')
   const [cpbcObjective, setCpbcObjective] = useState('')
 
@@ -58,7 +58,7 @@ export function NewClient() {
           name,
           email,
           country: country || null,
-          platform,
+          canal,
           start_date: startDate || null,
           status: 'active',
           fase: 'Fundación',
@@ -192,7 +192,7 @@ export function NewClient() {
             </div>
             <div style={{ marginBottom: 16 }}>
               <label style={labelStyle}>Canal</label>
-              <select value={platform} onChange={(e) => setPlatform(e.target.value)} style={{ ...inputStyle, backgroundColor: '#0d0e17' }}>
+              <select value={canal} onChange={(e) => setCanal(e.target.value)} style={{ ...inputStyle, backgroundColor: '#0d0e17' }}>
                 <option>Meta Ads</option>
                 <option>LinkedIn Outbound</option>
                 <option>Híbrido</option>

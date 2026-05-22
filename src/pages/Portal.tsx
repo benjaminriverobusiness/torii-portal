@@ -285,7 +285,7 @@ export function Portal() {
     return value <= 1 ? value * 100 : value
   }
 
-  const platform = client?.platform
+  const platform = client?.canal
   const kpiAgendas: number | null = latestMetrics
     ? platform === 'Meta Ads'
       ? (latestMetrics.ads_bookings ?? null)
@@ -386,7 +386,7 @@ export function Portal() {
                   {activePhase?.phase_description ?? ''}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <PlatformBadge platform={client?.platform ?? null} />
+                  <PlatformBadge platform={client?.canal ?? null} />
                   {client?.country && (
                     <span style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8a8c9e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>
                       {client.country}

@@ -15,6 +15,7 @@ export interface Client {
   status: string
   country: string | null
   platform: string | null
+  canal?: string
   fase: string | null
   profile_id: string
   installment_amount: number | null
