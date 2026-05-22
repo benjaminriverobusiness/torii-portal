@@ -44,6 +44,12 @@ function PhaseCard({
   isFuture: boolean
   days_in_phase: number | null | undefined
 }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
   const borderColor = isActive
     ? 'rgba(229,24,43,0.4)'
     : isCompleted
@@ -65,7 +71,7 @@ function PhaseCard({
       style={{
         display: 'flex',
         gap: 24,
-        padding: '28px 32px',
+        padding: isMobile ? '20px 16px' : '28px 32px',
         borderRadius: 16,
         marginBottom: 12,
         border: `1px solid ${borderColor}`,
@@ -141,12 +147,12 @@ function PhaseCard({
       {/* Right column — content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Top row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: isMobile ? 6 : undefined, marginBottom: 10 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: labelColor, marginBottom: 4 }}>
               Etapa {phase.phase_order}
             </div>
-            <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 700, color: nameColor }}>
+            <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(16px, 3vw, 20px)', fontWeight: 700, color: nameColor, wordBreak: 'break-word' }}>
               {phase.phase_name}
             </div>
           </div>
@@ -163,7 +169,7 @@ function PhaseCard({
                 padding: '4px 12px',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
-                marginLeft: 12,
+                marginLeft: isMobile ? 0 : 12,
               }}
             >
               DÍA {days_in_phase} EN ESTA ETAPA

@@ -235,23 +235,27 @@ export function Admin() {
               <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#0d0e17' }}>
-                    {['CLIENTE', 'PLATAFORMA', 'FASE', 'DÍA', 'ESTADO', 'ACTUALIZADO', 'ACCIÓN'].map((col) => (
-                      <th
-                        key={col}
-                        style={{
-                          padding: '12px 20px',
-                          textAlign: 'left',
-                          color: '#555669',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.08em',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {col}
-                      </th>
-                    ))}
+                    {['CLIENTE', 'PLATAFORMA', 'FASE', 'DÍA', 'ESTADO', 'ACTUALIZADO', 'ACCIÓN'].map((col) => {
+                      const mobileHidden = ['PLATAFORMA', 'FASE', 'ESTADO', 'ACTUALIZADO'].includes(col)
+                      return (
+                        <th
+                          key={col}
+                          style={{
+                            padding: '12px 20px',
+                            textAlign: 'left',
+                            color: '#555669',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                            whiteSpace: 'nowrap',
+                            display: isMobile && mobileHidden ? 'none' : undefined,
+                          }}
+                        >
+                          {col}
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>
@@ -271,20 +275,20 @@ export function Admin() {
                           <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600 }}>{client.name}</div>
                           <div style={{ color: '#555669', fontSize: 12, marginTop: 2 }}>{client.email}</div>
                         </td>
-                        <td style={{ padding: '14px 20px' }}>
+                        <td style={{ padding: '14px 20px', display: isMobile ? 'none' : undefined }}>
                           <PlatformBadge platform={client.platform} />
                         </td>
-                        <td style={{ padding: '14px 20px', color: '#8a8c9e', fontSize: 13 }}>
+                        <td style={{ padding: '14px 20px', color: '#8a8c9e', fontSize: 13, display: isMobile ? 'none' : undefined }}>
                           {client.fase ?? '—'}
                         </td>
                         <td style={{ padding: '14px 20px', color: '#f0f1f7', fontSize: 13 }}>
                           {daysActive(client.start_date)}
                           <span style={{ color: '#555669' }}>/90</span>
                         </td>
-                        <td style={{ padding: '14px 20px' }}>
+                        <td style={{ padding: '14px 20px', display: isMobile ? 'none' : undefined }}>
                           <StatusBadge status={client.status} />
                         </td>
-                        <td style={{ padding: '14px 20px', fontSize: 13 }}>
+                        <td style={{ padding: '14px 20px', fontSize: 13, display: isMobile ? 'none' : undefined }}>
                           {st ? (
                             <span style={{ color: '#8a8c9e' }}>{formatDate(st.updated_at)}</span>
                           ) : (
