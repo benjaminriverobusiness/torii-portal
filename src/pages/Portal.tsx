@@ -38,10 +38,10 @@ function formatDate(dateStr: string | null | undefined): string {
 
 function formatWeekRange(start?: string, end?: string): string {
   if (!start) return ''
-  const s = new Date(start)
+  const s = new Date(start + 'T12:00:00')
   const sStr = `${s.getDate().toString().padStart(2, '0')}/${(s.getMonth() + 1).toString().padStart(2, '0')}`
   if (!end) return sStr
-  const e = new Date(end)
+  const e = new Date(end + 'T12:00:00')
   const eStr = `${e.getDate().toString().padStart(2, '0')}/${(e.getMonth() + 1).toString().padStart(2, '0')}/${e.getFullYear()}`
   return `${sStr} — ${eStr}`
 }
