@@ -59,6 +59,13 @@ export function AdminClient() {
   const [registros, setRegistros] = useState<RegistroSemanal[]>([])
   const [history, setHistory] = useState<ClientPortalStatus[]>([])
 
+  // Copy phases state
+  const [showCopyModal, setShowCopyModal] = useState(false)
+  const [copyTargetClientId, setCopyTargetClientId] = useState('')
+  const [allClients, setAllClients] = useState<{ id: string; name: string }[]>([])
+  const [copying, setCopying] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false)
+
   // Metrics state
   const [templates, setTemplates] = useState<MetricsTemplate[]>([])
   const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig>({
@@ -203,6 +210,7 @@ export function AdminClient() {
         salesMatsRes,
         leadsRes,
         liAccountsRes,
+        allClientsRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('id', id).single(),
         supabase
@@ -224,6 +232,7 @@ export function AdminClient() {
         supabase.from('sales_materials').select('*').eq('client_id', id).order('order_index', { ascending: true }),
         supabase.from('crm_clientes').select('id, lead_nombre, fecha_llamada, notas').eq('client_id', id).order('created_at', { ascending: false }),
         supabase.from('li_account_metrics').select('*').eq('client_id', id).eq('week_number', weekForm.week_number).eq('year', weekForm.year).order('account_name'),
+        supabase.from('clients').select('id, name').neq('id', id).order('name'),
       ])
 
       const clientData = clientRes.data as Client
@@ -240,6 +249,7 @@ export function AdminClient() {
       setSalesMaterials((salesMatsRes.data ?? []) as SalesMaterialLocal[])
       setClientLeads((leadsRes.data ?? []) as Array<{ id: string; lead_nombre: string; fecha_llamada?: string | null; notas?: string | null }>)
       setLiAccounts((liAccountsRes.data ?? []) as LiAccountMetric[])
+      setAllClients((allClientsRes.data ?? []) as { id: string; name: string }[])
       if (metricsConfigRes.data) {
         setMetricsConfig(metricsConfigRes.data as ClientMetricsConfig)
       } else {
@@ -623,6 +633,32 @@ export function AdminClient() {
     setLiAccounts((prev) => prev.filter((a) => a.id !== accountId))
   }
 
+  async function handleCopyPhases() {
+    if (!copyTargetClientId) return
+    setCopying(true)
+    try {
+      await supabase.from('client_phases').delete().eq('client_id', copyTargetClientId)
+      const newPhases = phases.map(phase => ({
+        client_id: copyTargetClientId,
+        phase_order: phase.phase_order,
+        phase_name: phase.phase_name,
+        phase_description: phase.phase_description || null,
+        video_url: phase.video_url || null,
+      }))
+      await supabase.from('client_phases').insert(newPhases)
+      setCopySuccess(true)
+      setTimeout(() => {
+        setCopySuccess(false)
+        setShowCopyModal(false)
+        setCopyTargetClientId('')
+      }, 2000)
+    } catch (err) {
+      console.error('Error copiando fases:', err)
+    } finally {
+      setCopying(false)
+    }
+  }
+
   async function handleSaveLiAccountEdit(accountId: string) {
     await supabase.from('li_account_metrics').update({
       account_name: editingLiAccountForm.account_name,
@@ -878,6 +914,102 @@ export function AdminClient() {
                 {error}
               </div>
             )}
+
+            {/* Botón copiar etapas */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <button
+                onClick={() => setShowCopyModal(true)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: '#8a8c9e',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  fontFamily: 'DM Sans, sans-serif',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f0f1f7' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#8a8c9e' }}
+              >
+                Copiar etapas a otro cliente
+              </button>
+            </div>
+
+            {/* Modal copiar etapas */}
+            {showCopyModal && (
+              <div
+                style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+                onClick={() => setShowCopyModal(false)}
+              >
+                <div
+                  style={{ width: '100%', maxWidth: '480px', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '32px' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {copySuccess ? (
+                    <div style={{ color: '#4ade80', fontSize: '16px', fontWeight: 700, textAlign: 'center', padding: '24px 0' }}>
+                      ✓ Etapas copiadas exitosamente
+                    </div>
+                  ) : (
+                    <>
+                      <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: '20px', fontWeight: 800, color: '#f0f1f7', margin: '0 0 8px' }}>
+                        Copiar etapas a otro cliente
+                      </h2>
+                      <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 24px' }}>
+                        Las etapas actuales del cliente destino serán reemplazadas.
+                      </p>
+
+                      <p style={{ color: '#8a8c9e', fontSize: '13px', margin: '0 0 12px' }}>
+                        Se copiarán estas {phases.length} etapas:
+                      </p>
+                      <div style={{ marginBottom: '8px' }}>
+                        {phases.map((phase) => (
+                          <div key={phase.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '6px 0' }}>
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5182b', color: 'white', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              {phase.phase_order}
+                            </div>
+                            <span style={{ color: '#f0f1f7', fontSize: '14px' }}>{phase.phase_name}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.07)', margin: '20px 0' }} />
+
+                      <label style={{ display: 'block', color: '#8a8c9e', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+                        Copiar a:
+                      </label>
+                      <select
+                        value={copyTargetClientId}
+                        onChange={(e) => setCopyTargetClientId(e.target.value)}
+                        style={{ width: '100%', background: '#080910', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px 14px', color: '#f0f1f7', fontSize: '14px', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                      >
+                        <option value="">Seleccionar cliente...</option>
+                        {allClients.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+
+                      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+                        <button
+                          onClick={() => setShowCopyModal(false)}
+                          style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: '#f0f1f7', fontSize: '14px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleCopyPhases}
+                          disabled={!copyTargetClientId || copying}
+                          style={{ padding: '10px 20px', backgroundColor: '#e5182b', border: 'none', borderRadius: '8px', color: 'white', fontSize: '14px', fontWeight: 600, cursor: !copyTargetClientId || copying ? 'not-allowed' : 'pointer', opacity: copying ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          {copying ? 'Copiando...' : 'Copiar etapas →'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
             {phases.map((phase, i) => (
               <div
                 key={phase.id}
