@@ -310,7 +310,11 @@ export function AdminClient() {
         )
       }
 
-      await supabase.from('clients').update({ contract_days: contractDays }).eq('id', id)
+      const { error: contractDaysError } = await supabase
+        .from('clients')
+        .update({ contract_days: parseInt(String(contractDays), 10) })
+        .eq('id', id)
+      console.log('contract_days update:', { error: contractDaysError })
 
       setNewVideos([])
       setNewDocs([])
