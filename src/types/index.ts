@@ -19,6 +19,7 @@ export interface Client {
   fase: string | null
   profile_id: string
   installment_amount: number | null
+  contract_days?: number
 }
 
 export interface ClientPortalStatus {

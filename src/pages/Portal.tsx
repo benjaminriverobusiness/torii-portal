@@ -306,7 +306,8 @@ export function Portal() {
     } catch { return 0 }
   })()
 
-  const progress = Math.min(daysActive / 90, 1)
+  const contractDuration = client?.contract_days || 90
+  const progress = Math.min(daysActive / contractDuration, 1)
   const circumference = 2 * Math.PI * 52
 
   const latestRegistro = registros[0]
@@ -439,7 +440,7 @@ export function Portal() {
                 }}>
                   {daysActive}
                 </div>
-                <div style={{ color: '#555669', fontSize: 13, letterSpacing: '0.06em' }}>DE 90</div>
+                <div style={{ color: '#555669', fontSize: 13, letterSpacing: '0.06em' }}>DE {contractDuration}</div>
 
                 <div style={{ marginTop: 20 }}>
                   <svg width="110" height="110" viewBox="0 0 120 120">
@@ -459,7 +460,7 @@ export function Portal() {
                       }}
                     />
                     <text x="60" y="60" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="17" fontWeight="700" fontFamily="Bricolage Grotesque, sans-serif">
-                      {Math.round(progress * 100)}%
+                      {Math.round(daysActive / contractDuration * 100)}%
                     </text>
                   </svg>
                 </div>

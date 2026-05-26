@@ -149,6 +149,7 @@ export function AdminClient() {
   const [currentWin, setCurrentWin] = useState('')
   const [nextStep, setNextStep] = useState('')
   const [lastCallDate, setLastCallDate] = useState('')
+  const [contractDays, setContractDays] = useState<number>(90)
 
   // New video form
   const [newVideos, setNewVideos] = useState<Partial<ClientVideo>[]>([])
@@ -225,7 +226,9 @@ export function AdminClient() {
         supabase.from('li_account_metrics').select('*').eq('client_id', id).eq('week_number', weekForm.week_number).eq('year', weekForm.year).order('account_name'),
       ])
 
-      setClient(clientRes.data as Client)
+      const clientData = clientRes.data as Client
+      setClient(clientData)
+      setContractDays(clientData.contract_days || 90)
       setPhases((phasesRes.data ?? []) as ClientPhase[])
       setVideos((videosRes.data ?? []) as ClientVideo[])
       setDocuments((docsRes.data ?? []) as Document[])
@@ -306,6 +309,8 @@ export function AdminClient() {
           validDocs.map((d) => ({ ...d, client_id: id }))
         )
       }
+
+      await supabase.from('clients').update({ contract_days: contractDays }).eq('id', id)
 
       setNewVideos([])
       setNewDocs([])
@@ -1716,6 +1721,10 @@ export function AdminClient() {
                 <div>
                   <label style={labelStyle}>Días en esta etapa</label>
                   <input type="number" value={daysInPhase} onChange={(e) => setDaysInPhase(e.target.value)} style={inputStyle} min="0" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Duración del contrato (días)</label>
+                  <input type="number" value={contractDays} onChange={(e) => setContractDays(parseInt(e.target.value) || 90)} style={inputStyle} min="1" />
                 </div>
               </div>
             </div>
