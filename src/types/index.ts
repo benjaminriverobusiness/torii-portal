@@ -155,6 +155,23 @@ export interface ClientCreative {
   updated_at: string
 }
 
+export interface LiAccountMetric {
+  id: string
+  client_id: string
+  week_number: number
+  year: number
+  week_start: string
+  account_name: string
+  accept_rate?: number
+  reply_rate?: number
+  offer_rate?: number
+  calendly_rate?: number
+  booking_rate?: number
+  bookings?: number
+  created_at: string
+  updated_at: string
+}
+
 export interface MetricsTemplate {
   id: string
   name: string

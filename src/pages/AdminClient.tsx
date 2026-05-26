@@ -18,6 +18,7 @@ import type {
   ClientMetricsConfig,
   MetricsTemplate,
   ClientCreative,
+  LiAccountMetric,
 } from '../types'
 
 function formatDate(d: string | null | undefined) {
@@ -107,6 +108,11 @@ export function AdminClient() {
   const [weekSaveSuccess, setWeekSaveSuccess] = useState(false)
   const [confirmDeleteHistoryId, setConfirmDeleteHistoryId] = useState<string | null>(null)
 
+  // LinkedIn multi-account state
+  const [liAccounts, setLiAccounts] = useState<LiAccountMetric[]>([])
+  const [newLiAccount, setNewLiAccount] = useState({ account_name: '', accept_rate: '', reply_rate: '', offer_rate: '', calendly_rate: '', booking_rate: '', bookings: '' })
+  const [addingLiAccount, setAddingLiAccount] = useState(false)
+
   // Creatives state
   const [creatives, setCreatives] = useState<ClientCreative[]>([])
   const [addingCreative, setAddingCreative] = useState(false)
@@ -160,6 +166,21 @@ export function AdminClient() {
     loadAll()
   }, [id])
 
+  useEffect(() => {
+    if (!id) return
+    async function reloadLiAccounts() {
+      const { data } = await supabase
+        .from('li_account_metrics')
+        .select('*')
+        .eq('client_id', id)
+        .eq('week_number', weekForm.week_number)
+        .eq('year', weekForm.year)
+        .order('account_name')
+      setLiAccounts((data ?? []) as LiAccountMetric[])
+    }
+    reloadLiAccounts()
+  }, [id, weekForm.week_number, weekForm.year])
+
   async function loadAll() {
     setLoading(true)
     try {
@@ -177,6 +198,7 @@ export function AdminClient() {
         creativesRes,
         salesMatsRes,
         leadsRes,
+        liAccountsRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('id', id).single(),
         supabase
@@ -197,6 +219,7 @@ export function AdminClient() {
         supabase.from('client_creatives').select('*').eq('client_id', id).order('created_at', { ascending: false }),
         supabase.from('sales_materials').select('*').eq('client_id', id).order('order_index', { ascending: true }),
         supabase.from('crm_clientes').select('id, lead_nombre, fecha_llamada, notas').eq('client_id', id).order('created_at', { ascending: false }),
+        supabase.from('li_account_metrics').select('*').eq('client_id', id).eq('week_number', weekForm.week_number).eq('year', weekForm.year).order('account_name'),
       ])
 
       setClient(clientRes.data as Client)
@@ -210,6 +233,7 @@ export function AdminClient() {
       setCreatives((creativesRes.data ?? []) as ClientCreative[])
       setSalesMaterials((salesMatsRes.data ?? []) as SalesMaterialLocal[])
       setClientLeads((leadsRes.data ?? []) as Array<{ id: string; lead_nombre: string; fecha_llamada?: string | null; notas?: string | null }>)
+      setLiAccounts((liAccountsRes.data ?? []) as LiAccountMetric[])
       if (metricsConfigRes.data) {
         setMetricsConfig(metricsConfigRes.data as ClientMetricsConfig)
       } else {
@@ -549,6 +573,38 @@ export function AdminClient() {
       setAnalysisForm({ title: '', url: '', description: '' })
       setAddingAnalysisVideo(false)
     }
+  }
+
+  async function handleAddLiAccount() {
+    if (!id || !newLiAccount.account_name) return
+    await supabase.from('li_account_metrics').insert({
+      client_id: id,
+      week_number: weekForm.week_number,
+      year: weekForm.year,
+      week_start: weekForm.week_start,
+      account_name: newLiAccount.account_name,
+      accept_rate: newLiAccount.accept_rate ? parseFloat(newLiAccount.accept_rate) : null,
+      reply_rate: newLiAccount.reply_rate ? parseFloat(newLiAccount.reply_rate) : null,
+      offer_rate: newLiAccount.offer_rate ? parseFloat(newLiAccount.offer_rate) : null,
+      calendly_rate: newLiAccount.calendly_rate ? parseFloat(newLiAccount.calendly_rate) : null,
+      booking_rate: newLiAccount.booking_rate ? parseFloat(newLiAccount.booking_rate) : null,
+      bookings: newLiAccount.bookings ? parseInt(newLiAccount.bookings) : null,
+    })
+    const { data } = await supabase
+      .from('li_account_metrics')
+      .select('*')
+      .eq('client_id', id)
+      .eq('week_number', weekForm.week_number)
+      .eq('year', weekForm.year)
+      .order('account_name')
+    setLiAccounts((data ?? []) as LiAccountMetric[])
+    setNewLiAccount({ account_name: '', accept_rate: '', reply_rate: '', offer_rate: '', calendly_rate: '', booking_rate: '', bookings: '' })
+    setAddingLiAccount(false)
+  }
+
+  async function handleDeleteLiAccount(accountId: string) {
+    await supabase.from('li_account_metrics').delete().eq('id', accountId)
+    setLiAccounts((prev) => prev.filter((a) => a.id !== accountId))
   }
 
   async function handleSaveNotes(leadId: string) {
@@ -1299,30 +1355,121 @@ export function AdminClient() {
 
               {metricsConfig.show_li_section && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ color: '#8a8c9e', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    LinkedIn
+                  <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                    CUENTAS DE LINKEDIN
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    {([
-                      ['li_accept_rate', 'Accept rate (%)'],
-                      ['li_reply_rate', 'Reply rate (%)'],
-                      ['li_offer_rate', 'Offer rate (%)'],
-                      ['li_calendly_rate', 'Calendly rate (%)'],
-                      ['li_booking_rate', 'Booking rate (%)'],
-                      ['li_bookings', 'Agendas'],
-                    ] as [keyof typeof weekForm, string][]).map(([key, label]) => (
-                      <div key={key}>
-                        <label style={labelStyle}>{label}</label>
+
+                  {/* Resumen automático */}
+                  {liAccounts.length > 0 && (() => {
+                    const avgField = (field: keyof LiAccountMetric) => {
+                      const vals = liAccounts.map(a => a[field] as number).filter(v => v != null && v > 0)
+                      return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10 : null
+                    }
+                    const totalBookings = liAccounts.reduce((sum, a) => sum + (a.bookings || 0), 0)
+                    return (
+                      <div style={{ backgroundColor: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#c084fc', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>PROMEDIOS CALCULADOS</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                          {(['accept_rate', 'reply_rate', 'offer_rate', 'calendly_rate', 'booking_rate'] as (keyof LiAccountMetric)[]).map(field => {
+                            const val = avgField(field)
+                            return (
+                              <div key={field} style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 12px' }}>
+                                <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{String(field).replace('_rate', ' rate').replace('_', ' ')}</div>
+                                <div style={{ fontSize: 18, fontWeight: 700, color: val != null ? '#c084fc' : '#333' }}>{val != null ? `${val}%` : '—'}</div>
+                              </div>
+                            )
+                          })}
+                          <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 12px' }}>
+                            <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>agendas total</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: '#c084fc' }}>{totalBookings}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Lista de cuentas */}
+                  {liAccounts.map(account => (
+                    <div key={account.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{account.account_name}</span>
+                        <button onClick={() => handleDeleteLiAccount(account.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>✕</button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                        {[
+                          { label: 'Accept rate', value: account.accept_rate },
+                          { label: 'Reply rate', value: account.reply_rate },
+                          { label: 'Offer rate', value: account.offer_rate },
+                          { label: 'Calendly rate', value: account.calendly_rate },
+                          { label: 'Booking rate', value: account.booking_rate },
+                          { label: 'Agendas', value: account.bookings, noSuffix: true },
+                        ].map(({ label, value, noSuffix }) => (
+                          <div key={label}>
+                            <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>{label}</div>
+                            <div style={{ fontSize: 14, color: value != null ? '#8a8c9e' : '#555669' }}>{value != null ? `${value}${noSuffix ? '' : '%'}` : '—'}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Form nueva cuenta */}
+                  {addingLiAccount ? (
+                    <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 16, marginBottom: 8 }}>
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={labelStyle}>Nombre de cuenta *</label>
                         <input
-                          type="number"
-                          value={weekForm[key] as string}
-                          onChange={(e) => setWeekForm((p) => ({ ...p, [key]: e.target.value }))}
+                          type="text"
+                          placeholder="Ej: Cuenta Daniela"
+                          value={newLiAccount.account_name}
+                          onChange={(e) => setNewLiAccount(p => ({ ...p, account_name: e.target.value }))}
                           style={inputStyle}
-                          step="any"
                         />
                       </div>
-                    ))}
-                  </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                        {([
+                          ['accept_rate', 'Accept rate (%)'],
+                          ['reply_rate', 'Reply rate (%)'],
+                          ['offer_rate', 'Offer rate (%)'],
+                          ['calendly_rate', 'Calendly rate (%)'],
+                          ['booking_rate', 'Booking rate (%)'],
+                          ['bookings', 'Agendas'],
+                        ] as [keyof typeof newLiAccount, string][]).map(([key, label]) => (
+                          <div key={key}>
+                            <label style={labelStyle}>{label}</label>
+                            <input
+                              type="number"
+                              value={newLiAccount[key]}
+                              onChange={(e) => setNewLiAccount(p => ({ ...p, [key]: e.target.value }))}
+                              style={inputStyle}
+                              step="any"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={handleAddLiAccount}
+                          style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          Agregar cuenta
+                        </button>
+                        <button
+                          onClick={() => { setAddingLiAccount(false); setNewLiAccount({ account_name: '', accept_rate: '', reply_rate: '', offer_rate: '', calendly_rate: '', booking_rate: '', bookings: '' }) }}
+                          style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setAddingLiAccount(true)}
+                      style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', color: '#555669', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      + Agregar cuenta
+                    </button>
+                  )}
                 </div>
               )}
 

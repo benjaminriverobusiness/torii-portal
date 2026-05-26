@@ -12,12 +12,14 @@ import {
   ReferenceLine,
   LineChart,
 } from 'recharts'
-import type { ClientMetrics, ClientMetricsConfig } from '../types'
+import { useState } from 'react'
+import type { ClientMetrics, ClientMetricsConfig, LiAccountMetric } from '../types'
 
 interface MetricsSectionProps {
   metrics: ClientMetrics[]
   config: ClientMetricsConfig | null
   cpbc_objective?: number
+  liAccountMetrics?: LiAccountMetric[]
 }
 
 const tooltipContentStyle = {
@@ -162,7 +164,8 @@ function ChartBox({
   )
 }
 
-export function MetricsSection({ metrics, config, cpbc_objective }: MetricsSectionProps) {
+export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetrics = [] }: MetricsSectionProps) {
+  const [liDetailOpen, setLiDetailOpen] = useState(false)
   if (!config || (!config.show_ads_section && !config.show_li_section)) return null
 
   if (metrics.length === 0) {
@@ -428,6 +431,95 @@ export function MetricsSection({ metrics, config, cpbc_objective }: MetricsSecti
             <SectionPill text="PROSPECCIÓN — LINKEDIN" />
           </div>
 
+          {liAccountMetrics.length > 0 ? (() => {
+            const avgField = (field: keyof LiAccountMetric) => {
+              const vals = liAccountMetrics
+                .map(a => a[field] as number)
+                .filter(v => v != null && v > 0)
+              return vals.length > 0
+                ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10
+                : null
+            }
+            const totalBookings = liAccountMetrics.reduce((sum, a) => sum + (a.bookings || 0), 0)
+            const liMetricFields: { key: keyof LiAccountMetric; label: string }[] = [
+              { key: 'accept_rate', label: 'ACCEPT RATE' },
+              { key: 'reply_rate', label: 'REPLY RATE' },
+              { key: 'offer_rate', label: 'OFFER RATE' },
+              { key: 'calendly_rate', label: 'CALENDLY RATE' },
+              { key: 'booking_rate', label: 'BOOKING RATE' },
+            ]
+            return (
+              <div style={{ marginBottom: '32px' }}>
+                {/* Promedios calculados */}
+                <div style={{
+                  backgroundColor: 'rgba(192,132,252,0.06)',
+                  border: '1px solid rgba(192,132,252,0.2)',
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  marginBottom: 16,
+                }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#c084fc', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
+                    PROMEDIOS CALCULADOS
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                    {liMetricFields.map(({ key, label }) => {
+                      const val = avgField(key)
+                      return (
+                        <div key={key} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 14px' }}>
+                          <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{label}</div>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: val != null ? '#c084fc' : '#333', fontFamily: 'Bricolage Grotesque, sans-serif' }}>
+                            {val != null ? `${val}%` : '—'}
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 14px' }}>
+                      <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>AGENDAS TOTALES</div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: '#c084fc', fontFamily: 'Bricolage Grotesque, sans-serif' }}>
+                        {totalBookings}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ver detalle por cuenta */}
+                <button
+                  onClick={() => setLiDetailOpen(v => !v)}
+                  style={{ background: 'transparent', border: 'none', color: '#c084fc', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 16, padding: 0, fontFamily: 'DM Sans, sans-serif' }}
+                >
+                  {liDetailOpen ? 'Ocultar detalle por cuenta ↑' : 'Ver detalle por cuenta ↓'}
+                </button>
+
+                {liDetailOpen && (
+                  <div style={{ marginTop: 12, overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr>
+                          {['CUENTA', 'ACCEPT %', 'REPLY %', 'OFFER %', 'BOOKING %', 'AGENDAS'].map(h => (
+                            <th key={h} style={{ textAlign: 'left', color: '#555669', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {liAccountMetrics.map((a, i) => (
+                          <tr key={a.id} style={{ backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
+                            <td style={{ padding: '8px 12px', color: '#f0f1f7', fontWeight: 600 }}>{a.account_name}</td>
+                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.accept_rate != null ? `${a.accept_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.reply_rate != null ? `${a.reply_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.offer_rate != null ? `${a.offer_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.booking_rate != null ? `${a.booking_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.bookings ?? '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )
+          })() : (
           <div
             style={{
               display: 'grid',
@@ -475,6 +567,7 @@ export function MetricsSection({ metrics, config, cpbc_objective }: MetricsSecti
               <MetricCard label="AGENDAS GENERADAS" value={last.li_bookings} color="#f0f1f7" />
             )}
           </div>
+          )}
 
           {/* Gráfico 4 — Agendas LI */}
           <ChartBox title="Agendas por semana">

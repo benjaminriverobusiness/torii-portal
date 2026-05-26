@@ -9,7 +9,7 @@ import { Spinner } from '../components/Spinner'
 import { MetricsSection } from '../components/MetricsSection'
 import { useClient } from '../hooks/useClient'
 import { supabase } from '../lib/supabase'
-import type { HitosCliente, ClientMetrics, ClientMetricsConfig } from '../types'
+import type { HitosCliente, ClientMetrics, ClientMetricsConfig, LiAccountMetric } from '../types'
 
 class PortalErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -171,9 +171,11 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
 }
 
 export function Portal() {
-  const { client, status, phases, videos, documents, registros, hitos, latestMetrics, loading, error } = useClient()
+  const { client, status, phases, videos, documents, registros, hitos, loading, error } = useClient()
   const [metrics, setMetrics] = useState<ClientMetrics[]>([])
   const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig | null>(null)
+  const [selectedMetricIndex, setSelectedMetricIndex] = useState(0)
+  const [liAccountMetrics, setLiAccountMetrics] = useState<LiAccountMetric[]>([])
 
   useEffect(() => {
     if (!client?.id) return
@@ -183,7 +185,7 @@ export function Portal() {
           .from('client_metrics')
           .select('*')
           .eq('client_id', client!.id)
-          .order('week_start', { ascending: true }),
+          .order('week_start', { ascending: false }),
         supabase
           .from('client_metrics_config')
           .select('*')
@@ -195,6 +197,22 @@ export function Portal() {
     }
     fetchMetrics()
   }, [client?.id])
+
+  const selectedMetrics = metrics[selectedMetricIndex] || null
+
+  useEffect(() => {
+    if (!client?.id || !selectedMetrics) return
+    async function fetchLiAccounts() {
+      const { data } = await supabase
+        .from('li_account_metrics')
+        .select('*')
+        .eq('client_id', client!.id)
+        .eq('week_number', selectedMetrics!.week_number)
+        .eq('year', selectedMetrics!.year)
+      setLiAccountMetrics((data ?? []) as LiAccountMetric[])
+    }
+    fetchLiAccounts()
+  }, [client?.id, selectedMetricIndex, selectedMetrics?.week_number, selectedMetrics?.year])
 
   console.log('Portal data:', { client, status, phases, loading, error })
 
@@ -286,21 +304,21 @@ export function Portal() {
   }
 
   const platform = client?.canal
-  const kpiAgendas: number | null = latestMetrics
+  const kpiAgendas: number | null = selectedMetrics
     ? platform === 'Meta Ads'
-      ? (latestMetrics.ads_bookings ?? null)
+      ? (selectedMetrics.ads_bookings ?? null)
       : platform === 'LinkedIn Outbound'
-      ? (latestMetrics.li_bookings ?? null)
-      : ((latestMetrics.ads_bookings ?? 0) + (latestMetrics.li_bookings ?? 0))
+      ? (selectedMetrics.li_bookings ?? null)
+      : ((selectedMetrics.ads_bookings ?? 0) + (selectedMetrics.li_bookings ?? 0))
     : (latestRegistro?.agendas_generadas ?? null)
-  const kpiShowRate = latestMetrics
-    ? normalizeRate(latestMetrics.ads_show_rate)
+  const kpiShowRate = selectedMetrics
+    ? normalizeRate(selectedMetrics.ads_show_rate)
     : normalizeRate(latestRegistro?.show_rate)
-  const kpiCloseRate = latestMetrics
-    ? (platform === 'LinkedIn Outbound' ? null : normalizeRate(latestMetrics.ads_close_rate))
+  const kpiCloseRate = selectedMetrics
+    ? (platform === 'LinkedIn Outbound' ? null : normalizeRate(selectedMetrics.ads_close_rate))
     : normalizeRate(latestRegistro?.tasa_cierre)
-  const kpiCpbc: number | null = latestMetrics
-    ? (platform === 'LinkedIn Outbound' ? null : (latestMetrics.ads_cpbc ?? null))
+  const kpiCpbc: number | null = selectedMetrics
+    ? (platform === 'LinkedIn Outbound' ? null : (selectedMetrics.ads_cpbc ?? null))
     : (status.cpbc_current ?? null)
   const totalLiBookings = platform === 'LinkedIn Outbound'
     ? metrics.reduce((sum, m) => sum + (m.li_bookings ?? 0), 0)
@@ -451,6 +469,69 @@ export function Portal() {
         {(() => { try { return (
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="MÉTRICAS DE LA SEMANA" />
+
+          {/* Navegación entre semanas */}
+          {metrics.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <button
+                disabled={selectedMetricIndex === metrics.length - 1}
+                onClick={() => setSelectedMetricIndex(prev => prev + 1)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px',
+                  backgroundColor: selectedMetricIndex === metrics.length - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: selectedMetricIndex === metrics.length - 1 ? '#333' : '#8a8c9e',
+                  fontSize: 13,
+                  cursor: selectedMetricIndex === metrics.length - 1 ? 'not-allowed' : 'pointer',
+                  fontFamily: 'DM Sans, sans-serif',
+                }}
+              >
+                ← Semana anterior
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {selectedMetrics && (
+                  <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600 }}>
+                    Semana {selectedMetrics.week_number} · {selectedMetrics.year}
+                  </span>
+                )}
+                {selectedMetricIndex === 0 && (
+                  <span style={{
+                    backgroundColor: 'rgba(74,222,128,0.15)',
+                    color: '#4ade80',
+                    border: '1px solid rgba(74,222,128,0.3)',
+                    borderRadius: 99,
+                    padding: '2px 8px',
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}>
+                    ACTUAL
+                  </span>
+                )}
+              </div>
+
+              <button
+                disabled={selectedMetricIndex === 0}
+                onClick={() => setSelectedMetricIndex(prev => prev - 1)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px',
+                  backgroundColor: selectedMetricIndex === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 8,
+                  color: selectedMetricIndex === 0 ? '#333' : '#8a8c9e',
+                  fontSize: 13,
+                  cursor: selectedMetricIndex === 0 ? 'not-allowed' : 'pointer',
+                  fontFamily: 'DM Sans, sans-serif',
+                }}
+              >
+                Semana siguiente →
+              </button>
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
             <KpiCard label="AGENDAS ESTA SEMANA" value={kpiAgendas} colorLogic="neutral" delay={0} />
             <KpiCard label="SHOW RATE" value={kpiShowRate} suffix="%" objective={60} colorLogic="showRate" delay={100} />
@@ -470,6 +551,7 @@ export function Portal() {
             metrics={metrics}
             config={metricsConfig}
             cpbc_objective={status?.cpbc_objective ?? undefined}
+            liAccountMetrics={liAccountMetrics}
           />
         </div>
         ) } catch(e) { console.error('Metrics error:', e); return null } })()}
