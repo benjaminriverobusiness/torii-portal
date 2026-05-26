@@ -26,6 +26,16 @@ function formatDate(d: string | null | undefined) {
   return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function formatWeekRange(start?: string, end?: string): string {
+  if (!start) return '—'
+  const s = new Date(start + 'T12:00:00')
+  const sStr = `${s.getDate().toString().padStart(2, '0')}/${(s.getMonth() + 1).toString().padStart(2, '0')}`
+  if (!end) return sStr
+  const e = new Date(end + 'T12:00:00')
+  const eStr = `${e.getDate().toString().padStart(2, '0')}/${(e.getMonth() + 1).toString().padStart(2, '0')}`
+  return `${sStr} — ${eStr}`
+}
+
 function pct(val: number | null | undefined) {
   if (!val) return 0
   return val > 1 ? val : val * 100
@@ -157,6 +167,9 @@ export function AdminClient() {
   const [nextStep, setNextStep] = useState('')
   const [lastCallDate, setLastCallDate] = useState('')
   const [contractDays, setContractDays] = useState<number>(90)
+  const [clientForm, setClientForm] = useState({ name: '', email: '', country: '', canal: '', start_date: '', contract_days: 90 })
+  const [savingClient, setSavingClient] = useState(false)
+  const [clientSaveSuccess, setClientSaveSuccess] = useState(false)
 
   // New video form
   const [newVideos, setNewVideos] = useState<Partial<ClientVideo>[]>([])
@@ -238,6 +251,14 @@ export function AdminClient() {
       const clientData = clientRes.data as Client
       setClient(clientData)
       setContractDays(clientData.contract_days || 90)
+      setClientForm({
+        name: clientData.name || '',
+        email: clientData.email || '',
+        country: clientData.country || '',
+        canal: clientData.canal || '',
+        start_date: clientData.start_date || '',
+        contract_days: clientData.contract_days || 90,
+      })
       setPhases((phasesRes.data ?? []) as ClientPhase[])
       setVideos((videosRes.data ?? []) as ClientVideo[])
       setDocuments((docsRes.data ?? []) as Document[])
@@ -1178,6 +1199,69 @@ export function AdminClient() {
         {/* TAB: UPDATE */}
         {tab === 'update' && (
           <div>
+            {/* DATOS DEL CLIENTE */}
+            <div style={{ marginBottom: 32, padding: '20px 24px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', marginTop: 0 }}>
+                DATOS DEL CLIENTE
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Nombre</label>
+                  <input type="text" value={clientForm.name} onChange={(e) => setClientForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input type="email" value={clientForm.email} onChange={(e) => setClientForm(p => ({ ...p, email: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>País</label>
+                  <input type="text" value={clientForm.country} onChange={(e) => setClientForm(p => ({ ...p, country: e.target.value }))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Canal</label>
+                  <select value={clientForm.canal} onChange={(e) => setClientForm(p => ({ ...p, canal: e.target.value }))} style={{ ...inputStyle, backgroundColor: '#0d0e17' }}>
+                    <option value="">Sin canal</option>
+                    <option value="Meta Ads">Meta Ads</option>
+                    <option value="LinkedIn Outbound">LinkedIn Outbound</option>
+                    <option value="Híbrido">Híbrido</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Fecha de inicio del servicio</label>
+                  <input type="date" value={clientForm.start_date} onChange={(e) => setClientForm(p => ({ ...p, start_date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Duración (días)</label>
+                  <input type="number" value={clientForm.contract_days} onChange={(e) => setClientForm(p => ({ ...p, contract_days: parseInt(e.target.value) || 90 }))} style={inputStyle} min="1" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
+                <button
+                  onClick={async () => {
+                    setSavingClient(true)
+                    const { error: clientErr } = await supabase.from('clients').update({
+                      name: clientForm.name,
+                      email: clientForm.email,
+                      country: clientForm.country,
+                      canal: clientForm.canal || null,
+                      start_date: clientForm.start_date || null,
+                      contract_days: clientForm.contract_days,
+                    }).eq('id', id)
+                    if (!clientErr) {
+                      setClientSaveSuccess(true)
+                      setTimeout(() => setClientSaveSuccess(false), 2000)
+                    }
+                    setSavingClient(false)
+                  }}
+                  disabled={savingClient}
+                  style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f0f1f7', fontSize: 14, fontWeight: 600, cursor: savingClient ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: savingClient ? 0.7 : 1 }}
+                >
+                  Guardar datos del cliente
+                </button>
+                {clientSaveSuccess && <span style={{ color: '#4ade80', fontSize: 13 }}>✓ Datos guardados</span>}
+              </div>
+            </div>
+
             {/* CONFIGURACIÓN DE MÉTRICAS */}
             <div style={{ marginBottom: 32 }}>
               <p style={sectionTitle}>CONFIGURACIÓN DE MÉTRICAS</p>
@@ -1772,12 +1856,7 @@ export function AdminClient() {
                             {m.ads_cpbc ? `$${m.ads_cpbc}` : '—'}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#555669' }}>
-                            {m.week_start
-                              ? new Date(m.week_start).toLocaleDateString('es-ES', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                })
-                              : '—'}
+                            {formatWeekRange(m.week_start, (m as ClientMetrics & { week_end?: string }).week_end)}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
                             <button
@@ -1859,10 +1938,6 @@ export function AdminClient() {
                 <div>
                   <label style={labelStyle}>Días en esta etapa</label>
                   <input type="number" value={daysInPhase} onChange={(e) => setDaysInPhase(e.target.value)} style={inputStyle} min="0" />
-                </div>
-                <div>
-                  <label style={labelStyle}>Duración del contrato (días)</label>
-                  <input type="number" value={contractDays} onChange={(e) => setContractDays(parseInt(e.target.value) || 90)} style={inputStyle} min="1" />
                 </div>
               </div>
             </div>
