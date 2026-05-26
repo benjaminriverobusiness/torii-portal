@@ -85,6 +85,7 @@ export function AdminClient() {
     week_number: 1,
     year: new Date().getFullYear(),
     week_start: new Date().toISOString().split('T')[0],
+    week_end: '',
     ads_investment: '',
     ads_leads: '',
     ads_cpl: '',
@@ -112,6 +113,8 @@ export function AdminClient() {
   const [liAccounts, setLiAccounts] = useState<LiAccountMetric[]>([])
   const [newLiAccount, setNewLiAccount] = useState({ account_name: '', accept_rate: '', reply_rate: '', offer_rate: '', calendly_rate: '', booking_rate: '', bookings: '' })
   const [addingLiAccount, setAddingLiAccount] = useState(false)
+  const [editingLiAccountId, setEditingLiAccountId] = useState<string | null>(null)
+  const [editingLiAccountForm, setEditingLiAccountForm] = useState<Partial<LiAccountMetric>>({})
 
   // Creatives state
   const [creatives, setCreatives] = useState<ClientCreative[]>([])
@@ -430,6 +433,7 @@ export function AdminClient() {
         week_number: weekForm.week_number,
         year: weekForm.year,
         week_start: weekForm.week_start || new Date().toISOString().split('T')[0],
+        week_end: weekForm.week_end || null,
         ads_investment: n(weekForm.ads_investment),
         ads_leads: n(weekForm.ads_leads),
         ads_cpl: n(weekForm.ads_cpl),
@@ -490,6 +494,7 @@ export function AdminClient() {
       week_number: m.week_number,
       year: m.year,
       week_start: m.week_start ?? '',
+      week_end: (m as ClientMetrics & { week_end?: string }).week_end ?? '',
       ads_investment: m.ads_investment?.toString() ?? '',
       ads_leads: m.ads_leads?.toString() ?? '',
       ads_cpl: m.ads_cpl?.toString() ?? '',
@@ -605,6 +610,27 @@ export function AdminClient() {
   async function handleDeleteLiAccount(accountId: string) {
     await supabase.from('li_account_metrics').delete().eq('id', accountId)
     setLiAccounts((prev) => prev.filter((a) => a.id !== accountId))
+  }
+
+  async function handleSaveLiAccountEdit(accountId: string) {
+    await supabase.from('li_account_metrics').update({
+      account_name: editingLiAccountForm.account_name,
+      accept_rate: editingLiAccountForm.accept_rate || null,
+      reply_rate: editingLiAccountForm.reply_rate || null,
+      offer_rate: editingLiAccountForm.offer_rate || null,
+      calendly_rate: editingLiAccountForm.calendly_rate || null,
+      booking_rate: editingLiAccountForm.booking_rate || null,
+      bookings: editingLiAccountForm.bookings || null,
+    }).eq('id', accountId)
+    setEditingLiAccountId(null)
+    const { data } = await supabase
+      .from('li_account_metrics')
+      .select('*')
+      .eq('client_id', id)
+      .eq('week_number', weekForm.week_number)
+      .eq('year', weekForm.year)
+      .order('account_name')
+    setLiAccounts((data ?? []) as LiAccountMetric[])
   }
 
   async function handleSaveNotes(leadId: string) {
@@ -1286,7 +1312,7 @@ export function AdminClient() {
               {/* Carga de métricas semanales */}
               <p style={sectionTitle}>MÉTRICAS DE ESTA SEMANA</p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div>
                   <label style={labelStyle}>Semana número</label>
                   <input
@@ -1317,6 +1343,15 @@ export function AdminClient() {
                     type="date"
                     value={weekForm.week_start}
                     onChange={(e) => setWeekForm((p) => ({ ...p, week_start: e.target.value }))}
+                    style={{ ...inputStyle, colorScheme: 'dark' }}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Fecha fin de semana</label>
+                  <input
+                    type="date"
+                    value={weekForm.week_end}
+                    onChange={(e) => setWeekForm((p) => ({ ...p, week_end: e.target.value }))}
                     style={{ ...inputStyle, colorScheme: 'dark' }}
                   />
                 </div>
@@ -1391,25 +1426,84 @@ export function AdminClient() {
                   {/* Lista de cuentas */}
                   {liAccounts.map(account => (
                     <div key={account.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', marginBottom: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                        <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{account.account_name}</span>
-                        <button onClick={() => handleDeleteLiAccount(account.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>✕</button>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                        {[
-                          { label: 'Accept rate', value: account.accept_rate },
-                          { label: 'Reply rate', value: account.reply_rate },
-                          { label: 'Offer rate', value: account.offer_rate },
-                          { label: 'Calendly rate', value: account.calendly_rate },
-                          { label: 'Booking rate', value: account.booking_rate },
-                          { label: 'Agendas', value: account.bookings, noSuffix: true },
-                        ].map(({ label, value, noSuffix }) => (
-                          <div key={label}>
-                            <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>{label}</div>
-                            <div style={{ fontSize: 14, color: value != null ? '#8a8c9e' : '#555669' }}>{value != null ? `${value}${noSuffix ? '' : '%'}` : '—'}</div>
+                      {editingLiAccountId === account.id ? (
+                        <div>
+                          <div style={{ marginBottom: 10 }}>
+                            <label style={labelStyle}>Nombre de cuenta *</label>
+                            <input
+                              type="text"
+                              value={editingLiAccountForm.account_name ?? ''}
+                              onChange={(e) => setEditingLiAccountForm(p => ({ ...p, account_name: e.target.value }))}
+                              style={inputStyle}
+                            />
                           </div>
-                        ))}
-                      </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                            {([
+                              ['accept_rate', 'Accept rate (%)'],
+                              ['reply_rate', 'Reply rate (%)'],
+                              ['offer_rate', 'Offer rate (%)'],
+                              ['calendly_rate', 'Calendly rate (%)'],
+                              ['booking_rate', 'Booking rate (%)'],
+                              ['bookings', 'Agendas'],
+                            ] as [keyof LiAccountMetric, string][]).map(([field, label]) => (
+                              <div key={field}>
+                                <label style={labelStyle}>{label}</label>
+                                <input
+                                  type="number"
+                                  value={(editingLiAccountForm[field] as number | undefined) ?? ''}
+                                  onChange={(e) => setEditingLiAccountForm(p => ({ ...p, [field]: e.target.value === '' ? undefined : parseFloat(e.target.value) }))}
+                                  style={inputStyle}
+                                  step="any"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button
+                              onClick={() => handleSaveLiAccountEdit(account.id)}
+                              style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '7px 14px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              onClick={() => setEditingLiAccountId(null)}
+                              style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '7px 14px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                            <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{account.account_name}</span>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                onClick={() => { setEditingLiAccountId(account.id); setEditingLiAccountForm({ account_name: account.account_name, accept_rate: account.accept_rate, reply_rate: account.reply_rate, offer_rate: account.offer_rate, calendly_rate: account.calendly_rate, booking_rate: account.booking_rate, bookings: account.bookings }) }}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '3px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                              >
+                                Editar
+                              </button>
+                              <button onClick={() => handleDeleteLiAccount(account.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>✕</button>
+                            </div>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                            {[
+                              { label: 'Accept rate', value: account.accept_rate },
+                              { label: 'Reply rate', value: account.reply_rate },
+                              { label: 'Offer rate', value: account.offer_rate },
+                              { label: 'Calendly rate', value: account.calendly_rate },
+                              { label: 'Booking rate', value: account.booking_rate },
+                              { label: 'Agendas', value: account.bookings, noSuffix: true },
+                            ].map(({ label, value, noSuffix }) => (
+                              <div key={label}>
+                                <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>{label}</div>
+                                <div style={{ fontSize: 14, color: value != null ? '#8a8c9e' : '#555669' }}>{value != null ? `${value}${noSuffix ? '' : '%'}` : '—'}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
 

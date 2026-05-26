@@ -36,6 +36,16 @@ function formatDate(dateStr: string | null | undefined): string {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function formatWeekRange(start?: string, end?: string): string {
+  if (!start) return ''
+  const s = new Date(start)
+  const sStr = `${s.getDate().toString().padStart(2, '0')}/${(s.getMonth() + 1).toString().padStart(2, '0')}`
+  if (!end) return sStr
+  const e = new Date(end)
+  const eStr = `${e.getDate().toString().padStart(2, '0')}/${(e.getMonth() + 1).toString().padStart(2, '0')}/${e.getFullYear()}`
+  return `${sStr} — ${eStr}`
+}
+
 function SectionLabel({
   text,
   color = '#e5182b',
@@ -199,6 +209,10 @@ export function Portal() {
   }, [client?.id])
 
   const selectedMetrics = metrics[selectedMetricIndex] || null
+
+  useEffect(() => {
+    setSelectedMetricIndex(0)
+  }, [metrics])
 
   useEffect(() => {
     if (!client?.id || !selectedMetrics) return
@@ -471,7 +485,7 @@ export function Portal() {
           <SectionLabel text="MÉTRICAS DE LA SEMANA" />
 
           {/* Navegación entre semanas */}
-          {metrics.length > 1 && (
+          {metrics.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <button
                 disabled={selectedMetricIndex === metrics.length - 1}
@@ -491,23 +505,30 @@ export function Portal() {
                 ← Semana anterior
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 {selectedMetrics && (
-                  <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600 }}>
-                    Semana {selectedMetrics.week_number} · {selectedMetrics.year}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600 }}>
+                      Semana {selectedMetrics.week_number} · {selectedMetrics.year}
+                    </span>
+                    {selectedMetricIndex === 0 && (
+                      <span style={{
+                        backgroundColor: 'rgba(74,222,128,0.15)',
+                        color: '#4ade80',
+                        border: '1px solid rgba(74,222,128,0.3)',
+                        borderRadius: 99,
+                        padding: '2px 8px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}>
+                        ACTUAL
+                      </span>
+                    )}
+                  </div>
                 )}
-                {selectedMetricIndex === 0 && (
-                  <span style={{
-                    backgroundColor: 'rgba(74,222,128,0.15)',
-                    color: '#4ade80',
-                    border: '1px solid rgba(74,222,128,0.3)',
-                    borderRadius: 99,
-                    padding: '2px 8px',
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}>
-                    ACTUAL
+                {selectedMetrics?.week_start && (
+                  <span style={{ color: '#8a8c9e', fontSize: 12 }}>
+                    {formatWeekRange(selectedMetrics.week_start, (selectedMetrics as ClientMetrics & { week_end?: string }).week_end)}
                   </span>
                 )}
               </div>
