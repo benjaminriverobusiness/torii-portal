@@ -571,28 +571,22 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
 
           {/* Gráfico 4 — Agendas LI */}
           <ChartBox title="Agendas por semana">
-            <ResponsiveContainer width="100%" height={260}>
-              <ComposedChart data={liChartData}>
-                <CartesianGrid {...gridStyle} />
-                <XAxis dataKey="semana" {...axisStyle} />
-                <YAxis {...axisStyle} />
-                <Tooltip contentStyle={tooltipContentStyle} />
-                <Bar
-                  dataKey="agendas"
-                  fill="#c084fc"
-                  fillOpacity={0.8}
-                  radius={[4, 4, 0, 0]}
-                  name="Agendas"
-                />
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={liChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="semana" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
                 <Line
                   type="monotone"
                   dataKey="agendas"
-                  stroke="#c9a84c"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Tendencia"
+                  stroke="#c084fc"
+                  strokeWidth={2.5}
+                  dot={{ fill: '#c084fc', r: 4, strokeWidth: 2, stroke: '#08090f' }}
+                  activeDot={{ r: 6, fill: '#c084fc' }}
+                  name="Agendas"
                 />
-              </ComposedChart>
+              </LineChart>
             </ResponsiveContainer>
           </ChartBox>
 

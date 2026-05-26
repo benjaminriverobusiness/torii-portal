@@ -1652,6 +1652,30 @@ export function AdminClient() {
                             >
                               Editar
                             </button>
+                            <button
+                              onClick={async () => {
+                                if (confirm('¿Eliminar métricas de esta semana?')) {
+                                  await supabase.from('client_metrics').delete().eq('id', m.id)
+                                  const { data } = await supabase
+                                    .from('client_metrics')
+                                    .select('*')
+                                    .eq('client_id', id)
+                                    .order('week_start', { ascending: false })
+                                    .limit(8)
+                                  setMetricsHistory((data ?? []) as ClientMetrics[])
+                                }
+                              }}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#f87171',
+                                cursor: 'pointer',
+                                fontSize: 14,
+                                marginLeft: 8,
+                              }}
+                            >
+                              ✕
+                            </button>
                           </td>
                         </tr>
                       ))}
