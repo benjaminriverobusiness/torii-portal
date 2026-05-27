@@ -195,6 +195,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
   }
 
   const selectedMetric = metrics[metrics.length - 1 - selectedMetricIndex] ?? null
+  console.log('selectedMetricIndex:', selectedMetricIndex, '| selectedMetric week:', selectedMetric?.week_number, selectedMetric?.year)
 
   const adsChartData = metrics.map((m) => ({
     semana: `S${m.week_number}`,
@@ -454,6 +455,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
             const weekAccounts = selectedMetric
               ? liAccountMetrics.filter(a => a.week_number === selectedMetric.week_number && a.year === selectedMetric.year)
               : []
+            console.log('weekAccounts count:', weekAccounts.length, '| liAccountMetrics total:', liAccountMetrics.length)
             const avgField = (field: keyof LiAccountMetric) => {
               const vals = weekAccounts
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
