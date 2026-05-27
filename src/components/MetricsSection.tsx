@@ -194,7 +194,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
     )
   }
 
-  const selectedMetric = metrics[metrics.length - 1 - selectedMetricIndex] ?? null
+  const selectedMetric = metrics[selectedMetricIndex] ?? null
   console.log('selectedMetricIndex:', selectedMetricIndex, '| selectedMetric week:', selectedMetric?.week_number, selectedMetric?.year)
 
   const adsChartData = metrics.map((m) => ({
