@@ -710,19 +710,6 @@ export function VentasPage() {
     }
   })
 
-  console.log('=== DIAGNÓSTICO SHOW RATE ===')
-  console.log('sortedLeads count:', sortedLeads.length)
-  if (sortedLeads.length > 0) {
-    const first = sortedLeads[0]
-    console.log('Primer lead raw:', JSON.stringify(first))
-    console.log('asistio value:', first.asistio)
-    console.log('asistio type:', typeof first.asistio)
-    console.log('asistio === true:', first.asistio === true)
-    console.log('Boolean(asistio):', Boolean(first.asistio))
-  }
-  console.log('salesChartData[0]:', salesChartData[0])
-  console.log('============================')
-
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
 
   return (
@@ -780,6 +767,7 @@ export function VentasPage() {
                     Agendá más llamadas para ver la evolución de tus tasas de conversión.
                   </div>
                 ) : (
+                  <>
                   <ResponsiveContainer width="100%" height={240}>
                     <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 16, left: -8 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -790,11 +778,15 @@ export function VentasPage() {
                         formatter={(value) => `${value}%`}
                       />
                       <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                      <Line type="linear" dataKey="show_rate" stroke="#a78bfa" strokeWidth={2.5} dot={{ fill: '#a78bfa', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
-                      <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
-                      <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
+                      <Line type="linear" dataKey="show_rate" stroke="#a78bfa" strokeWidth={2.5} strokeDasharray="8 4" dot={{ fill: '#a78bfa', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
+                      <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2.5} dot={{ fill: '#c9a84c', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
+                      <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2.5} dot={{ fill: '#4ade80', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
                     </ComposedChart>
                   </ResponsiveContainer>
+                  <div style={{ color: '#555669', fontSize: '11px', fontStyle: 'italic', marginTop: '12px' }}>
+                    Las tasas se calculan de forma acumulada. Show rate = asistieron / agendas totales. Calificación = calificados / agendas totales.
+                  </div>
+                  </>
                 )}
               </div>
 
