@@ -326,7 +326,7 @@ export function Portal() {
   const withAsistio = leads.filter(l => l.asistio)
   const showRateTotal = leads.length > 0 ? Math.round((withAsistio.length / leads.length) * 100) : null
   const calificados = leads.filter(l => l.asistio === true && l.calificado === true)
-  const calificacionRateTotal = withAsistio.length > 0 ? Math.round((calificados.length / withAsistio.length) * 100) : null
+  const calificacionRateTotal = leads.length > 0 ? Math.round((calificados.length / leads.length) * 100) : null
   const cerrados = leads.filter(l => l.cerrado)
   const closeRateTotal = calificados.length > 0 ? Math.round((cerrados.length / calificados.length) * 100) : null
 
@@ -478,7 +478,7 @@ export function Portal() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
             <KpiCard label="AGENDAS EFECTIVAS" value={agendasEfectivas} colorLogic="neutral" delay={0} />
             <KpiCard label="SHOW RATE TOTAL" value={showRateTotal} suffix="%" objective={60} colorLogic="showRate" delay={100} />
-            <KpiCard label="CALIFICACIÓN TOTAL" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} />
+            <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} />
             <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} />
           </div>
         </div>
