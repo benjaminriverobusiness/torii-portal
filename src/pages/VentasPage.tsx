@@ -708,14 +708,6 @@ export function VentasPage() {
     }
   })
 
-  console.log('Leads para gráfico:', sortedLeads.map((l) => ({
-    nombre: l.lead_nombre,
-    asistio: l.asistio,
-    tipo: typeof l.asistio,
-    fecha: l.fecha_llamada,
-  })))
-  console.log('Primer punto del gráfico:', salesChartData[0])
-
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
 
   return (
@@ -783,7 +775,7 @@ export function VentasPage() {
                         formatter={(value) => `${value}%`}
                       />
                       <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                      <Line type="linear" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
+                      <Line type="linear" dataKey="show_rate" stroke="#a78bfa" strokeWidth={2.5} dot={{ fill: '#a78bfa', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
                       <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
                       <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
                     </ComposedChart>
