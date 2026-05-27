@@ -325,7 +325,7 @@ export function Portal() {
   const agendasEfectivas = leads.filter(l => l.asistio === true).length
   const withAsistio = leads.filter(l => l.asistio)
   const showRateTotal = leads.length > 0 ? Math.round((withAsistio.length / leads.length) * 100) : null
-  const calificados = leads.filter(l => l.calificado)
+  const calificados = leads.filter(l => l.asistio === true && l.calificado === true)
   const calificacionRateTotal = withAsistio.length > 0 ? Math.round((calificados.length / withAsistio.length) * 100) : null
   const cerrados = leads.filter(l => l.cerrado)
   const closeRateTotal = calificados.length > 0 ? Math.round((cerrados.length / calificados.length) * 100) : null

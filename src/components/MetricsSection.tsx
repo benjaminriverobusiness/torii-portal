@@ -451,8 +451,11 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
           </div>
 
           {liAccountMetrics.length > 0 ? (() => {
+            const weekAccounts = selectedMetric
+              ? liAccountMetrics.filter(a => a.week_number === selectedMetric.week_number && a.year === selectedMetric.year)
+              : []
             const avgField = (field: keyof LiAccountMetric) => {
-              const vals = liAccountMetrics
+              const vals = weekAccounts
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .map(a => parseFloat(String(a[field] as any)))
                 .filter(v => !isNaN(v) && v > 0)
@@ -460,7 +463,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10
                 : null
             }
-            const totalBookings = liAccountMetrics.reduce((sum, a) => sum + (parseFloat(String(a.bookings || 0)) || 0), 0)
+            const totalBookings = weekAccounts.reduce((sum, a) => sum + (parseFloat(String(a.bookings || 0)) || 0), 0)
             const liMetricFields: { key: keyof LiAccountMetric; label: string }[] = [
               { key: 'accept_rate', label: 'ACCEPT RATE' },
               { key: 'reply_rate', label: 'REPLY RATE' },
