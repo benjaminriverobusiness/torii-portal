@@ -673,12 +673,14 @@ export function VentasPage() {
   }
 
   // ── Metrics ────────────────────────────────────────────────
+  const isTrue = (v: unknown) => v === true || v === 'true' || String(v) === 'true'
+
   const totalLeads = leads.length
-  const totalAsistieron = leads.filter((l) => l.asistio).length
-  const totalCerrados = leads.filter((l) => l.cerrado).length
+  const totalAsistieron = leads.filter((l) => isTrue(l.asistio)).length
+  const totalCerrados = leads.filter((l) => isTrue(l.cerrado)).length
   const showRate = totalLeads > 0 ? Math.round((totalAsistieron / totalLeads) * 100) : 0
   const closeRate = totalAsistieron > 0 ? Math.round((totalCerrados / totalAsistieron) * 100) : 0
-  const totalMonto = leads.filter((l) => l.cerrado && l.monto).reduce((s, l) => s + (l.monto ?? 0), 0)
+  const totalMonto = leads.filter((l) => isTrue(l.cerrado) && l.monto).reduce((s, l) => s + (l.monto ?? 0), 0)
 
   const showRateColor = showRate >= 60 ? '#4ade80' : showRate >= 40 ? '#fcd34d' : '#f87171'
   const closeRateColor = closeRate >= 25 ? '#4ade80' : closeRate >= 15 ? '#fcd34d' : '#f87171'
@@ -697,9 +699,9 @@ export function VentasPage() {
   const salesChartData = sortedLeads.map((_, index) => {
     const leadsHastaAqui = sortedLeads.slice(0, index + 1)
     const total = leadsHastaAqui.length
-    const asistieron = leadsHastaAqui.filter((l) => l.asistio === true).length
-    const calificados = leadsHastaAqui.filter((l) => l.calificado === true).length
-    const cerrados = leadsHastaAqui.filter((l) => l.cerrado === true).length
+    const asistieron = leadsHastaAqui.filter((l) => isTrue(l.asistio)).length
+    const calificados = leadsHastaAqui.filter((l) => isTrue(l.calificado)).length
+    const cerrados = leadsHastaAqui.filter((l) => isTrue(l.cerrado)).length
     return {
       agenda: index + 1,
       show_rate: total > 0 ? Math.round(asistieron / total * 100) : 0,
