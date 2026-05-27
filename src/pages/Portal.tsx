@@ -186,11 +186,12 @@ export function Portal() {
   const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig | null>(null)
   const [selectedMetricIndex, setSelectedMetricIndex] = useState(0)
   const [liAccountMetrics, setLiAccountMetrics] = useState<LiAccountMetric[]>([])
+  const [leads, setLeads] = useState<any[]>([]) // eslint-disable-line @typescript-eslint/no-explicit-any
 
   useEffect(() => {
     if (!client?.id) return
     async function fetchMetrics() {
-      const [metricsRes, configRes] = await Promise.all([
+      const [metricsRes, configRes, leadsRes] = await Promise.all([
         supabase
           .from('client_metrics')
           .select('*')
@@ -201,9 +202,14 @@ export function Portal() {
           .select('*')
           .eq('client_id', client!.id)
           .maybeSingle(),
+        supabase
+          .from('crm_clientes')
+          .select('*')
+          .eq('client_id', client!.id),
       ])
       setMetrics((metricsRes.data ?? []) as ClientMetrics[])
       setMetricsConfig(configRes.data as ClientMetricsConfig | null)
+      setLeads(leadsRes.data ?? [])
     }
     fetchMetrics()
   }, [client?.id])
@@ -310,7 +316,6 @@ export function Portal() {
   const progress = Math.min(daysActive / contractDuration, 1)
   const circumference = 2 * Math.PI * 52
 
-  const latestRegistro = registros[0]
   const activePhase = phases.find((p) => p.id === status.active_phase_id) ?? phases[0]
 
   function normalizeRate(value: number | null | undefined): number {
@@ -319,22 +324,19 @@ export function Portal() {
   }
 
   const platform = client?.canal
-  const kpiAgendas: number | null = selectedMetrics
-    ? platform === 'Meta Ads'
-      ? (selectedMetrics.ads_bookings ?? null)
-      : platform === 'LinkedIn Outbound'
-      ? (selectedMetrics.li_bookings ?? null)
-      : ((selectedMetrics.ads_bookings ?? 0) + (selectedMetrics.li_bookings ?? 0))
-    : (latestRegistro?.agendas_generadas ?? null)
-  const kpiShowRate = selectedMetrics
-    ? normalizeRate(selectedMetrics.ads_show_rate)
-    : normalizeRate(latestRegistro?.show_rate)
-  const kpiCloseRate = selectedMetrics
-    ? (platform === 'LinkedIn Outbound' ? null : normalizeRate(selectedMetrics.ads_close_rate))
-    : normalizeRate(latestRegistro?.tasa_cierre)
-  const kpiCpbc: number | null = selectedMetrics
-    ? (platform === 'LinkedIn Outbound' ? null : (selectedMetrics.ads_cpbc ?? null))
-    : (status.cpbc_current ?? null)
+
+  // KPIs automáticos desde pipeline
+  const startOfWeek = new Date()
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
+  startOfWeek.setHours(0, 0, 0, 0)
+  const agendasThisWeek = leads.filter(l => new Date(l.created_at) >= startOfWeek).length
+  const withCall = leads.filter(l => l.fecha_llamada)
+  const attended = withCall.filter(l => l.asistio)
+  const autoShowRate = withCall.length > 0 ? Math.round((attended.length / withCall.length) * 100) : 0
+  const closed = attended.filter(l => l.cerrado)
+  const autoCloseRate = attended.length > 0 ? Math.round((closed.length / attended.length) * 100) : 0
+  const kpiCpbc: number | null = status.cpbc_current ?? null
+
   const totalLiBookings = platform === 'LinkedIn Outbound'
     ? metrics.reduce((sum, m) => sum + (m.li_bookings ?? 0), 0)
     : null
@@ -480,10 +482,74 @@ export function Portal() {
         </div>
         )} catch(e) { console.error('JourneyMap error:', e); return <div style={{color:'red',padding:16}}>Error en JourneyMap</div> } })()}
 
-        {/* KPIs */}
+        {/* KPIs automáticos */}
         {(() => { try { return (
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="MÉTRICAS DE LA SEMANA" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
+            <KpiCard label="AGENDAS ESTA SEMANA" value={agendasThisWeek} colorLogic="neutral" delay={0} />
+            <KpiCard label="SHOW RATE" value={autoShowRate} suffix="%" objective={60} colorLogic="showRate" delay={100} />
+            <KpiCard label="TASA DE CIERRE" value={autoCloseRate} suffix="%" objective={25} colorLogic="closingRate" delay={200} />
+            {platform === 'LinkedIn Outbound'
+              ? <KpiCard label="AGENDAS TOTALES" value={totalLiBookings} colorLogic="neutral" delay={300} />
+              : <KpiCard label="CPBC ACTUAL" value={kpiCpbc} prefix="$" objective={status.cpbc_objective ?? undefined} colorLogic="cpbc" delay={300} />
+            }
+          </div>
+        </div>
+        )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}
+
+        {/* HITOS */}
+        {(() => { try { return hitos ? <HitosSection hitos={hitos} /> : null } catch(e) { console.error('Hitos error:', e); return null } })()}
+
+        {/* WIN + NEXT STEP */}
+        {(() => { try { return (
+        <div className="fade-in visible" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }} id="win-grid">
+          {/* Último resultado */}
+          <div style={{
+            position: 'relative',
+            overflow: 'hidden',
+            backgroundColor: 'rgba(229,24,43,0.04)',
+            border: '1px solid rgba(229,24,43,0.18)',
+            borderRadius: 16,
+            padding: 28,
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, #e5182b, rgba(229,24,43,0.2))', borderRadius: '0 0 0 0' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <GlowDot color="#e5182b" />
+              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#e5182b', fontWeight: 700 }}>ÚLTIMO RESULTADO</span>
+            </div>
+            <p style={{ color: '#f0f1f7', fontSize: 16, lineHeight: 1.75, margin: 0 }}>
+              {status.current_win ?? <span style={{ color: '#555669' }}>—</span>}
+            </p>
+          </div>
+
+          {/* Próximos 7 días */}
+          <div style={{
+            position: 'relative',
+            overflow: 'hidden',
+            backgroundColor: 'rgba(96,165,250,0.04)',
+            border: '1px solid rgba(96,165,250,0.18)',
+            borderRadius: 16,
+            padding: 28,
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, #60a5fa, rgba(96,165,250,0.2))', borderRadius: '0 0 0 0' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#60a5fa', flexShrink: 0, boxShadow: '0 0 8px #60a5fa, 0 0 20px rgba(96,165,250,0.4)' }} />
+              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#60a5fa', fontWeight: 700 }}>PRÓXIMOS 7 DÍAS</span>
+            </div>
+            <p style={{ color: '#f0f1f7', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>
+              {status.next_step ?? <span style={{ color: '#555669' }}>—</span>}
+            </p>
+            <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 0 12px' }} />
+            <p style={{ color: '#555669', fontSize: 12, margin: 0 }}>Actualizado el {formatDate(status.updated_at)}</p>
+          </div>
+        </div>
+        )} catch(e) { console.error('WinNextStep error:', e); return <div style={{color:'red',padding:16}}>Error en Win/NextStep</div> } })()}
+
+        {/* MÉTRICAS POR SEMANA */}
+        {(() => { try { return (
+        <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
+          <SectionLabel text="MÉTRICAS POR SEMANA" />
 
           {/* Navegación entre semanas */}
           {metrics.length > 0 && (
@@ -554,21 +620,6 @@ export function Portal() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
-            <KpiCard label="AGENDAS ESTA SEMANA" value={kpiAgendas} colorLogic="neutral" delay={0} />
-            <KpiCard label="SHOW RATE" value={kpiShowRate} suffix="%" objective={60} colorLogic="showRate" delay={100} />
-            <KpiCard label="TASA DE CIERRE" value={kpiCloseRate} suffix="%" objective={25} colorLogic="closingRate" delay={200} />
-            {platform === 'LinkedIn Outbound'
-              ? <KpiCard label="AGENDAS TOTALES" value={totalLiBookings} colorLogic="neutral" delay={300} />
-              : <KpiCard label="CPBC ACTUAL" value={kpiCpbc} prefix="$" objective={status.cpbc_objective ?? undefined} colorLogic="cpbc" delay={300} />
-            }
-          </div>
-        </div>
-        )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}
-
-        {/* METRICS */}
-        {(() => { try { return (
-        <div className="fade-in visible">
           <MetricsSection
             metrics={metrics}
             config={metricsConfig}
@@ -577,54 +628,6 @@ export function Portal() {
           />
         </div>
         ) } catch(e) { console.error('Metrics error:', e); return null } })()}
-
-        {/* HITOS */}
-        {(() => { try { return hitos ? <HitosSection hitos={hitos} /> : null } catch(e) { console.error('Hitos error:', e); return null } })()}
-
-        {/* WIN + NEXT STEP */}
-        {(() => { try { return (
-        <div className="fade-in visible" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }} id="win-grid">
-          {/* Último resultado */}
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: 'rgba(229,24,43,0.04)',
-            border: '1px solid rgba(229,24,43,0.18)',
-            borderRadius: 16,
-            padding: 28,
-          }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, #e5182b, rgba(229,24,43,0.2))', borderRadius: '0 0 0 0' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <GlowDot color="#e5182b" />
-              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#e5182b', fontWeight: 700 }}>ÚLTIMO RESULTADO</span>
-            </div>
-            <p style={{ color: '#f0f1f7', fontSize: 16, lineHeight: 1.75, margin: 0 }}>
-              {status.current_win ?? <span style={{ color: '#555669' }}>—</span>}
-            </p>
-          </div>
-
-          {/* Próximos 7 días */}
-          <div style={{
-            position: 'relative',
-            overflow: 'hidden',
-            backgroundColor: 'rgba(96,165,250,0.04)',
-            border: '1px solid rgba(96,165,250,0.18)',
-            borderRadius: 16,
-            padding: 28,
-          }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, #60a5fa, rgba(96,165,250,0.2))', borderRadius: '0 0 0 0' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#60a5fa', flexShrink: 0, boxShadow: '0 0 8px #60a5fa, 0 0 20px rgba(96,165,250,0.4)' }} />
-              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#60a5fa', fontWeight: 700 }}>PRÓXIMOS 7 DÍAS</span>
-            </div>
-            <p style={{ color: '#f0f1f7', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>
-              {status.next_step ?? <span style={{ color: '#555669' }}>—</span>}
-            </p>
-            <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 0 12px' }} />
-            <p style={{ color: '#555669', fontSize: 12, margin: 0 }}>Actualizado el {formatDate(status.updated_at)}</p>
-          </div>
-        </div>
-        )} catch(e) { console.error('WinNextStep error:', e); return <div style={{color:'red',padding:16}}>Error en Win/NextStep</div> } })()}
 
         {/* VIDEOS */}
         {(() => { try { return videos.length > 0 ? (

@@ -434,13 +434,14 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
           {liAccountMetrics.length > 0 ? (() => {
             const avgField = (field: keyof LiAccountMetric) => {
               const vals = liAccountMetrics
-                .map(a => a[field] as number)
-                .filter(v => v != null && v > 0)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map(a => parseFloat(String(a[field] as any)))
+                .filter(v => !isNaN(v) && v > 0)
               return vals.length > 0
                 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10
                 : null
             }
-            const totalBookings = liAccountMetrics.reduce((sum, a) => sum + (a.bookings || 0), 0)
+            const totalBookings = liAccountMetrics.reduce((sum, a) => sum + (parseFloat(String(a.bookings || 0)) || 0), 0)
             const liMetricFields: { key: keyof LiAccountMetric; label: string }[] = [
               { key: 'accept_rate', label: 'ACCEPT RATE' },
               { key: 'reply_rate', label: 'REPLY RATE' },

@@ -1624,10 +1624,11 @@ export function AdminClient() {
                   {/* Resumen automático */}
                   {liAccounts.length > 0 && (() => {
                     const avgField = (field: keyof LiAccountMetric) => {
-                      const vals = liAccounts.map(a => a[field] as number).filter(v => v != null && v > 0)
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const vals = liAccounts.map(a => parseFloat(String(a[field] as any))).filter(v => !isNaN(v) && v > 0)
                       return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10 : null
                     }
-                    const totalBookings = liAccounts.reduce((sum, a) => sum + (a.bookings || 0), 0)
+                    const totalBookings = liAccounts.reduce((sum, a) => sum + (parseFloat(String(a.bookings || 0)) || 0), 0)
                     return (
                       <div style={{ backgroundColor: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
                         <div style={{ fontSize: 11, fontWeight: 700, color: '#c084fc', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>PROMEDIOS CALCULADOS</div>
