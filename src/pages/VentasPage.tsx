@@ -5,7 +5,7 @@ import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import type { Client, ClientCloser } from '../types'
 import {
-  ComposedChart, Bar, LineChart, Line,
+  ComposedChart, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
@@ -670,24 +670,26 @@ export function VentasPage() {
   const analysisVideos = materials.filter((m) => m.type === 'analysis_video')
 
   const salesChartData = (() => {
-    const map: Record<string, { mes: string; agendas: number; asistieron: number; calificados: number; cerrados: number }> = {}
+    const map: Record<string, { label: string; agendas: number; asistieron: number; calificados: number; cerrados: number; weekNum: number }> = {}
     leads.forEach((lead) => {
       const date = new Date((lead.created_at || '').split('T')[0] + 'T12:00:00')
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      const label = date.toLocaleDateString('es', { month: 'short', year: '2-digit' })
-      if (!map[key]) map[key] = { mes: label, agendas: 0, asistieron: 0, calificados: 0, cerrados: 0 }
+      const startOfYear = new Date(date.getFullYear(), 0, 1)
+      const weekNum = Math.ceil(((date.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
+      const key = `${date.getFullYear()}-W${weekNum}`
+      const label = `S${weekNum}`
+      if (!map[key]) map[key] = { label, agendas: 0, asistieron: 0, calificados: 0, cerrados: 0, weekNum }
       map[key].agendas++
       if (lead.asistio) map[key].asistieron++
       if (lead.calificado) map[key].calificados++
       if (lead.cerrado) map[key].cerrados++
     })
-    return Object.entries(map)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([, m]) => ({
-        mes: m.mes,
+    return Object.values(map)
+      .sort((a, b) => a.weekNum - b.weekNum)
+      .map((m) => ({
+        semana: m.label,
         agendas: m.agendas,
         show_rate: m.agendas > 0 ? Math.round(m.asistieron / m.agendas * 100) : 0,
-        tasa_calificacion: m.agendas > 0 ? Math.round(m.calificados / m.agendas * 100) : 0,
+        calificacion: m.agendas > 0 ? Math.round(m.calificados / m.agendas * 100) : 0,
         close_rate: m.calificados > 0 ? Math.round(m.cerrados / m.calificados * 100) : 0,
       }))
   })()
@@ -741,35 +743,22 @@ export function VentasPage() {
                 <SectionPill text="GRÁFICOS HISTÓRICOS" />
               </div>
 
-              {/* Gráfico unificado — dos subgráficos en una card */}
+              {/* Gráfico unificado */}
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Evolución del pipeline</div>
-
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Agendas</div>
-                <ResponsiveContainer width="100%" height={160}>
-                  <LineChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                <ResponsiveContainer width="100%" height={260}>
+                  <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="mes" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
-                    <Line type="monotone" dataKey="agendas" stroke="#60a5fa" strokeWidth={2.5} dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Agendas" />
-                  </LineChart>
-                </ResponsiveContainer>
-
-                <div style={{ height: 16 }} />
-
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Tasas de conversión</div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="mes" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                    <XAxis dataKey="semana" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                    <YAxis yAxisId="left" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} width={30} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} width={40} />
                     <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
                     <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                    <Line type="monotone" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2} dot={{ fill: '#f0f1f7', r: 3 }} name="Show rate %" />
-                    <Line type="monotone" dataKey="tasa_calificacion" stroke="#c9a84c" strokeWidth={2} dot={{ fill: '#c9a84c', r: 3 }} name="Calificación %" />
-                    <Line type="monotone" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3 }} name="Close rate %" />
-                  </LineChart>
+                    <Line type="monotone" dataKey="agendas" yAxisId="left" stroke="#60a5fa" strokeWidth={2.5} dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Agendas" />
+                    <Line type="monotone" dataKey="show_rate" yAxisId="right" stroke="#f0f1f7" strokeWidth={2} dot={{ fill: '#f0f1f7', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
+                    <Line type="monotone" dataKey="calificacion" yAxisId="right" stroke="#c9a84c" strokeWidth={2} dot={{ fill: '#c9a84c', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
+                    <Line type="monotone" dataKey="close_rate" yAxisId="right" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
 
@@ -880,7 +869,7 @@ export function VentasPage() {
           ) : (
             <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {['NOMBRE', 'ETAPA', 'CLOSER', 'CALIF', 'LLAMADA', 'ASISTIÓ', 'CERRADO', '2DA REUNIÓN', 'ACCIONES'].map((h) => (
+                {['NOMBRE', 'ETAPA', 'CLOSER', 'CALIF', 'LLAMADA', 'ASISTIÓ', '2DA REUNIÓN', 'RESULTADO', 'ACCIONES'].map((h) => (
                   <div key={h}>{h}</div>
                 ))}
               </div>
@@ -893,9 +882,9 @@ export function VentasPage() {
                 >
                   <div>
                     <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
-                    {lead.lead_email && <div style={{ color: '#555669', fontSize: 12, marginTop: 2 }}>{lead.lead_email}</div>}
+                    {lead.lead_email && <div style={{ color: '#555669', fontSize: '11px', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px', whiteSpace: 'nowrap' }}>{lead.lead_email}</div>}
                   </div>
-                  <div><StageBadge etapa={lead.etapa} /></div>
+                  <div style={{ whiteSpace: 'normal', lineHeight: 1.3, fontSize: '12px' }}><StageBadge etapa={lead.etapa} /></div>
                   <div style={{ color: lead.closer ? '#8a8c9e' : '#555669', fontSize: 13 }}>
                     {lead.closer || '—'}
                   </div>
@@ -913,38 +902,37 @@ export function VentasPage() {
                   <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(lead.fecha_llamada)}</div>
                   <div><BoolIcon value={lead.asistio} /></div>
                   <div>
-                    {lead.cerrado
-                      ? <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: '#071a0f', color: '#4ade80' }}>Cerrado</span>
-                      : <span style={{ color: '#555669', fontSize: 13 }}>Pendiente</span>}
+                    {lead.segunda_reunion ? (
+                      lead.fecha_segunda_reunion ? (
+                        <span style={{ fontSize: 12, background: 'rgba(192,132,252,0.15)', color: '#c084fc', border: '1px solid rgba(192,132,252,0.3)', borderRadius: '6px', padding: '3px 8px', display: 'inline-block' }}>
+                          {(() => {
+                            const d = new Date(lead.fecha_segunda_reunion + 'T12:00:00')
+                            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`
+                          })()}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#c084fc', fontSize: 13, fontWeight: 600 }}>Sí</span>
+                      )
+                    ) : (
+                      <span style={{ color: '#555669', fontSize: 13 }}>—</span>
+                    )}
                   </div>
                   <div>
-                    {lead.segunda_reunion ? (
-                      <div>
-                        <span style={{ fontSize: 12, background: 'rgba(192,132,252,0.15)', color: '#c084fc', border: '1px solid rgba(192,132,252,0.3)', borderRadius: '6px', padding: '3px 8px', display: 'inline-block' }}>
-                          {lead.fecha_segunda_reunion
-                            ? (() => {
-                                const d = new Date(lead.fecha_segunda_reunion + 'T12:00:00')
-                                return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`
-                              })()
-                            : 'Agendada'}
+                    {lead.resultado_segunda_reunion ? (() => {
+                      const rMap: Record<string, { bg: string; color: string }> = {
+                        'Cerrado':              { bg: 'rgba(74,222,128,0.15)',   color: '#4ade80' },
+                        'Pendiente de cerrar':  { bg: 'rgba(201,168,76,0.15)',   color: '#c9a84c' },
+                        'Reagendado':           { bg: 'rgba(96,165,250,0.15)',   color: '#60a5fa' },
+                        'No cerrado':           { bg: 'rgba(248,113,113,0.15)',  color: '#f87171' },
+                        'No asistió':           { bg: 'rgba(255,255,255,0.08)',  color: '#555669' },
+                      }
+                      const s = rMap[lead.resultado_segunda_reunion] ?? { bg: 'rgba(255,255,255,0.08)', color: '#555669' }
+                      return (
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '6px', display: 'inline-block', background: s.bg, color: s.color }}>
+                          {lead.resultado_segunda_reunion}
                         </span>
-                        {lead.resultado_segunda_reunion && (() => {
-                          const rMap: Record<string, { bg: string; color: string }> = {
-                            'Cerrado':              { bg: 'rgba(74,222,128,0.15)',   color: '#4ade80' },
-                            'Pendiente de cerrar':  { bg: 'rgba(201,168,76,0.15)',   color: '#c9a84c' },
-                            'Reagendado':           { bg: 'rgba(96,165,250,0.15)',   color: '#60a5fa' },
-                            'No cerrado':           { bg: 'rgba(248,113,113,0.15)',  color: '#f87171' },
-                            'No asistió':           { bg: 'rgba(255,255,255,0.08)',  color: '#555669' },
-                          }
-                          const s = rMap[lead.resultado_segunda_reunion] ?? { bg: 'rgba(255,255,255,0.08)', color: '#555669' }
-                          return (
-                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '6px', marginTop: 4, display: 'inline-block', background: s.bg, color: s.color }}>
-                              {lead.resultado_segunda_reunion}
-                            </span>
-                          )
-                        })()}
-                      </div>
-                    ) : (
+                      )
+                    })() : (
                       <span style={{ color: '#555669', fontSize: 13 }}>—</span>
                     )}
                   </div>
