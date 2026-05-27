@@ -5,7 +5,7 @@ import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import type { Client, ClientCloser } from '../types'
 import {
-  ComposedChart, Bar, Line, Area,
+  ComposedChart, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
@@ -686,30 +686,23 @@ export function VentasPage() {
   const leadsConGrabacion = leads.filter((l) => l.recording_url)
   const analysisVideos = materials.filter((m) => m.type === 'analysis_video')
 
-  const salesChartData = (() => {
-    const map: Record<string, { label: string; agendas: number; asistieron: number; calificados: number; cerrados: number; weekNum: number }> = {}
-    leads.forEach((lead) => {
-      const date = new Date((lead.created_at || '').split('T')[0] + 'T12:00:00')
-      const startOfYear = new Date(date.getFullYear(), 0, 1)
-      const weekNum = Math.ceil(((date.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7)
-      const key = `${date.getFullYear()}-W${weekNum}`
-      const label = `S${weekNum}`
-      if (!map[key]) map[key] = { label, agendas: 0, asistieron: 0, calificados: 0, cerrados: 0, weekNum }
-      map[key].agendas++
-      if (lead.asistio) map[key].asistieron++
-      if (lead.calificado) map[key].calificados++
-      if (lead.cerrado) map[key].cerrados++
-    })
-    return Object.values(map)
-      .sort((a, b) => a.weekNum - b.weekNum)
-      .map((m) => ({
-        semana: m.label,
-        agendas: m.agendas,
-        show_rate: m.agendas > 0 ? Math.round(m.asistieron / m.agendas * 100) : 0,
-        calificacion: m.agendas > 0 ? Math.round(m.calificados / m.agendas * 100) : 0,
-        close_rate: m.calificados > 0 ? Math.round(m.cerrados / m.calificados * 100) : 0,
-      }))
-  })()
+  const sortedLeads = [...leads]
+    .filter((l) => l.fecha_llamada)
+    .sort((a, b) => new Date(a.fecha_llamada!).getTime() - new Date(b.fecha_llamada!).getTime())
+
+  const salesChartData = sortedLeads.map((_, index) => {
+    const leadsHastaAqui = sortedLeads.slice(0, index + 1)
+    const total = leadsHastaAqui.length
+    const asistieron = leadsHastaAqui.filter((l) => l.asistio).length
+    const calificados = leadsHastaAqui.filter((l) => l.calificado).length
+    const cerrados = leadsHastaAqui.filter((l) => l.cerrado).length
+    return {
+      agenda: index + 1,
+      show_rate: total > 0 ? Math.round(asistieron / total * 100) : 0,
+      calificacion: total > 0 ? Math.round(calificados / total * 100) : 0,
+      close_rate: calificados > 0 ? Math.round(cerrados / calificados * 100) : 0,
+    }
+  })
 
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
 
@@ -763,25 +756,27 @@ export function VentasPage() {
               {/* Gráfico unificado */}
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Evolución del pipeline</div>
-                <ResponsiveContainer width="100%" height={240}>
-                  <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="semana" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} width={30} domain={[0, 'auto']} />
-                    <Tooltip
-                      contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }}
-                      formatter={(value, name) => {
-                        if (name === 'Agendas') return [value, name]
-                        return [`${value}%`, name]
-                      }}
-                    />
-                    <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                    <Area type="linear" dataKey="agendas" stroke="#60a5fa" strokeWidth={2.5} fill="rgba(96,165,250,0.08)" dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Agendas" />
-                    <Line type="linear" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2} dot={{ fill: '#f0f1f7', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
-                    <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2} dot={{ fill: '#c9a84c', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
-                    <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                {salesChartData.length < 2 ? (
+                  <div style={{ color: '#555669', fontSize: '13px', textAlign: 'center', padding: '40px' }}>
+                    Agendá más llamadas para ver la evolución de tus tasas de conversión.
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 16, left: -8 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="agenda" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} label={{ value: 'Agenda #', position: 'insideBottom', offset: -5, fill: '#555669', fontSize: 11 }} />
+                      <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} width={36} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                      <Tooltip
+                        contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }}
+                        formatter={(value) => `${value}%`}
+                      />
+                      <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
+                      <Line type="linear" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
+                      <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
+                      <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2.5} dot={{ r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                )}
               </div>
 
               {/* Gráfico por closer */}
