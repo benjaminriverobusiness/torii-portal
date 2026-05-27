@@ -19,6 +19,7 @@ import type {
   MetricsTemplate,
   ClientCreative,
   LiAccountMetric,
+  ClientCloser,
 } from '../types'
 
 function formatDate(d: string | null | undefined) {
@@ -171,6 +172,11 @@ export function AdminClient() {
   const [savingClient, setSavingClient] = useState(false)
   const [clientSaveSuccess, setClientSaveSuccess] = useState(false)
 
+  // Closers state
+  const [closers, setClosers] = useState<ClientCloser[]>([])
+  const [addingCloser, setAddingCloser] = useState(false)
+  const [newCloserName, setNewCloserName] = useState('')
+
   // New video form
   const [newVideos, setNewVideos] = useState<Partial<ClientVideo>[]>([])
   // New doc form
@@ -224,6 +230,7 @@ export function AdminClient() {
         leadsRes,
         liAccountsRes,
         allClientsRes,
+        closersRes,
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('id', id).single(),
         supabase
@@ -246,6 +253,7 @@ export function AdminClient() {
         supabase.from('crm_clientes').select('id, lead_nombre, fecha_llamada, notas').eq('client_id', id).order('created_at', { ascending: false }),
         supabase.from('li_account_metrics').select('*').eq('client_id', id).eq('week_number', weekForm.week_number).eq('year', weekForm.year).order('account_name'),
         supabase.from('clients').select('id, name').neq('id', id).order('name'),
+        supabase.from('client_closers').select('*').eq('client_id', id).order('name'),
       ])
 
       const clientData = clientRes.data as Client
@@ -271,6 +279,7 @@ export function AdminClient() {
       setClientLeads((leadsRes.data ?? []) as Array<{ id: string; lead_nombre: string; fecha_llamada?: string | null; notas?: string | null }>)
       setLiAccounts((liAccountsRes.data ?? []) as LiAccountMetric[])
       setAllClients((allClientsRes.data ?? []) as { id: string; name: string }[])
+      setClosers((closersRes.data ?? []) as ClientCloser[])
       if (metricsConfigRes.data) {
         setMetricsConfig(metricsConfigRes.data as ClientMetricsConfig)
       } else {
@@ -713,6 +722,11 @@ export function AdminClient() {
     await supabase.from('crm_clientes').update({ notas: null }).eq('id', leadId)
     setClientLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, notas: null } : l))
     setEditingNotes((prev) => ({ ...prev, [leadId]: '' }))
+  }
+
+  async function reloadClosers() {
+    const { data } = await supabase.from('client_closers').select('*').eq('client_id', id).order('name')
+    setClosers((data ?? []) as ClientCloser[])
   }
 
   const inputStyle: React.CSSProperties = {
@@ -1262,6 +1276,75 @@ export function AdminClient() {
               </div>
             </div>
 
+            {/* CLOSERS */}
+            <div style={{ marginBottom: 32, padding: '20px 24px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', marginTop: 0 }}>
+                CLOSERS
+              </p>
+              {closers.map((closer) => (
+                <div key={closer.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '6px' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: closer.active ? '#4ade80' : '#555669', flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: '#f0f1f7', fontSize: 13, fontWeight: 700 }}>{closer.name}</span>
+                  <button
+                    onClick={async () => {
+                      await supabase.from('client_closers').update({ active: !closer.active }).eq('id', closer.id)
+                      await reloadClosers()
+                    }}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                  >
+                    {closer.active ? 'Desactivar' : 'Activar'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await supabase.from('client_closers').delete().eq('id', closer.id)
+                      await reloadClosers()
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {addingCloser ? (
+                <div style={{ display: 'flex', gap: 8, marginTop: closers.length > 0 ? 8 : 0 }}>
+                  <input
+                    type="text"
+                    placeholder="Nombre del closer"
+                    value={newCloserName}
+                    onChange={(e) => setNewCloserName(e.target.value)}
+                    style={{ ...inputStyle, marginBottom: 0, flex: 1 }}
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!newCloserName.trim()) return
+                      await supabase.from('client_closers').insert({ client_id: id, name: newCloserName, active: true })
+                      setNewCloserName('')
+                      setAddingCloser(false)
+                      await reloadClosers()
+                    }}
+                    style={{ padding: '10px 16px', background: '#e5182b', border: 'none', borderRadius: 8, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', whiteSpace: 'nowrap' }}
+                  >
+                    Agregar
+                  </button>
+                  <button
+                    onClick={() => { setAddingCloser(false); setNewCloserName('') }}
+                    style={{ padding: '10px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddingCloser(true)}
+                  style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', color: '#555669', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', marginTop: closers.length > 0 ? 8 : 0 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                >
+                  + Agregar closer
+                </button>
+              )}
+            </div>
+
             {/* CONFIGURACIÓN DE MÉTRICAS */}
             <div style={{ marginBottom: 32 }}>
               <p style={sectionTitle}>CONFIGURACIÓN DE MÉTRICAS</p>
@@ -1329,6 +1412,7 @@ export function AdminClient() {
               {[
                 { key: 'show_ads_section' as const, label: 'Mostrar sección Meta Ads' },
                 { key: 'show_li_section' as const, label: 'Mostrar sección LinkedIn' },
+                { key: 'show_closer_chart' as const, label: 'Mostrar gráfico por closer' },
               ].map(({ key, label }) => (
                 <div
                   key={key}

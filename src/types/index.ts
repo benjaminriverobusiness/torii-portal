@@ -137,6 +137,7 @@ export interface ClientMetricsConfig {
   show_li_calendly_rate: boolean
   show_li_booking_rate: boolean
   show_li_bookings: boolean
+  show_closer_chart?: boolean
   template_name?: string
 }
 
@@ -192,4 +193,12 @@ export interface MetricsTemplate {
   show_li_calendly_rate: boolean
   show_li_booking_rate: boolean
   show_li_bookings: boolean
+}
+
+export interface ClientCloser {
+  id: string
+  client_id: string
+  name: string
+  active: boolean
+  created_at: string
 }

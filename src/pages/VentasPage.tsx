@@ -3,9 +3,9 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
-import type { Client } from '../types'
+import type { Client, ClientCloser } from '../types'
 import {
-  LineChart, Line, ReferenceLine,
+  ComposedChart, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
@@ -33,6 +33,11 @@ interface CrmLead {
   recording_url?: string
   created_at: string
   updated_at: string
+  closer?: string
+  calificacion?: 'A' | 'B' | 'C'
+  segunda_reunion?: boolean
+  fecha_segunda_reunion?: string
+  resultado_segunda_reunion?: string
 }
 
 interface SalesMaterial {
@@ -60,6 +65,11 @@ interface FormState {
   objeciones: string
   recording_url: string
   next_followup_date: string
+  closer: string
+  calificacion: string
+  segunda_reunion: boolean
+  fecha_segunda_reunion: string
+  resultado_segunda_reunion: string
 }
 
 const EMPTY_FORM: FormState = {
@@ -76,6 +86,11 @@ const EMPTY_FORM: FormState = {
   objeciones: '',
   recording_url: '',
   next_followup_date: '',
+  closer: '',
+  calificacion: '',
+  segunda_reunion: false,
+  fecha_segunda_reunion: '',
+  resultado_segunda_reunion: '',
 }
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -323,7 +338,7 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
 // ─── Lead Modal ───────────────────────────────────────────────
 
 function LeadModal({
-  editingLead, form, setForm, saving, onSave, onClose, onDelete,
+  editingLead, form, setForm, saving, onSave, onClose, onDelete, closers,
 }: {
   editingLead: CrmLead | null
   form: FormState
@@ -332,6 +347,7 @@ function LeadModal({
   onSave: () => void
   onClose: () => void
   onDelete?: () => void
+  closers: ClientCloser[]
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const inp: React.CSSProperties = {
@@ -375,6 +391,41 @@ function LeadModal({
           ))}
         </select>
 
+        <label style={lbl}>Closer</label>
+        {closers.length > 0 ? (
+          <select style={{ ...inp, marginBottom: 16 }} value={form.closer} onChange={(e) => setForm((f) => ({ ...f, closer: e.target.value }))}>
+            <option value="">Sin asignar</option>
+            {closers.map((c) => (
+              <option key={c.id} value={c.name}>{c.name}</option>
+            ))}
+          </select>
+        ) : (
+          <input style={inp} type="text" value={form.closer} onChange={(e) => setForm((f) => ({ ...f, closer: e.target.value }))} />
+        )}
+
+        <label style={lbl}>Calificación del lead</label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          {([
+            { val: 'A', label: 'A — Muy calificado', activeColor: '#4ade80', activeBg: 'rgba(74,222,128,0.15)' },
+            { val: 'B', label: 'B — Semi calificado', activeColor: '#fcd34d', activeBg: 'rgba(252,211,77,0.15)' },
+            { val: 'C', label: 'C — Descalificado', activeColor: '#f87171', activeBg: 'rgba(248,113,113,0.15)' },
+          ] as { val: string; label: string; activeColor: string; activeBg: string }[]).map(({ val, label: optLabel, activeColor, activeBg }) => (
+            <button
+              key={val}
+              onClick={() => setForm((f) => ({ ...f, calificacion: f.calificacion === val ? '' : val }))}
+              style={{
+                padding: '6px 14px', borderRadius: 99, fontSize: 13, cursor: 'pointer',
+                fontFamily: 'DM Sans, sans-serif', border: 'none',
+                ...(form.calificacion === val
+                  ? { background: activeBg, color: activeColor, outline: `1px solid ${activeColor}` }
+                  : { background: 'transparent', color: '#8a8c9e', outline: '1px solid rgba(255,255,255,0.1)' }),
+              }}
+            >
+              {optLabel}
+            </button>
+          ))}
+        </div>
+
         <label style={lbl}>Fecha de llamada</label>
         <input style={{ ...inp, colorScheme: 'dark' }} type="date" value={form.fecha_llamada} onChange={(e) => setForm((f) => ({ ...f, fecha_llamada: e.target.value }))} />
 
@@ -386,6 +437,25 @@ function LeadModal({
           <>
             <label style={lbl}>Monto del cierre</label>
             <input style={inp} type="number" placeholder="$0" value={form.monto} onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))} />
+          </>
+        )}
+
+        <Toggle checked={form.segunda_reunion} onChange={(v) => setForm((f) => ({ ...f, segunda_reunion: v }))} label="¿Agendó segunda reunión?" />
+
+        {form.segunda_reunion && (
+          <>
+            <label style={lbl}>Fecha segunda reunión</label>
+            <input style={{ ...inp, colorScheme: 'dark' }} type="date" value={form.fecha_segunda_reunion} onChange={(e) => setForm((f) => ({ ...f, fecha_segunda_reunion: e.target.value }))} />
+
+            <label style={lbl}>Resultado segunda reunión</label>
+            <select style={{ ...inp, marginBottom: 16 }} value={form.resultado_segunda_reunion} onChange={(e) => setForm((f) => ({ ...f, resultado_segunda_reunion: e.target.value }))}>
+              <option value="">Seleccionar...</option>
+              <option value="Cerrado">Cerrado</option>
+              <option value="No cerrado">No cerrado</option>
+              <option value="Reagendado">Reagendado</option>
+              <option value="No asistió">No asistió</option>
+              <option value="Pendiente de cerrar">Pendiente de cerrar</option>
+            </select>
           </>
         )}
 
@@ -466,6 +536,9 @@ export function VentasPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
 
+  const [closers, setClosers] = useState<ClientCloser[]>([])
+  const [showCloserChart, setShowCloserChart] = useState(false)
+
   const [previewMaterial, setPreviewMaterial] = useState<SalesMaterial | null>(null)
   const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -485,12 +558,16 @@ export function VentasPage() {
         const c = clientData as Client
         setClient(c)
 
-        const [{ data: leadsData }, { data: matsData }] = await Promise.all([
+        const [{ data: leadsData }, { data: matsData }, { data: closersData }, { data: configData }] = await Promise.all([
           supabase.from('crm_clientes').select('*').eq('client_id', c.id).order('created_at', { ascending: false }),
           supabase.from('sales_materials').select('*').eq('client_id', c.id).order('order_index', { ascending: true }),
+          supabase.from('client_closers').select('*').eq('client_id', c.id).eq('active', true).order('name'),
+          supabase.from('client_metrics_config').select('show_closer_chart').eq('client_id', c.id).maybeSingle(),
         ])
         setLeads((leadsData ?? []) as CrmLead[])
         setMaterials((matsData ?? []) as SalesMaterial[])
+        setClosers((closersData ?? []) as ClientCloser[])
+        setShowCloserChart((configData as { show_closer_chart?: boolean } | null)?.show_closer_chart || false)
       } finally {
         setLoading(false)
       }
@@ -520,6 +597,11 @@ export function VentasPage() {
       objeciones: lead.objeciones ?? '',
       recording_url: lead.recording_url ?? '',
       next_followup_date: lead.next_followup_date ?? '',
+      closer: lead.closer ?? '',
+      calificacion: lead.calificacion ?? '',
+      segunda_reunion: lead.segunda_reunion ?? false,
+      fecha_segunda_reunion: lead.fecha_segunda_reunion ?? '',
+      resultado_segunda_reunion: lead.resultado_segunda_reunion ?? '',
     })
     setShowModal(true)
   }
@@ -551,6 +633,11 @@ export function VentasPage() {
         objeciones: form.objeciones || null,
         recording_url: form.recording_url || null,
         next_followup_date: form.next_followup_date || null,
+        closer: form.closer || null,
+        calificacion: (form.calificacion as 'A' | 'B' | 'C') || null,
+        segunda_reunion: form.segunda_reunion || false,
+        fecha_segunda_reunion: form.segunda_reunion ? form.fecha_segunda_reunion || null : null,
+        resultado_segunda_reunion: form.segunda_reunion ? form.resultado_segunda_reunion || null : null,
       }
 
       if (editingLead) {
@@ -583,21 +670,27 @@ export function VentasPage() {
   const leadsConGrabacion = leads.filter((l) => l.recording_url)
   const analysisVideos = materials.filter((m) => m.type === 'analysis_video')
 
-  const monthlyData = (() => {
-    const map = new Map<string, { month: string; llamadas: number; cerrados: number; ingresos: number }>()
-    leads.forEach((l) => {
-      const dateStr = l.fecha_llamada ?? l.created_at
-      const d = new Date(dateStr)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      const label = d.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' })
-      if (!map.has(key)) map.set(key, { month: label, llamadas: 0, cerrados: 0, ingresos: 0 })
-      const entry = map.get(key)!
-      entry.llamadas++
-      if (l.cerrado) { entry.cerrados++; entry.ingresos += l.monto ?? 0 }
+  const salesChartData = (() => {
+    const map: Record<string, { mes: string; agendas: number; asistieron: number; calificados: number; cerrados: number }> = {}
+    leads.forEach((lead) => {
+      const date = new Date(lead.created_at + 'T12:00:00')
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const label = date.toLocaleDateString('es', { month: 'short', year: '2-digit' })
+      if (!map[key]) map[key] = { mes: label, agendas: 0, asistieron: 0, calificados: 0, cerrados: 0 }
+      map[key].agendas++
+      if (lead.asistio) map[key].asistieron++
+      if (lead.calificado) map[key].calificados++
+      if (lead.cerrado) map[key].cerrados++
     })
-    return Array.from(map.entries())
+    return Object.entries(map)
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([, v]) => ({ ...v, close_rate: v.llamadas > 0 ? Math.round((v.cerrados / v.llamadas) * 100) : 0 }))
+      .map(([, m]) => ({
+        mes: m.mes,
+        agendas: m.agendas,
+        show_rate: m.agendas > 0 ? Math.round(m.asistieron / m.agendas * 100) : 0,
+        tasa_calificacion: m.agendas > 0 ? Math.round(m.calificados / m.agendas * 100) : 0,
+        close_rate: m.calificados > 0 ? Math.round(m.cerrados / m.calificados * 100) : 0,
+      }))
   })()
 
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 80px'
@@ -642,57 +735,69 @@ export function VentasPage() {
             ))}
           </div>
 
-          {/* Section 3 — Gráficos Históricos */}
+          {/* Section 3 — Gráficos */}
           {leads.length > 0 && (
             <div className="fade-in visible" style={{ marginBottom: 40 }}>
               <div style={{ marginBottom: 20 }}>
                 <SectionPill text="GRÁFICOS HISTÓRICOS" />
               </div>
 
-              {/* Gráfico 1 — Llamadas y cierres */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 24px 16px', marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Llamadas por mes</div>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+              {/* Gráfico unificado */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Evolución del pipeline</div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <ComposedChart data={salesChartData} margin={{ top: 4, right: 32, bottom: 0, left: -16 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="month" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="mes" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} tickFormatter={(v) => `${v}%`} />
                     <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
-                    <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '8px' }} />
-                    <Line type="monotone" dataKey="llamadas" stroke="#60a5fa" strokeWidth={2.5} dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6, fill: '#60a5fa' }} name="Llamadas" />
-                    <Line type="monotone" dataKey="cerrados" stroke="#4ade80" strokeWidth={2.5} dot={{ fill: '#4ade80', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6, fill: '#4ade80' }} name="Cerrados" />
-                  </LineChart>
+                    <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
+                    <Bar dataKey="agendas" fill="rgba(96,165,250,0.5)" radius={[3, 3, 0, 0]} name="Agendas" />
+                    <Line type="monotone" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2} yAxisId="right" dot={{ fill: '#f0f1f7', r: 3 }} name="Show rate %" />
+                    <Line type="monotone" dataKey="tasa_calificacion" stroke="#c9a84c" strokeWidth={2} yAxisId="right" dot={{ fill: '#c9a84c', r: 3 }} name="Calificación %" />
+                    <Line type="monotone" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} yAxisId="right" dot={{ fill: '#4ade80', r: 3 }} name="Close rate %" />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
 
-              {/* Gráfico 2 — Tasa de cierre */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 24px 16px', marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Tasa de cierre %</div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="month" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} formatter={(v) => [`${v}%`, 'Close rate %']} />
-                    <ReferenceLine y={25} stroke="rgba(74,222,128,0.5)" strokeDasharray="5 5" label={{ value: 'Objetivo 25%', fill: '#4ade80', fontSize: 10, position: 'insideTopRight' }} />
-                    <Line type="monotone" dataKey="close_rate" stroke="#e5182b" strokeWidth={2.5} dot={{ fill: '#e5182b', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Close rate %" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Gráfico 3 — Ingresos */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px 24px 16px', marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Ingresos generados ($)</div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={monthlyData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="month" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`} />
-                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Ingresos']} />
-                    <Line type="monotone" dataKey="ingresos" stroke="#c9a84c" strokeWidth={2.5} dot={{ fill: '#c9a84c', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Ingresos ($)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {/* Gráfico por closer */}
+              {showCloserChart && closers.length > 0 && (() => {
+                const closerChartData = (() => {
+                  const map: Record<string, { closer: string; agendas: number; cerrados: number; close_rate: number }> = {}
+                  leads.filter((l) => l.closer).forEach((lead) => {
+                    const key = lead.closer!
+                    if (!map[key]) map[key] = { closer: key, agendas: 0, cerrados: 0, close_rate: 0 }
+                    map[key].agendas++
+                    if (lead.cerrado) map[key].cerrados++
+                  })
+                  return Object.values(map).map((m) => ({
+                    ...m,
+                    close_rate: m.agendas > 0 ? Math.round(m.cerrados / m.agendas * 100) : 0,
+                  }))
+                })()
+                if (closerChartData.length === 0) return null
+                return (
+                  <>
+                    <div style={{ marginBottom: 20 }}>
+                      <SectionPill text="RENDIMIENTO POR CLOSER" />
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <ComposedChart data={closerChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                          <XAxis dataKey="closer" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                          <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                          <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
+                          <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
+                          <Bar dataKey="agendas" fill="rgba(96,165,250,0.6)" radius={[3, 3, 0, 0]} name="Agendas" />
+                          <Bar dataKey="cerrados" fill="rgba(74,222,128,0.8)" radius={[3, 3, 0, 0]} name="Cerrados" />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           )}
 
@@ -760,7 +865,7 @@ export function VentasPage() {
           ) : (
             <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {['NOMBRE', 'ETAPA', 'LLAMADA', 'ASISTIÓ', 'CALIFICADO', 'CERRADO', 'ACCIONES'].map((h) => (
+                {['NOMBRE', 'ETAPA', 'CALIF', 'LLAMADA', 'ASISTIÓ', 'CERRADO', 'ACCIONES'].map((h) => (
                   <div key={h}>{h}</div>
                 ))}
               </div>
@@ -776,9 +881,19 @@ export function VentasPage() {
                     {lead.lead_email && <div style={{ color: '#555669', fontSize: 12, marginTop: 2 }}>{lead.lead_email}</div>}
                   </div>
                   <div><StageBadge etapa={lead.etapa} /></div>
+                  <div>
+                    {lead.calificacion === 'A' ? (
+                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>A · Muy cal.</span>
+                    ) : lead.calificacion === 'B' ? (
+                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(252,211,77,0.15)', color: '#fcd34d' }}>B · Semi</span>
+                    ) : lead.calificacion === 'C' ? (
+                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>C · Desc.</span>
+                    ) : (
+                      <span style={{ color: '#555669', fontSize: 13 }}>—</span>
+                    )}
+                  </div>
                   <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(lead.fecha_llamada)}</div>
                   <div><BoolIcon value={lead.asistio} /></div>
-                  <div><BoolIcon value={lead.calificado} /></div>
                   <div>
                     {lead.cerrado
                       ? <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: '#071a0f', color: '#4ade80' }}>Cerrado</span>
@@ -875,6 +990,7 @@ export function VentasPage() {
           onSave={handleSave}
           onClose={() => setShowModal(false)}
           onDelete={handleDelete}
+          closers={closers}
         />
       )}
       {previewMaterial && <MaterialPreviewModal material={previewMaterial} onClose={() => setPreviewMaterial(null)} />}
