@@ -205,15 +205,33 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
     close_rate: m.ads_close_rate || 0,
   }))
 
-  const liChartData = metrics.map((m) => ({
-    semana: `S${m.week_number}`,
-    agendas: m.li_bookings || 0,
-    accept_rate: m.li_accept_rate || 0,
-    reply_rate: m.li_reply_rate || 0,
-    offer_rate: m.li_offer_rate || 0,
-    calendly_rate: m.li_calendly_rate || 0,
-    booking_rate: m.li_booking_rate || 0,
-  }))
+  // Build liChartData from liAccountMetrics grouped by week
+  const liByWeek = liAccountMetrics.reduce((acc, a) => {
+    const key = `${a.year}-${a.week_number}`
+    if (!acc[key]) acc[key] = { semana: `S${a.week_number}`, year: a.year, week_number: a.week_number, accounts: [] }
+    acc[key].accounts.push(a)
+    return acc
+  }, {} as Record<string, { semana: string; year: number; week_number: number; accounts: LiAccountMetric[] }>)
+
+  const liChartData = Object.values(liByWeek)
+    .sort((a, b) => a.year !== b.year ? a.year - b.year : a.week_number - b.week_number)
+    .map(week => {
+      const avgField = (field: keyof LiAccountMetric) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vals = week.accounts.map(a => parseFloat(String(a[field] as any))).filter(v => !isNaN(v) && v > 0)
+        return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10 : 0
+      }
+      const totalBookings = week.accounts.reduce((sum, a) => sum + (parseFloat(String(a.bookings || 0)) || 0), 0)
+      return {
+        semana: week.semana,
+        agendas: totalBookings,
+        accept_rate: avgField('accept_rate'),
+        reply_rate: avgField('reply_rate'),
+        offer_rate: avgField('offer_rate'),
+        calendly_rate: avgField('calendly_rate'),
+        booking_rate: avgField('booking_rate'),
+      }
+    })
 
   const showRate = last.ads_show_rate || 0
   const closeRate = last.ads_close_rate || 0

@@ -221,18 +221,17 @@ export function Portal() {
   }, [metrics])
 
   useEffect(() => {
-    if (!client?.id || !selectedMetrics) return
+    if (!client?.id) return
     async function fetchLiAccounts() {
       const { data } = await supabase
         .from('li_account_metrics')
         .select('*')
         .eq('client_id', client!.id)
-        .eq('week_number', selectedMetrics!.week_number)
-        .eq('year', selectedMetrics!.year)
+        .order('week_start', { ascending: true })
       setLiAccountMetrics((data ?? []) as LiAccountMetric[])
     }
     fetchLiAccounts()
-  }, [client?.id, selectedMetricIndex, selectedMetrics?.week_number, selectedMetrics?.year])
+  }, [client?.id])
 
   console.log('Portal data:', { client, status, phases, loading, error })
 
