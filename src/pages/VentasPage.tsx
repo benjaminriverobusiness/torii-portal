@@ -708,6 +708,14 @@ export function VentasPage() {
     }
   })
 
+  console.log('Leads para gráfico:', sortedLeads.map((l) => ({
+    nombre: l.lead_nombre,
+    asistio: l.asistio,
+    tipo: typeof l.asistio,
+    fecha: l.fecha_llamada,
+  })))
+  console.log('Primer punto del gráfico:', salesChartData[0])
+
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
 
   return (
