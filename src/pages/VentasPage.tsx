@@ -687,15 +687,19 @@ export function VentasPage() {
   const analysisVideos = materials.filter((m) => m.type === 'analysis_video')
 
   const sortedLeads = [...leads]
-    .filter((l) => l.fecha_llamada)
-    .sort((a, b) => new Date(a.fecha_llamada!).getTime() - new Date(b.fecha_llamada!).getTime())
+    .filter((l) => l.fecha_llamada || l.created_at)
+    .sort((a, b) => {
+      const dateA = new Date((a.fecha_llamada || a.created_at || '')).getTime()
+      const dateB = new Date((b.fecha_llamada || b.created_at || '')).getTime()
+      return dateA - dateB
+    })
 
   const salesChartData = sortedLeads.map((_, index) => {
     const leadsHastaAqui = sortedLeads.slice(0, index + 1)
     const total = leadsHastaAqui.length
-    const asistieron = leadsHastaAqui.filter((l) => l.asistio).length
-    const calificados = leadsHastaAqui.filter((l) => l.calificado).length
-    const cerrados = leadsHastaAqui.filter((l) => l.cerrado).length
+    const asistieron = leadsHastaAqui.filter((l) => l.asistio === true).length
+    const calificados = leadsHastaAqui.filter((l) => l.calificado === true).length
+    const cerrados = leadsHastaAqui.filter((l) => l.cerrado === true).length
     return {
       agenda: index + 1,
       show_rate: total > 0 ? Math.round(asistieron / total * 100) : 0,
