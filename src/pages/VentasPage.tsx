@@ -5,7 +5,7 @@ import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import type { Client, ClientCloser } from '../types'
 import {
-  ComposedChart, Bar, Line,
+  ComposedChart, Bar, Line, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
@@ -95,6 +95,23 @@ const EMPTY_FORM: FormState = {
 
 // ─── Helpers ─────────────────────────────────────────────────
 
+function shortEtapa(etapa: string): string {
+  const map: Record<string, string> = {
+    'Llamada realizada': 'Realizada',
+    'Llamada Realizada': 'Realizada',
+    'Seguimiento': 'Seguim.',
+    'No calificado': 'No cal.',
+  }
+  return map[etapa] || etapa
+}
+
+function shortResultado(r: string): string {
+  const map: Record<string, string> = {
+    'Pendiente de cerrar': 'Pendiente',
+  }
+  return map[r] || r
+}
+
 function formatDate(s: string | null | undefined): string {
   if (!s) return '—'
   return new Date(s).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -145,7 +162,7 @@ function StageBadge({ etapa }: { etapa: string }) {
   const s = map[etapa] ?? { bg: '#111', color: '#8a8c9e' }
   return (
     <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: s.bg, color: s.color }}>
-      {etapa}
+      {shortEtapa(etapa)}
     </span>
   )
 }
@@ -746,18 +763,23 @@ export function VentasPage() {
               {/* Gráfico unificado */}
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Evolución del pipeline</div>
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={240}>
                   <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="semana" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                    <YAxis yAxisId="left" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} width={30} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} tickFormatter={(v) => `${v}%`} domain={[0, 100]} width={40} />
-                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
+                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} width={30} domain={[0, 'auto']} />
+                    <Tooltip
+                      contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }}
+                      formatter={(value, name) => {
+                        if (name === 'Agendas') return [value, name]
+                        return [`${value}%`, name]
+                      }}
+                    />
                     <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                    <Line type="monotone" dataKey="agendas" yAxisId="left" stroke="#60a5fa" strokeWidth={2.5} dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Agendas" />
-                    <Line type="monotone" dataKey="show_rate" yAxisId="right" stroke="#f0f1f7" strokeWidth={2} dot={{ fill: '#f0f1f7', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
-                    <Line type="monotone" dataKey="calificacion" yAxisId="right" stroke="#c9a84c" strokeWidth={2} dot={{ fill: '#c9a84c', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
-                    <Line type="monotone" dataKey="close_rate" yAxisId="right" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
+                    <Area type="linear" dataKey="agendas" stroke="#60a5fa" strokeWidth={2.5} fill="rgba(96,165,250,0.08)" dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Agendas" />
+                    <Line type="linear" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2} dot={{ fill: '#f0f1f7', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
+                    <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2} dot={{ fill: '#c9a84c', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
+                    <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -929,7 +951,7 @@ export function VentasPage() {
                       const s = rMap[lead.resultado_segunda_reunion] ?? { bg: 'rgba(255,255,255,0.08)', color: '#555669' }
                       return (
                         <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '6px', display: 'inline-block', background: s.bg, color: s.color }}>
-                          {lead.resultado_segunda_reunion}
+                          {shortResultado(lead.resultado_segunda_reunion)}
                         </span>
                       )
                     })() : (
