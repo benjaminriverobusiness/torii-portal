@@ -703,7 +703,7 @@ export function VentasPage() {
     return {
       agenda: index + 1,
       show_rate: total > 0 ? Math.round(asistieron / total * 100) : 0,
-      calificacion: total > 0 ? Math.round(calificados / total * 100) : 0,
+      calificacion: asistieron > 0 ? Math.round(calificados / asistieron * 100) : 0,
       close_rate: calificados > 0 ? Math.round(cerrados / calificados * 100) : 0,
     }
   })
