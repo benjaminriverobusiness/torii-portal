@@ -322,23 +322,13 @@ export function Portal() {
     return value <= 1 ? value * 100 : value
   }
 
-  const platform = client?.canal
-
-  // KPIs automáticos desde pipeline
-  const startOfWeek = new Date()
-  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
-  startOfWeek.setHours(0, 0, 0, 0)
-  const agendasThisWeek = leads.filter(l => new Date(l.created_at) >= startOfWeek).length
-  const withCall = leads.filter(l => l.fecha_llamada)
-  const attended = withCall.filter(l => l.asistio)
-  const autoShowRate = withCall.length > 0 ? Math.round((attended.length / withCall.length) * 100) : 0
-  const closed = attended.filter(l => l.cerrado)
-  const autoCloseRate = attended.length > 0 ? Math.round((closed.length / attended.length) * 100) : 0
-  const kpiCpbc: number | null = status.cpbc_current ?? null
-
-  const totalLiBookings = platform === 'LinkedIn Outbound'
-    ? metrics.reduce((sum, m) => sum + (m.li_bookings ?? 0), 0)
-    : null
+  const agendasEfectivas = leads.filter(l => l.asistio === true).length
+  const withAsistio = leads.filter(l => l.asistio)
+  const showRateTotal = leads.length > 0 ? Math.round((withAsistio.length / leads.length) * 100) : null
+  const calificados = leads.filter(l => l.calificado)
+  const calificacionRateTotal = withAsistio.length > 0 ? Math.round((calificados.length / withAsistio.length) * 100) : null
+  const cerrados = leads.filter(l => l.cerrado)
+  const closeRateTotal = calificados.length > 0 ? Math.round((cerrados.length / calificados.length) * 100) : null
 
   console.log('Rendering portal with:', {
     daysActive,
@@ -481,18 +471,15 @@ export function Portal() {
         </div>
         )} catch(e) { console.error('JourneyMap error:', e); return <div style={{color:'red',padding:16}}>Error en JourneyMap</div> } })()}
 
-        {/* KPIs automáticos */}
+        {/* MÉTRICAS TOTALES */}
         {(() => { try { return (
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
-          <SectionLabel text="MÉTRICAS DE LA SEMANA" />
+          <SectionLabel text="MÉTRICAS TOTALES" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
-            <KpiCard label="AGENDAS ESTA SEMANA" value={agendasThisWeek} colorLogic="neutral" delay={0} />
-            <KpiCard label="SHOW RATE" value={autoShowRate} suffix="%" objective={60} colorLogic="showRate" delay={100} />
-            <KpiCard label="TASA DE CIERRE" value={autoCloseRate} suffix="%" objective={25} colorLogic="closingRate" delay={200} />
-            {platform === 'LinkedIn Outbound'
-              ? <KpiCard label="AGENDAS TOTALES" value={totalLiBookings} colorLogic="neutral" delay={300} />
-              : <KpiCard label="CPBC ACTUAL" value={kpiCpbc} prefix="$" objective={status.cpbc_objective ?? undefined} colorLogic="cpbc" delay={300} />
-            }
+            <KpiCard label="AGENDAS EFECTIVAS" value={agendasEfectivas} colorLogic="neutral" delay={0} />
+            <KpiCard label="SHOW RATE TOTAL" value={showRateTotal} suffix="%" objective={60} colorLogic="showRate" delay={100} />
+            <KpiCard label="CALIFICACIÓN TOTAL" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} />
+            <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} />
           </div>
         </div>
         )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}
@@ -624,6 +611,7 @@ export function Portal() {
             config={metricsConfig}
             cpbc_objective={status?.cpbc_objective ?? undefined}
             liAccountMetrics={liAccountMetrics}
+            selectedMetricIndex={selectedMetricIndex}
           />
         </div>
         ) } catch(e) { console.error('Metrics error:', e); return null } })()}

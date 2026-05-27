@@ -20,6 +20,7 @@ interface MetricsSectionProps {
   config: ClientMetricsConfig | null
   cpbc_objective?: number
   liAccountMetrics?: LiAccountMetric[]
+  selectedMetricIndex: number
 }
 
 const tooltipContentStyle = {
@@ -164,7 +165,7 @@ function ChartBox({
   )
 }
 
-export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetrics = [] }: MetricsSectionProps) {
+export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetrics = [], selectedMetricIndex }: MetricsSectionProps) {
   const [liDetailOpen, setLiDetailOpen] = useState(false)
   if (!config || (!config.show_ads_section && !config.show_li_section)) return null
 
@@ -193,7 +194,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
     )
   }
 
-  const last = metrics[metrics.length - 1]
+  const selectedMetric = metrics[metrics.length - 1 - selectedMetricIndex] ?? null
 
   const adsChartData = metrics.map((m) => ({
     semana: `S${m.week_number}`,
@@ -233,10 +234,10 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
       }
     })
 
-  const showRate = last.ads_show_rate || 0
-  const closeRate = last.ads_close_rate || 0
-  const acceptRate = last.li_accept_rate || 0
-  const replyRate = last.li_reply_rate || 0
+  const showRate = selectedMetric?.ads_show_rate || 0
+  const closeRate = selectedMetric?.ads_close_rate || 0
+  const acceptRate = selectedMetric?.li_accept_rate || 0
+  const replyRate = selectedMetric?.li_reply_rate || 0
 
   return (
     <div style={{ marginBottom: 32 }}>
@@ -298,31 +299,31 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
             {config.show_ads_investment && (
               <MetricCard
                 label="INVERSIÓN SEMANAL"
-                value={last.ads_investment}
+                value={selectedMetric?.ads_investment}
                 color="#c9a84c"
                 prefix="$"
               />
             )}
             {config.show_ads_leads && (
-              <MetricCard label="LEADS GENERADOS" value={last.ads_leads} color="#f0f1f7" />
+              <MetricCard label="LEADS GENERADOS" value={selectedMetric?.ads_leads} color="#f0f1f7" />
             )}
             {config.show_ads_cpl && (
-              <MetricCard label="COSTO POR LEAD" value={last.ads_cpl} color="#f0f1f7" prefix="$" />
+              <MetricCard label="COSTO POR LEAD" value={selectedMetric?.ads_cpl} color="#f0f1f7" prefix="$" />
             )}
             {config.show_ads_qualified && (
               <MetricCard
                 label="LEADS CALIFICADOS"
-                value={last.ads_qualified_leads}
+                value={selectedMetric?.ads_qualified_leads}
                 color="#60a5fa"
               />
             )}
             {config.show_ads_cpbc && (
               <MetricCard
                 label="COSTO / BOOKING"
-                value={last.ads_cpbc}
+                value={selectedMetric?.ads_cpbc}
                 color={
                   cpbc_objective
-                    ? (last.ads_cpbc ?? 0) <= cpbc_objective
+                    ? (selectedMetric?.ads_cpbc ?? 0) <= cpbc_objective
                       ? '#4ade80'
                       : '#e5182b'
                     : '#f0f1f7'
@@ -564,12 +565,12 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               />
             )}
             {config.show_li_offer_rate && (
-              <MetricCard label="OFFER RATE" value={last.li_offer_rate} color="#c084fc" suffix="%" />
+              <MetricCard label="OFFER RATE" value={selectedMetric?.li_offer_rate} color="#c084fc" suffix="%" />
             )}
             {config.show_li_calendly_rate && (
               <MetricCard
                 label="CALENDLY RATE"
-                value={last.li_calendly_rate}
+                value={selectedMetric?.li_calendly_rate}
                 color="#60a5fa"
                 suffix="%"
               />
@@ -577,13 +578,13 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
             {config.show_li_booking_rate && (
               <MetricCard
                 label="BOOKING RATE"
-                value={last.li_booking_rate}
+                value={selectedMetric?.li_booking_rate}
                 color="#4ade80"
                 suffix="%"
               />
             )}
             {config.show_li_bookings && (
-              <MetricCard label="AGENDAS GENERADAS" value={last.li_bookings} color="#f0f1f7" />
+              <MetricCard label="AGENDAS GENERADAS" value={selectedMetric?.li_bookings} color="#f0f1f7" />
             )}
           </div>
           )}
