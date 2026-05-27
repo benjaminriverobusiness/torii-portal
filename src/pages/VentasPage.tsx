@@ -5,7 +5,7 @@ import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 import type { Client, ClientCloser } from '../types'
 import {
-  ComposedChart, Bar, Line,
+  ComposedChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
@@ -692,7 +692,7 @@ export function VentasPage() {
       }))
   })()
 
-  const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
+  const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
@@ -741,21 +741,35 @@ export function VentasPage() {
                 <SectionPill text="GRÁFICOS HISTÓRICOS" />
               </div>
 
-              {/* Gráfico unificado */}
+              {/* Gráfico unificado — dos subgráficos en una card */}
               <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
                 <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Evolución del pipeline</div>
-                <ResponsiveContainer width="100%" height={280}>
-                  <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Agendas</div>
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="mes" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
                     <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
                     <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
-                    <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
                     <Line type="monotone" dataKey="agendas" stroke="#60a5fa" strokeWidth={2.5} dot={{ fill: '#60a5fa', r: 4, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 6 }} name="Agendas" />
+                  </LineChart>
+                </ResponsiveContainer>
+
+                <div style={{ height: 16 }} />
+
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Tasas de conversión</div>
+                <ResponsiveContainer width="100%" height={180}>
+                  <LineChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis dataKey="mes" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
+                    <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                    <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
+                    <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
                     <Line type="monotone" dataKey="show_rate" stroke="#f0f1f7" strokeWidth={2} dot={{ fill: '#f0f1f7', r: 3 }} name="Show rate %" />
                     <Line type="monotone" dataKey="tasa_calificacion" stroke="#c9a84c" strokeWidth={2} dot={{ fill: '#c9a84c', r: 3 }} name="Calificación %" />
                     <Line type="monotone" dataKey="close_rate" stroke="#4ade80" strokeWidth={2} dot={{ fill: '#4ade80', r: 3 }} name="Close rate %" />
-                  </ComposedChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
 
@@ -827,6 +841,9 @@ export function VentasPage() {
                     <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
                     <StageBadge etapa={lead.etapa} />
                   </div>
+                  {lead.closer && (
+                    <div style={{ color: '#8a8c9e', fontSize: 13, marginBottom: 6 }}>👤 {lead.closer}</div>
+                  )}
                   {lead.fecha_llamada && (
                     <div style={{ color: '#8a8c9e', fontSize: 13, marginBottom: 10 }}>
                       📅 {formatDate(lead.fecha_llamada)}
@@ -863,7 +880,7 @@ export function VentasPage() {
           ) : (
             <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {['NOMBRE', 'ETAPA', 'CALIF', 'LLAMADA', 'ASISTIÓ', 'CERRADO', '2DA REUNIÓN', 'ACCIONES'].map((h) => (
+                {['NOMBRE', 'ETAPA', 'CLOSER', 'CALIF', 'LLAMADA', 'ASISTIÓ', 'CERRADO', '2DA REUNIÓN', 'ACCIONES'].map((h) => (
                   <div key={h}>{h}</div>
                 ))}
               </div>
@@ -879,6 +896,9 @@ export function VentasPage() {
                     {lead.lead_email && <div style={{ color: '#555669', fontSize: 12, marginTop: 2 }}>{lead.lead_email}</div>}
                   </div>
                   <div><StageBadge etapa={lead.etapa} /></div>
+                  <div style={{ color: lead.closer ? '#8a8c9e' : '#555669', fontSize: 13 }}>
+                    {lead.closer || '—'}
+                  </div>
                   <div>
                     {lead.calificacion === 'A' ? (
                       <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>A · Muy cal.</span>
@@ -908,9 +928,21 @@ export function VentasPage() {
                               })()
                             : 'Agendada'}
                         </span>
-                        {lead.resultado_segunda_reunion && (
-                          <div style={{ color: '#8a8c9e', fontSize: 11, marginTop: 3 }}>{lead.resultado_segunda_reunion}</div>
-                        )}
+                        {lead.resultado_segunda_reunion && (() => {
+                          const rMap: Record<string, { bg: string; color: string }> = {
+                            'Cerrado':              { bg: 'rgba(74,222,128,0.15)',   color: '#4ade80' },
+                            'Pendiente de cerrar':  { bg: 'rgba(201,168,76,0.15)',   color: '#c9a84c' },
+                            'Reagendado':           { bg: 'rgba(96,165,250,0.15)',   color: '#60a5fa' },
+                            'No cerrado':           { bg: 'rgba(248,113,113,0.15)',  color: '#f87171' },
+                            'No asistió':           { bg: 'rgba(255,255,255,0.08)',  color: '#555669' },
+                          }
+                          const s = rMap[lead.resultado_segunda_reunion] ?? { bg: 'rgba(255,255,255,0.08)', color: '#555669' }
+                          return (
+                            <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '6px', marginTop: 4, display: 'inline-block', background: s.bg, color: s.color }}>
+                              {lead.resultado_segunda_reunion}
+                            </span>
+                          )
+                        })()}
                       </div>
                     ) : (
                       <span style={{ color: '#555669', fontSize: 13 }}>—</span>
