@@ -99,6 +99,7 @@ export function AdminClient() {
     show_li_bookings: false,
   })
   const [metricsHistory, setMetricsHistory] = useState<ClientMetrics[]>([])
+  const [liBookingsByWeek, setLiBookingsByWeek] = useState<Record<string, number>>({})
   const [weekForm, setWeekForm] = useState({
     week_number: 1,
     year: new Date().getFullYear(),
@@ -247,7 +248,7 @@ export function AdminClient() {
         supabase.from('client_portal_status').select('*').eq('client_id', id).order('updated_at', { ascending: false }).limit(8),
         supabase.from('metrics_templates').select('*').order('name'),
         supabase.from('client_metrics_config').select('*').eq('client_id', id).maybeSingle(),
-        supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }).limit(8),
+        supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }),
         supabase.from('client_creatives').select('*').eq('client_id', id).order('created_at', { ascending: false }),
         supabase.from('sales_materials').select('*').eq('client_id', id).order('order_index', { ascending: true }),
         supabase.from('crm_clientes').select('id, lead_nombre, fecha_llamada, notas').eq('client_id', id).order('created_at', { ascending: false }),
@@ -274,6 +275,18 @@ export function AdminClient() {
       setHistory((historyRes.data ?? []) as ClientPortalStatus[])
       setTemplates((templatesRes.data ?? []) as MetricsTemplate[])
       setMetricsHistory((metricsHistoryRes.data ?? []) as ClientMetrics[])
+
+      const { data: liBookingsData } = await supabase
+        .from('li_account_metrics')
+        .select('week_number, year, bookings')
+        .eq('client_id', id)
+      const liBookingsMap: Record<string, number> = {}
+      liBookingsData?.forEach(row => {
+        const key = `${row.week_number}-${row.year}`
+        liBookingsMap[key] = (liBookingsMap[key] ?? 0) + (Number(row.bookings) || 0)
+      })
+      setLiBookingsByWeek(liBookingsMap)
+
       setCreatives((creativesRes.data ?? []) as ClientCreative[])
       setSalesMaterials((salesMatsRes.data ?? []) as SalesMaterialLocal[])
       setClientLeads((leadsRes.data ?? []) as Array<{ id: string; lead_nombre: string; fecha_llamada?: string | null; notas?: string | null }>)
@@ -1935,7 +1948,7 @@ export function AdminClient() {
                             S{m.week_number} / {m.year}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
-                            {m.ads_bookings ?? m.li_bookings ?? '—'}
+                            {liBookingsByWeek[`${m.week_number}-${m.year}`] ?? '—'}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
                             {m.ads_cpbc ? `$${m.ads_cpbc}` : '—'}
