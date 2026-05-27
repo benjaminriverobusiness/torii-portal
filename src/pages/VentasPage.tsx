@@ -710,6 +710,19 @@ export function VentasPage() {
     }
   })
 
+  console.log('=== DIAGNÓSTICO SHOW RATE ===')
+  console.log('sortedLeads count:', sortedLeads.length)
+  if (sortedLeads.length > 0) {
+    const first = sortedLeads[0]
+    console.log('Primer lead raw:', JSON.stringify(first))
+    console.log('asistio value:', first.asistio)
+    console.log('asistio type:', typeof first.asistio)
+    console.log('asistio === true:', first.asistio === true)
+    console.log('Boolean(asistio):', Boolean(first.asistio))
+  }
+  console.log('salesChartData[0]:', salesChartData[0])
+  console.log('============================')
+
   const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
 
   return (
