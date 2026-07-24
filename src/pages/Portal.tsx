@@ -203,9 +203,10 @@ export function Portal() {
           .eq('client_id', client!.id)
           .maybeSingle(),
         supabase
-          .from('crm_clientes')
-          .select('*')
-          .eq('client_id', client!.id),
+          .from('client_closer_calls')
+          .select('*, asistio:se_presento, calificado:califico, cerrado:cerro')
+          .eq('client_id', client!.id)
+          .eq('owner_type', 'client'),
       ])
       setMetrics((metricsRes.data ?? []) as ClientMetrics[])
       setMetricsConfig(configRes.data as ClientMetricsConfig | null)

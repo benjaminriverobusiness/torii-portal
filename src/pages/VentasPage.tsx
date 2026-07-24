@@ -93,6 +93,18 @@ const EMPTY_FORM: FormState = {
   resultado_segunda_reunion: '',
 }
 
+const CRM_LEAD_SELECT = `
+  id, client_id,
+  lead_nombre:lead_name, lead_email, lead_telefono:lead_phone, lead_linkedin,
+  etapa, fecha_agenda, fecha_llamada,
+  asistio:se_presento, calificado:califico, cerrado:cerro,
+  monto:precio, objeciones:objections, notas:notes,
+  next_followup_date, followup_count, recording_url,
+  created_at, updated_at, closer, calificacion,
+  segunda_reunion, fecha_segunda_reunion:segunda_llamada_fecha,
+  resultado_segunda_reunion:segunda_llamada_status
+`
+
 // ─── Helpers ─────────────────────────────────────────────────
 
 function shortEtapa(etapa: string): string {
@@ -575,7 +587,7 @@ export function VentasPage() {
         setClient(c)
 
         const [{ data: leadsData }, { data: matsData }, { data: closersData }, { data: configData }] = await Promise.all([
-          supabase.from('crm_clientes').select('*').eq('client_id', c.id).order('created_at', { ascending: false }),
+          supabase.from('client_closer_calls').select(CRM_LEAD_SELECT).eq('client_id', c.id).eq('owner_type', 'client').order('created_at', { ascending: false }),
           supabase.from('sales_materials').select('*').eq('client_id', c.id).order('order_index', { ascending: true }),
           supabase.from('client_closers').select('*').eq('client_id', c.id).eq('active', true).order('name'),
           supabase.from('client_metrics_config').select('show_closer_chart').eq('client_id', c.id).maybeSingle(),
@@ -624,7 +636,7 @@ export function VentasPage() {
 
   async function handleDelete() {
     if (!editingLead) return
-    await supabase.from('crm_clientes').delete().eq('id', editingLead.id)
+    await supabase.from('client_closer_calls').delete().eq('id', editingLead.id)
     setLeads((prev) => prev.filter((l) => l.id !== editingLead.id))
     setShowModal(false)
     setEditingLead(null)
@@ -636,33 +648,34 @@ export function VentasPage() {
     try {
       const payload = {
         client_id: client.id,
-        lead_nombre: form.lead_nombre,
+        owner_type: 'client',
+        lead_name: form.lead_nombre,
         lead_email: form.lead_email || null,
-        lead_telefono: form.lead_telefono || null,
+        lead_phone: form.lead_telefono || null,
         etapa: form.etapa,
         fecha_llamada: form.fecha_llamada || null,
-        asistio: form.asistio,
-        calificado: form.calificado,
-        cerrado: form.cerrado,
-        monto: form.cerrado && form.monto ? parseFloat(form.monto) : null,
-        notas: form.notas || null,
-        objeciones: form.objeciones || null,
+        se_presento: form.asistio,
+        califico: form.calificado,
+        cerro: form.cerrado,
+        precio: form.cerrado && form.monto ? parseFloat(form.monto) : null,
+        notes: form.notas || null,
+        objections: form.objeciones || null,
         recording_url: form.recording_url || null,
         next_followup_date: form.next_followup_date || null,
         closer: form.closer || null,
         calificacion: (form.calificacion as 'A' | 'B' | 'C') || null,
         segunda_reunion: form.segunda_reunion || false,
-        fecha_segunda_reunion: form.segunda_reunion ? form.fecha_segunda_reunion || null : null,
-        resultado_segunda_reunion: form.segunda_reunion ? form.resultado_segunda_reunion || null : null,
+        segunda_llamada_fecha: form.segunda_reunion ? form.fecha_segunda_reunion || null : null,
+        segunda_llamada_status: form.segunda_reunion ? form.resultado_segunda_reunion || null : null,
       }
 
       if (editingLead) {
-        await supabase.from('crm_clientes').update(payload).eq('id', editingLead.id)
+        await supabase.from('client_closer_calls').update(payload).eq('id', editingLead.id)
       } else {
-        await supabase.from('crm_clientes').insert(payload)
+        await supabase.from('client_closer_calls').insert(payload)
       }
 
-      const { data } = await supabase.from('crm_clientes').select('*').eq('client_id', client.id).order('created_at', { ascending: false })
+      const { data } = await supabase.from('client_closer_calls').select(CRM_LEAD_SELECT).eq('client_id', client.id).eq('owner_type', 'client').order('created_at', { ascending: false })
       setLeads((data ?? []) as CrmLead[])
       setShowModal(false)
     } catch (e) {

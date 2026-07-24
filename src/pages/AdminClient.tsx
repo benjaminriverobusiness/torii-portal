@@ -251,7 +251,7 @@ export function AdminClient() {
         supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }),
         supabase.from('client_creatives').select('*').eq('client_id', id).order('created_at', { ascending: false }),
         supabase.from('sales_materials').select('*').eq('client_id', id).order('order_index', { ascending: true }),
-        supabase.from('crm_clientes').select('id, lead_nombre, fecha_llamada, notas').eq('client_id', id).order('created_at', { ascending: false }),
+        supabase.from('client_closer_calls').select('id, lead_nombre:lead_name, fecha_llamada, notas:notes').eq('client_id', id).eq('owner_type', 'client').order('created_at', { ascending: false }),
         supabase.from('li_account_metrics').select('*').eq('client_id', id).eq('week_number', weekForm.week_number).eq('year', weekForm.year).order('account_name'),
         supabase.from('clients').select('id, name').neq('id', id).order('name'),
         supabase.from('client_closers').select('*').eq('client_id', id).order('name'),
@@ -725,14 +725,14 @@ export function AdminClient() {
 
   async function handleSaveNotes(leadId: string) {
     const notes = editingNotes[leadId] ?? ''
-    await supabase.from('crm_clientes').update({ notas: notes }).eq('id', leadId)
+    await supabase.from('client_closer_calls').update({ notes }).eq('id', leadId)
     setClientLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, notas: notes } : l))
     setNotesSaved((prev) => ({ ...prev, [leadId]: true }))
     setTimeout(() => setNotesSaved((prev) => ({ ...prev, [leadId]: false })), 2000)
   }
 
   async function handleClearNotes(leadId: string) {
-    await supabase.from('crm_clientes').update({ notas: null }).eq('id', leadId)
+    await supabase.from('client_closer_calls').update({ notes: null }).eq('id', leadId)
     setClientLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, notas: null } : l))
     setEditingNotes((prev) => ({ ...prev, [leadId]: '' }))
   }
