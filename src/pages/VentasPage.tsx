@@ -38,6 +38,18 @@ interface CrmLead {
   segunda_reunion?: boolean
   fecha_segunda_reunion?: string
   resultado_segunda_reunion?: string
+  producto?: string
+  comision_estimada?: number
+  motivo_no_cierre?: string
+  situacion_laboral?: string
+  nivel_ingresos?: string
+  capacidad_ahorro?: string
+  preocupacion_actual?: string
+  edad?: number
+  ad_id?: string
+  calificaba?: boolean
+  situacion_resultado?: string
+  hijos_casado?: string
 }
 
 interface SalesMaterial {
@@ -51,47 +63,37 @@ interface SalesMaterial {
   created_at: string
 }
 
-interface FormState {
-  lead_nombre: string
-  lead_email: string
-  lead_telefono: string
-  etapa: string
-  fecha_llamada: string
-  asistio: boolean
-  calificado: boolean
-  cerrado: boolean
-  monto: string
-  notas: string
-  objeciones: string
-  recording_url: string
-  next_followup_date: string
-  closer: string
-  calificacion: string
-  segunda_reunion: boolean
-  fecha_segunda_reunion: string
-  resultado_segunda_reunion: string
-}
+// Opciones de los <select> — se usan directo en las columnas editables de
+// ALL_COLUMNS (ya no hay un form de modal separado).
+const SITUACION_PRIMERA_CITA_OPTIONS = [
+  'Cerrado',
+  'No cerrado',
+  'Reagendado',
+  'No asistió',
+  'Pendiente de cerrar',
+  'Necesita 2da cita',
+]
 
-const EMPTY_FORM: FormState = {
-  lead_nombre: '',
-  lead_email: '',
-  lead_telefono: '',
-  etapa: 'Agendado',
-  fecha_llamada: '',
-  asistio: false,
-  calificado: false,
-  cerrado: false,
-  monto: '',
-  notas: '',
-  objeciones: '',
-  recording_url: '',
-  next_followup_date: '',
-  closer: '',
-  calificacion: '',
-  segunda_reunion: false,
-  fecha_segunda_reunion: '',
-  resultado_segunda_reunion: '',
-}
+const SITUACION_LABORAL_OPTIONS = [
+  'Empleado',
+  'Persona física con actividad empresarial',
+  'Empresario',
+]
+
+const NIVEL_INGRESOS_OPTIONS = [
+  '-40.000MXN/Mes',
+  'Entre 40.000 y 50.000 MXN/Mes',
+  'Entre 50.000 y 80.000 MXN/Mes',
+  '>80,000 MXN/mes',
+  'No especificó',
+]
+
+const CAPACIDAD_AHORRO_OPTIONS = [
+  'Alta (>1000 USD/mes)',
+  'Media (500-1000 USD/mes)',
+  'Baja (<500 USD/mes)',
+  'No especificó',
+]
 
 const CRM_LEAD_SELECT = `
   id, client_id,
@@ -102,7 +104,10 @@ const CRM_LEAD_SELECT = `
   next_followup_date, followup_count, recording_url,
   created_at, updated_at, closer, calificacion,
   segunda_reunion, fecha_segunda_reunion:segunda_llamada_fecha,
-  resultado_segunda_reunion:segunda_llamada_status
+  resultado_segunda_reunion:segunda_llamada_status,
+  producto, comision_estimada, motivo_no_cierre:loss_reason, situacion_laboral,
+  nivel_ingresos, capacidad_ahorro, preocupacion_actual, edad,
+  ad_id, calificaba, situacion_resultado, hijos_casado
 `
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -115,13 +120,6 @@ function shortEtapa(etapa: string): string {
     'No calificado': 'No cal.',
   }
   return map[etapa] || etapa
-}
-
-function shortResultado(r: string): string {
-  const map: Record<string, string> = {
-    'Pendiente de cerrar': 'Pendiente',
-  }
-  return map[r] || r
 }
 
 function formatDate(s: string | null | undefined): string {
@@ -145,6 +143,26 @@ function getEmbedUrl(url: string): string {
   const loom = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/)
   if (loom) return `https://www.loom.com/embed/${loom[1]}`
   return url
+}
+
+// ─── Column config ─────────────────────────────────────────────
+// Todas las columnas están siempre visibles (nada de selector) y cada celda
+// se edita in-place — ver EditableCell más abajo.
+
+interface RowCtx {
+  closers: ClientCloser[]
+  savingCell: string | null
+  errorCell: string | null
+  saveField: (lead: CrmLead, uiPatch: Partial<CrmLead>, dbPatch: Record<string, unknown>) => void
+  newLeadId: string | null
+  onAutoFocusHandled: () => void
+}
+
+interface ColumnDef {
+  key: string
+  label: string
+  minPx: number
+  render: (lead: CrmLead, ctx: RowCtx) => React.ReactNode
 }
 
 // ─── Tiny shared pieces ───────────────────────────────────────
@@ -185,16 +203,329 @@ function BoolIcon({ value }: { value: boolean | null | undefined }) {
   return <span style={{ color: '#555669' }}>—</span>
 }
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, cursor: 'pointer' }} onClick={() => onChange(!checked)}>
-      <div style={{ width: 40, height: 22, borderRadius: 11, background: checked ? '#e5182b' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-        <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: checked ? 20 : 2, transition: 'left 0.2s' }} />
+// ─── EditableCell — el único componente que sabe editar una celda ─────────
+// 4 tipos: bool (click alterna), select/date (control nativo siempre presente,
+// el navegador se encarga del picker), text/number (input siempre presente).
+// Todos comparten: guardado optimista directo (sin confirmar aparte), mini
+// spinner mientras guarda, flash de error + revert si falla.
+
+interface EditableCellProps {
+  value: string | number | boolean | null | undefined
+  type: 'text' | 'number' | 'date' | 'select' | 'bool'
+  options?: string[]
+  editable?: boolean
+  disabledTitle?: string
+  saving: boolean
+  errored: boolean
+  onSave: (next: string) => void
+  placeholder?: string
+  emptyOptionLabel?: string
+  validate?: (next: string) => boolean
+  autoFocus?: boolean
+  onAutoFocusHandled?: () => void
+}
+
+function EditableCell({
+  value, type, options, editable = true, disabledTitle, saving, errored, onSave,
+  placeholder, emptyOptionLabel = '—', validate, autoFocus, onAutoFocusHandled,
+}: EditableCellProps) {
+  const original = value === null || value === undefined ? '' : String(value)
+  const [draft, setDraft] = useState(original)
+  useEffect(() => { setDraft(original) }, [original])
+
+  const feedback = (
+    <>
+      {saving && <Spinner size={11} color="#8a8c9e" />}
+      {errored && <span style={{ color: '#f87171', fontSize: 11 }} title="No se pudo guardar, probá de nuevo">!</span>}
+    </>
+  )
+
+  if (type === 'bool') {
+    const boolValue = value as boolean | null | undefined
+    if (!editable) {
+      return <div title={disabledTitle}><BoolIcon value={boolValue} /></div>
+    }
+    return (
+      <div
+        onClick={() => !saving && onSave(String(!boolValue))}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: saving ? 'default' : 'pointer', fontSize: 18 }}
+      >
+        <BoolIcon value={boolValue} />
+        {feedback}
       </div>
-      <span style={{ fontSize: 14, color: '#f0f1f7', userSelect: 'none' }}>{label}</span>
+    )
+  }
+
+  if (type === 'select') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <select
+          className="ec-input"
+          value={draft}
+          disabled={saving || !editable}
+          onChange={(e) => { setDraft(e.target.value); onSave(e.target.value) }}
+        >
+          <option value="">{emptyOptionLabel}</option>
+          {options?.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        {feedback}
+      </div>
+    )
+  }
+
+  if (type === 'date') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <input
+          className="ec-input"
+          type="date"
+          value={draft}
+          disabled={saving || !editable}
+          onChange={(e) => { setDraft(e.target.value); onSave(e.target.value) }}
+          style={{ colorScheme: 'dark' }}
+        />
+        {feedback}
+      </div>
+    )
+  }
+
+  // text / number
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <input
+        className="ec-input"
+        type={type === 'number' ? 'number' : 'text'}
+        value={draft}
+        placeholder={placeholder}
+        disabled={saving || !editable}
+        autoFocus={autoFocus}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+          if (e.key === 'Escape') { setDraft(original); (e.target as HTMLInputElement).blur() }
+        }}
+        onBlur={() => {
+          if (autoFocus) onAutoFocusHandled?.()
+          if (draft === original) return
+          if (validate && !validate(draft)) { setDraft(original); return }
+          onSave(draft)
+        }}
+      />
+      {feedback}
     </div>
   )
 }
+
+// ─── Factories de columnas — declarativo, para no repetir la mecánica de
+// EditableCell en cada una de las ~20 columnas "simples" (1 campo = 1 celda) ──
+
+function textColumn(
+  key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string,
+  opts?: { numeric?: boolean; placeholder?: string; validate?: (v: string) => boolean; autoFocusOnCreate?: boolean },
+): ColumnDef {
+  return {
+    key, label, minPx,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:${dbField}`
+      const isNewRow = !!opts?.autoFocusOnCreate && ctx.newLeadId === l.id
+      return (
+        <EditableCell
+          type={opts?.numeric ? 'number' : 'text'}
+          value={l[field] as string | number | undefined}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          placeholder={opts?.placeholder}
+          validate={opts?.validate}
+          autoFocus={isNewRow}
+          onAutoFocusHandled={ctx.onAutoFocusHandled}
+          onSave={(v) => {
+            const trimmed = v.trim()
+            const uiVal: unknown = opts?.numeric ? (trimmed === '' ? undefined : Number(trimmed)) : (trimmed || undefined)
+            const dbVal = opts?.numeric ? (trimmed === '' ? null : Number(trimmed)) : (trimmed || null)
+            ctx.saveField(l, { [field]: uiVal } as Partial<CrmLead>, { [dbField]: dbVal })
+          }}
+        />
+      )
+    },
+  }
+}
+
+function dateColumn(key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string): ColumnDef {
+  return {
+    key, label, minPx,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:${dbField}`
+      return (
+        <EditableCell
+          type="date"
+          value={l[field] as string | undefined}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(l, { [field]: v || undefined } as Partial<CrmLead>, { [dbField]: v || null })}
+        />
+      )
+    },
+  }
+}
+
+function selectColumn(
+  key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string, options: string[],
+): ColumnDef {
+  return {
+    key, label, minPx,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:${dbField}`
+      return (
+        <EditableCell
+          type="select"
+          options={options}
+          value={l[field] as string | undefined}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(l, { [field]: v || undefined } as Partial<CrmLead>, { [dbField]: v || null })}
+        />
+      )
+    },
+  }
+}
+
+function boolColumn(key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string): ColumnDef {
+  return {
+    key, label, minPx,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:${dbField}`
+      return (
+        <EditableCell
+          type="bool"
+          value={l[field] as boolean | undefined}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(l, { [field]: v === 'true' } as Partial<CrmLead>, { [dbField]: v === 'true' })}
+        />
+      )
+    },
+  }
+}
+
+const RESULTADO_SEGUNDA_CITA_OPTIONS = [
+  'Cerrado', 'No cerrado', 'Reagendado', 'No asistió', 'Pendiente de cerrar',
+]
+
+const ALL_COLUMNS: ColumnDef[] = [
+  // ── Orden acordado (Closer al final, después de Notas closer) ──
+  textColumn('nombre', 'Nombre del lead', 220, 'lead_nombre', 'lead_name', { validate: (v) => v.trim().length > 0, autoFocusOnCreate: true }),
+  textColumn('telefono', 'Teléfono', 130, 'lead_telefono', 'lead_phone'),
+  textColumn('correo', 'Correo', 180, 'lead_email', 'lead_email'),
+  dateColumn('fecha_agenda', 'Fecha cita agendada', 150, 'fecha_agenda', 'fecha_agenda'),
+  textColumn('ad', 'Ad', 110, 'ad_id', 'ad_id'),
+  boolColumn('calificaba', 'Calificaba?', 100, 'calificaba', 'calificaba'),
+  boolColumn('asistio', 'Se presentó?', 100, 'asistio', 'se_presento'),
+  boolColumn('calificado', 'Calificado', 100, 'calificado', 'califico'),
+  selectColumn('situacion_resultado', 'Situación 1ra cita', 170, 'situacion_resultado', 'situacion_resultado', SITUACION_PRIMERA_CITA_OPTIONS),
+  {
+    key: 'segunda_reunion', label: 'Fecha 2da cita', minPx: 130,
+    // Mental model simple para Raúl: si hay fecha, hay 2da cita. Poner una
+    // fecha prende segunda_reunion; vaciarla lo apaga (y libera "Cerró?").
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:segunda_llamada_fecha`
+      return (
+        <EditableCell
+          type="date"
+          value={l.fecha_segunda_reunion}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(
+            l,
+            { fecha_segunda_reunion: v || undefined, segunda_reunion: !!v },
+            { segunda_llamada_fecha: v || null, segunda_reunion: !!v },
+          )}
+        />
+      )
+    },
+  },
+  {
+    key: 'resultado', label: 'Situación 2da cita', minPx: 150,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:segunda_llamada_status`
+      return (
+        <EditableCell
+          type="select"
+          options={RESULTADO_SEGUNDA_CITA_OPTIONS}
+          value={l.resultado_segunda_reunion}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(
+            l,
+            { resultado_segunda_reunion: v || undefined, segunda_reunion: v ? true : l.segunda_reunion },
+            { segunda_llamada_status: v || null, segunda_reunion: v ? true : l.segunda_reunion },
+          )}
+        />
+      )
+    },
+  },
+  {
+    key: 'cerrado', label: 'Cerró?', minPx: 90,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:cerro`
+      return (
+        <EditableCell
+          type="bool"
+          value={l.cerrado}
+          editable={!l.segunda_reunion}
+          disabledTitle={l.segunda_reunion ? 'Se define por el resultado de la 2da reunión' : undefined}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(l, { cerrado: v === 'true' }, { cerro: v === 'true' })}
+        />
+      )
+    },
+  },
+  textColumn('monto', 'Monto del cierre', 130, 'monto', 'precio', { numeric: true }),
+  textColumn('producto', 'Producto', 140, 'producto', 'producto'),
+  textColumn('comision_estimada', 'Comisión estimada', 160, 'comision_estimada', 'comision_estimada', { numeric: true }),
+  textColumn('motivo_no_cierre', 'Motivo no cierre', 170, 'motivo_no_cierre', 'loss_reason'),
+  selectColumn('situacion_laboral', 'Situación laboral', 210, 'situacion_laboral', 'situacion_laboral', SITUACION_LABORAL_OPTIONS),
+  selectColumn('nivel_ingresos', 'Nivel de ingresos', 230, 'nivel_ingresos', 'nivel_ingresos', NIVEL_INGRESOS_OPTIONS),
+  selectColumn('capacidad_ahorro', 'Capacidad de ahorro', 210, 'capacidad_ahorro', 'capacidad_ahorro', CAPACIDAD_AHORRO_OPTIONS),
+  textColumn('preocupacion_actual', 'Preocupación actual', 210, 'preocupacion_actual', 'preocupacion_actual'),
+  textColumn('edad', 'Edad', 80, 'edad', 'edad', { numeric: true }),
+  textColumn('hijos_casado', 'Hijos/Casado', 150, 'hijos_casado', 'hijos_casado'),
+  textColumn('notas', 'Notas closer', 220, 'notas', 'notes'),
+  // ── Campo real del Portal que no está en el Sheet ──
+  dateColumn('llamada', 'Fecha llamada', 130, 'fecha_llamada', 'fecha_llamada'),
+  // ── Closer se movió del puesto 12 del Sheet a acá, al final ──
+  {
+    key: 'closer', label: 'Closer', minPx: 120,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:closer`
+      return (
+        <EditableCell
+          type="select"
+          options={ctx.closers.map((c) => c.name)}
+          value={l.closer}
+          emptyOptionLabel="Sin asignar"
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(l, { closer: v || undefined }, { closer: v || null })}
+        />
+      )
+    },
+  },
+  // ── Campos que antes solo vivían en el modal — ahora columnas como el resto ──
+  textColumn('objeciones', 'Objeciones', 200, 'objeciones', 'objections'),
+  textColumn('recording_url', 'Link Fathom', 200, 'recording_url', 'recording_url', { placeholder: 'https://fathom.video/...' }),
+  dateColumn('next_followup_date', 'Próximo follow-up', 150, 'next_followup_date', 'next_followup_date'),
+]
+
+// Suma manual (no calculada) de los minPx de las 28 columnas de ALL_COLUMNS + 50px
+// de la columna de borrar (ícono chico, ya no hay botón "Acciones"/"Ver").
+// nombre220 + telefono130 + correo180 + fecha_agenda150 + ad110 + calificaba100 + asistio100
+// + calificado100 + situacion_resultado170 + segunda_reunion130 + resultado150 + cerrado90
+// + monto130 + producto140 + comision_estimada160 + motivo_no_cierre170 + situacion_laboral210
+// + nivel_ingresos230 + capacidad_ahorro210 + preocupacion_actual210 + edad80 + hijos_casado150
+// + notas220 + llamada130 + closer120 + objeciones200 + recording_url200 + next_followup_date150
+// + borrar50 = 4390
+const TABLE_MIN_WIDTH_PX = 4390
 
 // ─── Material sub-components ──────────────────────────────────
 
@@ -364,192 +695,6 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
   )
 }
 
-// ─── Lead Modal ───────────────────────────────────────────────
-
-function LeadModal({
-  editingLead, form, setForm, saving, onSave, onClose, onDelete, closers,
-}: {
-  editingLead: CrmLead | null
-  form: FormState
-  setForm: React.Dispatch<React.SetStateAction<FormState>>
-  saving: boolean
-  onSave: () => void
-  onClose: () => void
-  onDelete?: () => void
-  closers: ClientCloser[]
-}) {
-  const [showConfirm, setShowConfirm] = useState(false)
-  const inp: React.CSSProperties = {
-    width: '100%', background: '#080910',
-    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
-    padding: '10px 14px', color: '#f0f1f7', fontSize: 14,
-    outline: 'none', marginBottom: 16, boxSizing: 'border-box',
-    fontFamily: 'DM Sans, sans-serif',
-  }
-  const lbl: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: '#8a8c9e',
-    marginBottom: 6, display: 'block',
-    textTransform: 'uppercase', letterSpacing: '0.05em',
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
-      <div style={{ width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 22, fontWeight: 800, color: '#f0f1f7', margin: 0 }}>
-            {editingLead ? 'Editar llamada' : 'Nueva llamada'}
-          </h2>
-          <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
-        </div>
-
-        {/* Fields */}
-        <label style={lbl}>Nombre del prospecto *</label>
-        <input style={inp} type="text" required value={form.lead_nombre} onChange={(e) => setForm((f) => ({ ...f, lead_nombre: e.target.value }))} />
-
-        <label style={lbl}>Email</label>
-        <input style={inp} type="email" value={form.lead_email} onChange={(e) => setForm((f) => ({ ...f, lead_email: e.target.value }))} />
-
-        <label style={lbl}>Teléfono</label>
-        <input style={inp} type="text" value={form.lead_telefono} onChange={(e) => setForm((f) => ({ ...f, lead_telefono: e.target.value }))} />
-
-        <label style={lbl}>Etapa</label>
-        <select style={{ ...inp, marginBottom: 16 }} value={form.etapa} onChange={(e) => setForm((f) => ({ ...f, etapa: e.target.value }))}>
-          {['Agendado', 'Llamada realizada', 'Seguimiento', 'Cerrado', 'No calificado'].map((o) => (
-            <option key={o} value={o}>{o}</option>
-          ))}
-        </select>
-
-        <label style={lbl}>Closer</label>
-        <select style={{ ...inp, marginBottom: closers.length === 0 ? 4 : 16 }} value={form.closer || ''} onChange={(e) => setForm((f) => ({ ...f, closer: e.target.value }))}>
-          <option value="">Sin asignar</option>
-          {closers.map((c) => (
-            <option key={c.id} value={c.name}>{c.name}</option>
-          ))}
-        </select>
-        {closers.length === 0 && (
-          <p style={{ color: '#555669', fontSize: 12, margin: '0 0 16px' }}>Configurá los closers desde el panel admin.</p>
-        )}
-
-        <label style={lbl}>Calificación del lead</label>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          {([
-            { val: 'A', label: 'A — Muy calificado', activeColor: '#4ade80', activeBg: 'rgba(74,222,128,0.15)' },
-            { val: 'B', label: 'B — Semi calificado', activeColor: '#fcd34d', activeBg: 'rgba(252,211,77,0.15)' },
-            { val: 'C', label: 'C — Descalificado', activeColor: '#f87171', activeBg: 'rgba(248,113,113,0.15)' },
-          ] as { val: string; label: string; activeColor: string; activeBg: string }[]).map(({ val, label: optLabel, activeColor, activeBg }) => (
-            <button
-              key={val}
-              onClick={() => setForm((f) => ({ ...f, calificacion: f.calificacion === val ? '' : val }))}
-              style={{
-                padding: '6px 14px', borderRadius: 99, fontSize: 13, cursor: 'pointer',
-                fontFamily: 'DM Sans, sans-serif', border: 'none',
-                ...(form.calificacion === val
-                  ? { background: activeBg, color: activeColor, outline: `1px solid ${activeColor}` }
-                  : { background: 'transparent', color: '#8a8c9e', outline: '1px solid rgba(255,255,255,0.1)' }),
-              }}
-            >
-              {optLabel}
-            </button>
-          ))}
-        </div>
-
-        <label style={lbl}>Fecha de llamada</label>
-        <input style={{ ...inp, colorScheme: 'dark' }} type="date" value={form.fecha_llamada} onChange={(e) => setForm((f) => ({ ...f, fecha_llamada: e.target.value }))} />
-
-        <Toggle checked={form.asistio} onChange={(v) => setForm((f) => ({ ...f, asistio: v }))} label="Asistió a la llamada" />
-        <Toggle checked={form.calificado} onChange={(v) => setForm((f) => ({ ...f, calificado: v }))} label="Calificado" />
-        <Toggle checked={form.cerrado} onChange={(v) => setForm((f) => ({ ...f, cerrado: v }))} label="Cerrado" />
-
-        {form.cerrado && (
-          <>
-            <label style={lbl}>Monto del cierre</label>
-            <input style={inp} type="number" placeholder="$0" value={form.monto} onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))} />
-          </>
-        )}
-
-        <Toggle checked={form.segunda_reunion} onChange={(v) => setForm((f) => ({ ...f, segunda_reunion: v }))} label="¿Agendó segunda reunión?" />
-
-        {form.segunda_reunion && (
-          <>
-            <label style={lbl}>Fecha segunda reunión</label>
-            <input style={{ ...inp, colorScheme: 'dark' }} type="date" value={form.fecha_segunda_reunion} onChange={(e) => setForm((f) => ({ ...f, fecha_segunda_reunion: e.target.value }))} />
-
-            <label style={lbl}>Resultado segunda reunión</label>
-            <select style={{ ...inp, marginBottom: 16 }} value={form.resultado_segunda_reunion} onChange={(e) => setForm((f) => ({ ...f, resultado_segunda_reunion: e.target.value }))}>
-              <option value="">Seleccionar...</option>
-              <option value="Cerrado">Cerrado</option>
-              <option value="No cerrado">No cerrado</option>
-              <option value="Reagendado">Reagendado</option>
-              <option value="No asistió">No asistió</option>
-              <option value="Pendiente de cerrar">Pendiente de cerrar</option>
-            </select>
-          </>
-        )}
-
-        <label style={lbl}>Objeciones</label>
-        <textarea style={{ ...inp, resize: 'vertical' }} rows={3} value={form.objeciones} onChange={(e) => setForm((f) => ({ ...f, objeciones: e.target.value }))} />
-
-        <label style={lbl}>Notas</label>
-        <textarea style={{ ...inp, resize: 'vertical' }} rows={3} value={form.notas} onChange={(e) => setForm((f) => ({ ...f, notas: e.target.value }))} />
-
-        <label style={{ ...lbl, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
-          <span style={{ color: '#c084fc' }}>Link de grabación Fathom</span>
-        </label>
-        <input style={inp} type="text" placeholder="https://fathom.video/..." value={form.recording_url} onChange={(e) => setForm((f) => ({ ...f, recording_url: e.target.value }))} />
-
-        <label style={lbl}>Próximo follow-up</label>
-        <input style={{ ...inp, colorScheme: 'dark' }} type="date" value={form.next_followup_date} onChange={(e) => setForm((f) => ({ ...f, next_followup_date: e.target.value }))} />
-
-        {/* Footer */}
-        {showConfirm ? (
-          <div style={{ marginTop: 24 }}>
-            <p style={{ color: '#f87171', fontSize: 13, margin: '0 0 12px' }}>¿Eliminar esta llamada?</p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                style={{ padding: '9px 18px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontSize: 13 }}
-                onClick={() => { setShowConfirm(false); onDelete?.() }}
-              >
-                Sí, eliminar
-              </button>
-              <button
-                style={{ padding: '9px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontSize: 13 }}
-                onClick={() => setShowConfirm(false)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
-            <div>
-              {editingLead && (
-                <button
-                  style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(248,113,113,0.3)', color: '#f87171', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontFamily: 'DM Sans, sans-serif' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(248,113,113,0.1)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                  onClick={() => setShowConfirm(true)}
-                >
-                  Eliminar llamada
-                </button>
-              )}
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={onClose}>
-                Cancelar
-              </button>
-              <button style={{ padding: '10px 24px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }} onClick={onSave} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 // ─── Main page ────────────────────────────────────────────────
 
 export function VentasPage() {
@@ -559,17 +704,17 @@ export function VentasPage() {
   const [leads, setLeads] = useState<CrmLead[]>([])
   const [materials, setMaterials] = useState<SalesMaterial[]>([])
 
-  const [showModal, setShowModal] = useState(false)
-  const [editingLead, setEditingLead] = useState<CrmLead | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState<FormState>(EMPTY_FORM)
-
   const [closers, setClosers] = useState<ClientCloser[]>([])
   const [showCloserChart, setShowCloserChart] = useState(false)
 
   const [previewMaterial, setPreviewMaterial] = useState<SalesMaterial | null>(null)
   const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [savingCell, setSavingCell] = useState<string | null>(null)
+  const [errorCell, setErrorCell] = useState<string | null>(null)
+  const [newLeadId, setNewLeadId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [addingRow, setAddingRow] = useState(false)
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -603,85 +748,61 @@ export function VentasPage() {
     load()
   }, [user])
 
-  function openNew() {
-    setEditingLead(null)
-    setForm(EMPTY_FORM)
-    setShowModal(true)
-  }
 
-  function openEdit(lead: CrmLead) {
-    setEditingLead(lead)
-    setForm({
-      lead_nombre: lead.lead_nombre,
-      lead_email: lead.lead_email ?? '',
-      lead_telefono: lead.lead_telefono ?? '',
-      etapa: lead.etapa,
-      fecha_llamada: lead.fecha_llamada ?? '',
-      asistio: lead.asistio ?? false,
-      calificado: lead.calificado ?? false,
-      cerrado: lead.cerrado ?? false,
-      monto: lead.monto?.toString() ?? '',
-      notas: lead.notas ?? '',
-      objeciones: lead.objeciones ?? '',
-      recording_url: lead.recording_url ?? '',
-      next_followup_date: lead.next_followup_date ?? '',
-      closer: lead.closer ?? '',
-      calificacion: lead.calificacion ?? '',
-      segunda_reunion: lead.segunda_reunion ?? false,
-      fecha_segunda_reunion: lead.fecha_segunda_reunion ?? '',
-      resultado_segunda_reunion: lead.resultado_segunda_reunion ?? '',
-    })
-    setShowModal(true)
-  }
-
-  async function handleDelete() {
-    if (!editingLead) return
-    await supabase.from('client_closer_calls').delete().eq('id', editingLead.id)
-    setLeads((prev) => prev.filter((l) => l.id !== editingLead.id))
-    setShowModal(false)
-    setEditingLead(null)
-  }
-
-  async function handleSave() {
-    if (!client) return
-    setSaving(true)
+  async function handleAddRow() {
+    if (!client || addingRow) return
+    setAddingRow(true)
     try {
       const payload = {
         client_id: client.id,
         owner_type: 'client',
-        lead_name: form.lead_nombre,
-        lead_email: form.lead_email || null,
-        lead_phone: form.lead_telefono || null,
-        etapa: form.etapa,
-        fecha_llamada: form.fecha_llamada || null,
-        se_presento: form.asistio,
-        califico: form.calificado,
-        cerro: form.cerrado,
-        precio: form.cerrado && form.monto ? parseFloat(form.monto) : null,
-        notes: form.notas || null,
-        objections: form.objeciones || null,
-        recording_url: form.recording_url || null,
-        next_followup_date: form.next_followup_date || null,
-        closer: form.closer || null,
-        calificacion: (form.calificacion as 'A' | 'B' | 'C') || null,
-        segunda_reunion: form.segunda_reunion || false,
-        segunda_llamada_fecha: form.segunda_reunion ? form.fecha_segunda_reunion || null : null,
-        segunda_llamada_status: form.segunda_reunion ? form.resultado_segunda_reunion || null : null,
+        lead_name: '',
+        etapa: 'Agendado',
+        se_presento: false,
+        califico: false,
+        cerro: false,
+        segunda_reunion: false,
+        calificaba: false,
       }
-
-      if (editingLead) {
-        await supabase.from('client_closer_calls').update(payload).eq('id', editingLead.id)
-      } else {
-        await supabase.from('client_closer_calls').insert(payload)
-      }
-
-      const { data } = await supabase.from('client_closer_calls').select(CRM_LEAD_SELECT).eq('client_id', client.id).eq('owner_type', 'client').order('created_at', { ascending: false })
-      setLeads((data ?? []) as CrmLead[])
-      setShowModal(false)
+      const { data, error } = await supabase.from('client_closer_calls').insert(payload).select(CRM_LEAD_SELECT).single()
+      if (error || !data) throw error
+      const newLead = data as CrmLead
+      setLeads((prev) => [newLead, ...prev])
+      setNewLeadId(newLead.id)
     } catch (e) {
       console.error(e)
     } finally {
-      setSaving(false)
+      setAddingRow(false)
+    }
+  }
+
+  async function saveInlineField(lead: CrmLead, uiPatch: Partial<CrmLead>, dbPatch: Record<string, unknown>) {
+    const cellKey = `${lead.id}:${Object.keys(dbPatch)[0]}`
+    const prevLeads = leads
+    setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, ...uiPatch } : l)))
+    setErrorCell((c) => (c === cellKey ? null : c))
+    setSavingCell(cellKey)
+    try {
+      const { error } = await supabase.from('client_closer_calls').update(dbPatch).eq('id', lead.id)
+      if (error) throw error
+    } catch (e) {
+      console.error(e)
+      setLeads(prevLeads)
+      setErrorCell(cellKey)
+      setTimeout(() => setErrorCell((c) => (c === cellKey ? null : c)), 1500)
+    } finally {
+      setSavingCell((c) => (c === cellKey ? null : c))
+    }
+  }
+
+  async function handleDeleteLead(lead: CrmLead) {
+    setConfirmDeleteId(null)
+    const prevLeads = leads
+    setLeads((prev) => prev.filter((l) => l.id !== lead.id))
+    const { error } = await supabase.from('client_closer_calls').delete().eq('id', lead.id)
+    if (error) {
+      console.error(error)
+      setLeads(prevLeads)
     }
   }
 
@@ -723,7 +844,15 @@ export function VentasPage() {
     }
   })
 
-  const GRID = '2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px'
+  const rowCtx: RowCtx = {
+    closers, savingCell, errorCell, saveField: saveInlineField,
+    newLeadId, onAutoFocusHandled: () => setNewLeadId(null),
+  }
+  // Fuerza bruta a propósito: cada columna es un track de ancho FIJO en px
+  // (nada de minmax()/fr), así no hay ninguna sizing algorithm que pueda
+  // comprimirla. Todas las columnas están siempre visibles, así que el grid
+  // es fijo — sin selector, sin filtrado.
+  const GRID = [...ALL_COLUMNS.map((c) => `${c.minPx}px`), '50px'].join(' ')
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
@@ -734,7 +863,7 @@ export function VentasPage() {
           <Spinner size={40} />
         </div>
       ) : (
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
+        <div style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 24px' }}>
 
           {/* Hero */}
           <div className="fade-in visible" style={{ marginBottom: 24 }}>
@@ -846,7 +975,11 @@ export function VentasPage() {
           {/* Pipeline header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <SectionPill text="PIPELINE" />
-            <button style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={openNew}>
+            <button
+              style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: addingRow ? 'not-allowed' : 'pointer', opacity: addingRow ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+              onClick={handleAddRow}
+              disabled={addingRow}
+            >
               + Nueva llamada
             </button>
           </div>
@@ -901,89 +1034,47 @@ export function VentasPage() {
                       🎙 Ver grabación →
                     </div>
                   )}
-                  <button style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => openEdit(lead)}>
-                    Ver / Editar
-                  </button>
                 </div>
               ))}
             </div>
           ) : (
             <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
-              <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, padding: '12px 20px', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {['NOMBRE', 'ETAPA', 'CLOSER', 'CALIF', 'LLAMADA', 'ASISTIÓ', '2DA REUNIÓN', 'RESULTADO', 'ACCIONES'].map((h) => (
-                  <div key={h}>{h}</div>
-                ))}
-              </div>
-              {leads.map((lead, i) => (
-                <div
-                  key={lead.id}
-                  style={{ display: 'grid', gridTemplateColumns: GRID, padding: '14px 20px', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)', transition: 'background 0.15s ease', cursor: 'default' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)')}
-                >
-                  <div>
-                    <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
-                    {lead.lead_email && <div style={{ color: '#555669', fontSize: '11px', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px', whiteSpace: 'nowrap' }}>{lead.lead_email}</div>}
+              {/* Fuerza bruta a propósito: contenedor exterior con overflowX:auto + width:100%,
+                  contenedor interior con minWidth FIJO hardcodeado (TABLE_MIN_WIDTH_PX, suma manual
+                  de los minPx de las 28 columnas), y cada columna es un track de ancho fijo en px
+                  (ver GRID). Nada de fit-content/minmax()/fr acá — cero ambigüedad de sizing.
+                  Bordes reales entre celdas/filas (grid-line, no solo espaciado) para que se vea
+                  como una hoja de cálculo. */}
+              <div style={{ overflowX: 'auto', width: '100%' }}>
+                <div style={{ minWidth: `${TABLE_MIN_WIDTH_PX}px` }}>
+                  <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, borderBottom: '1px solid rgba(255,255,255,0.12)', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {ALL_COLUMNS.map((c) => (
+                      <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, padding: '10px 12px', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.label.toUpperCase()}</div>
+                    ))}
+                    <div style={{ flexShrink: 0, minWidth: 50, padding: '10px 12px' }} />
                   </div>
-                  <div style={{ whiteSpace: 'normal', lineHeight: 1.3, fontSize: '12px' }}><StageBadge etapa={lead.etapa} /></div>
-                  <div style={{ color: lead.closer ? '#8a8c9e' : '#555669', fontSize: 13 }}>
-                    {lead.closer || '—'}
-                  </div>
-                  <div>
-                    {lead.calificacion === 'A' ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>A · Muy cal.</span>
-                    ) : lead.calificacion === 'B' ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(252,211,77,0.15)', color: '#fcd34d' }}>B · Semi</span>
-                    ) : lead.calificacion === 'C' ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 8px', borderRadius: 99, background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>C · Desc.</span>
-                    ) : (
-                      <span style={{ color: '#555669', fontSize: 13 }}>—</span>
-                    )}
-                  </div>
-                  <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(lead.fecha_llamada)}</div>
-                  <div><BoolIcon value={lead.asistio} /></div>
-                  <div>
-                    {lead.segunda_reunion ? (
-                      lead.fecha_segunda_reunion ? (
-                        <span style={{ fontSize: 12, background: 'rgba(192,132,252,0.15)', color: '#c084fc', border: '1px solid rgba(192,132,252,0.3)', borderRadius: '6px', padding: '3px 8px', display: 'inline-block' }}>
-                          {(() => {
-                            const d = new Date(lead.fecha_segunda_reunion + 'T12:00:00')
-                            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`
-                          })()}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#c084fc', fontSize: 13, fontWeight: 600 }}>Sí</span>
-                      )
-                    ) : (
-                      <span style={{ color: '#555669', fontSize: 13 }}>—</span>
-                    )}
-                  </div>
-                  <div>
-                    {lead.resultado_segunda_reunion ? (() => {
-                      const rMap: Record<string, { bg: string; color: string }> = {
-                        'Cerrado':              { bg: 'rgba(74,222,128,0.15)',   color: '#4ade80' },
-                        'Pendiente de cerrar':  { bg: 'rgba(201,168,76,0.15)',   color: '#c9a84c' },
-                        'Reagendado':           { bg: 'rgba(96,165,250,0.15)',   color: '#60a5fa' },
-                        'No cerrado':           { bg: 'rgba(248,113,113,0.15)',  color: '#f87171' },
-                        'No asistió':           { bg: 'rgba(255,255,255,0.08)',  color: '#555669' },
-                      }
-                      const s = rMap[lead.resultado_segunda_reunion] ?? { bg: 'rgba(255,255,255,0.08)', color: '#555669' }
-                      return (
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '6px', display: 'inline-block', background: s.bg, color: s.color }}>
-                          {shortResultado(lead.resultado_segunda_reunion)}
-                        </span>
-                      )
-                    })() : (
-                      <span style={{ color: '#555669', fontSize: 13 }}>—</span>
-                    )}
-                  </div>
-                  <div>
-                    <button style={{ padding: '5px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 12, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => openEdit(lead)}>
-                      Ver
-                    </button>
-                  </div>
+                  {leads.map((lead, i) => (
+                    <div
+                      key={lead.id}
+                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'stretch', borderBottom: '1px solid rgba(255,255,255,0.06)', background: i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)' }}
+                    >
+                      {ALL_COLUMNS.map((c) => (
+                        <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, overflow: 'hidden', padding: '6px 10px', display: 'flex', alignItems: 'center', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.render(lead, rowCtx)}</div>
+                      ))}
+                      <div style={{ flexShrink: 0, minWidth: 50, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {confirmDeleteId === lead.id ? (
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button title="Confirmar" onClick={() => handleDeleteLead(lead)} style={{ background: 'transparent', border: 'none', color: '#4ade80', fontSize: 15, cursor: 'pointer', padding: 0 }}>✓</button>
+                            <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'transparent', border: 'none', color: '#8a8c9e', fontSize: 15, cursor: 'pointer', padding: 0 }}>✕</button>
+                          </div>
+                        ) : (
+                          <button title="Eliminar llamada" onClick={() => setConfirmDeleteId(lead.id)} style={{ background: 'transparent', border: 'none', color: '#555669', fontSize: 15, cursor: 'pointer', padding: 0 }}>🗑</button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           )}
 
@@ -1059,18 +1150,6 @@ export function VentasPage() {
       )}
 
       {/* Modals */}
-      {showModal && (
-        <LeadModal
-          editingLead={editingLead}
-          form={form}
-          setForm={setForm}
-          saving={saving}
-          onSave={handleSave}
-          onClose={() => setShowModal(false)}
-          onDelete={handleDelete}
-          closers={closers}
-        />
-      )}
       {previewMaterial && <MaterialPreviewModal material={previewMaterial} onClose={() => setPreviewMaterial(null)} />}
       {playingVideo && <VideoModal url={playingVideo.url} title={playingVideo.title} onClose={() => setPlayingVideo(null)} />}
 
@@ -1082,6 +1161,16 @@ export function VentasPage() {
           .ventas-recordings-grid { grid-template-columns: 1fr !important; }
           .ventas-analysis-grid { grid-template-columns: 1fr !important; }
         }
+        .ec-input {
+          width: 100%; background: transparent; border: 1px solid transparent; border-radius: 6px;
+          color: #f0f1f7; font-size: 13px; padding: 4px 6px; font-family: 'DM Sans', sans-serif;
+          outline: none; box-sizing: border-box;
+        }
+        .ec-input:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); }
+        .ec-input:focus { border-color: #e5182b; background: #080910; }
+        .ec-input::placeholder { color: #555669; }
+        .ec-input:disabled { opacity: 0.5; cursor: default; }
+        select.ec-input { cursor: pointer; }
       `}</style>
     </div>
   )
