@@ -9,7 +9,6 @@ import type {
   Document,
   HitosCliente,
   ClientVideo,
-  ClientMetrics,
 } from '../types'
 
 interface ClientData {
@@ -20,7 +19,6 @@ interface ClientData {
   documents: Document[]
   registros: RegistroSemanal[]
   hitos: HitosCliente | null
-  latestMetrics: ClientMetrics | null
   loading: boolean
   error: string | null
 }
@@ -34,7 +32,6 @@ export function useClient(): ClientData {
   const [documents, setDocuments] = useState<Document[]>([])
   const [registros, setRegistros] = useState<RegistroSemanal[]>([])
   const [hitos, setHitos] = useState<HitosCliente | null>(null)
-  const [latestMetrics, setLatestMetrics] = useState<ClientMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,7 +53,7 @@ export function useClient(): ClientData {
 
         const cid = clientData.id
 
-        const [statusRes, phasesRes, videosRes, docsRes, registrosRes, hitosRes, latestMetricsRes] =
+        const [statusRes, phasesRes, videosRes, docsRes, registrosRes, hitosRes] =
           await Promise.all([
             supabase
               .from('client_portal_status')
@@ -91,13 +88,6 @@ export function useClient(): ClientData {
               .select('*')
               .eq('client_id', cid)
               .maybeSingle(),
-            supabase
-              .from('client_metrics')
-              .select('*')
-              .eq('client_id', cid)
-              .order('week_start', { ascending: false })
-              .limit(1)
-              .maybeSingle(),
           ])
 
         setStatus(statusRes.data as ClientPortalStatus | null)
@@ -106,7 +96,6 @@ export function useClient(): ClientData {
         setDocuments((docsRes.data ?? []) as Document[])
         setRegistros((registrosRes.data ?? []) as RegistroSemanal[])
         setHitos(hitosRes.data as HitosCliente | null)
-        setLatestMetrics(latestMetricsRes.data as ClientMetrics | null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error cargando datos')
       } finally {
@@ -117,5 +106,5 @@ export function useClient(): ClientData {
     fetchAll()
   }, [user])
 
-  return { client, status, phases, videos, documents, registros, hitos, latestMetrics, loading, error }
+  return { client, status, phases, videos, documents, registros, hitos, loading, error }
 }

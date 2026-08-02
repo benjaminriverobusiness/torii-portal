@@ -180,6 +180,15 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
   )
 }
 
+const WEEKLY_METRICS_SELECT: string = `
+  id, client_id,
+  week_number:semana, year:año, week_start:fecha_inicio,
+  ads_investment:inversion, ads_leads:leads, ads_cpl:cpl,
+  ads_qualified_leads:calificados, ads_bookings:agendas_generadas,
+  ads_cpbc:cpbc, ads_show_rate:show_rate, ads_close_rate:tasa_cierre,
+  created_at, updated_at
+`
+
 export function Portal() {
   const { client, status, phases, videos, documents, registros, hitos, loading, error } = useClient()
   const [metrics, setMetrics] = useState<ClientMetrics[]>([])
@@ -193,10 +202,10 @@ export function Portal() {
     async function fetchMetrics() {
       const [metricsRes, configRes, leadsRes] = await Promise.all([
         supabase
-          .from('client_metrics')
-          .select('*')
+          .from('registro_semanal_fullfillment')
+          .select(WEEKLY_METRICS_SELECT)
           .eq('client_id', client!.id)
-          .order('week_start', { ascending: false }),
+          .order('fecha_inicio', { ascending: false }),
         supabase
           .from('client_metrics_config')
           .select('*')
@@ -208,7 +217,7 @@ export function Portal() {
           .eq('client_id', client!.id)
           .eq('owner_type', 'client'),
       ])
-      setMetrics((metricsRes.data ?? []) as ClientMetrics[])
+      setMetrics((metricsRes.data ?? []) as unknown as ClientMetrics[])
       setMetricsConfig(configRes.data as ClientMetricsConfig | null)
       setLeads(leadsRes.data ?? [])
     }

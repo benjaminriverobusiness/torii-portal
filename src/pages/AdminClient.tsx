@@ -14,13 +14,38 @@ import type {
   ClientVideo,
   Document,
   RegistroSemanal,
-  ClientMetrics,
   ClientMetricsConfig,
   MetricsTemplate,
   ClientCreative,
   LiAccountMetric,
   ClientCloser,
 } from '../types'
+
+interface WeeklyAutoMetrics {
+  inversion: number | null
+  leads: number | null
+  calificados: number | null
+  cpl: number | null
+  cpbc: number | null
+  agendas_generadas: number | null
+  llamadas_realizadas: number | null
+  no_shows: number | null
+  show_rate: number | null
+}
+
+interface WeeklyFullfillment extends WeeklyAutoMetrics {
+  id: string
+  client_id: string
+  semana: number
+  año: number
+  fecha_inicio: string | null
+  fecha_fin: string | null
+  calificados_manual: number | null
+  cerrados: number | null
+  tasa_calificacion: number | null
+  tasa_cierre: number | null
+  notas: string | null
+}
 
 function formatDate(d: string | null | undefined) {
   if (!d) return '—'
@@ -98,32 +123,20 @@ export function AdminClient() {
     show_li_booking_rate: false,
     show_li_bookings: false,
   })
-  const [metricsHistory, setMetricsHistory] = useState<ClientMetrics[]>([])
+  const [metricsHistory, setMetricsHistory] = useState<WeeklyFullfillment[]>([])
   const [liBookingsByWeek, setLiBookingsByWeek] = useState<Record<string, number>>({})
   const [weekForm, setWeekForm] = useState({
     week_number: 1,
     year: new Date().getFullYear(),
     week_start: new Date().toISOString().split('T')[0],
     week_end: '',
-    ads_investment: '',
-    ads_leads: '',
-    ads_cpl: '',
-    ads_qualified_leads: '',
-    ads_bookings: '',
-    ads_cpbc: '',
-    ads_show_rate: '',
-    ads_close_rate: '',
-    li_connections_sent: '',
-    li_connections_accepted: '',
-    li_accept_rate: '',
-    li_messages_sent: '',
-    li_replies: '',
-    li_reply_rate: '',
-    li_offer_rate: '',
-    li_calendly_rate: '',
-    li_booking_rate: '',
-    li_bookings: '',
+    calificados_manual: '',
+    cerrados: '',
+    tasa_calificacion: '',
+    tasa_cierre: '',
+    notas: '',
   })
+  const [autoMetrics, setAutoMetrics] = useState<WeeklyAutoMetrics | null>(null)
   const [configSaveSuccess, setConfigSaveSuccess] = useState(false)
   const [weekSaveSuccess, setWeekSaveSuccess] = useState(false)
   const [confirmDeleteHistoryId, setConfirmDeleteHistoryId] = useState<string | null>(null)
@@ -198,6 +211,24 @@ export function AdminClient() {
   }, [id])
 
   useEffect(() => {
+    if (!id || !weekForm.week_start || !weekForm.week_end) { setAutoMetrics(null); return }
+    async function loadAutoMetrics() {
+      const { data, error } = await supabase.rpc('get_weekly_automatic_metrics', {
+        p_client_id: id,
+        p_week_start: weekForm.week_start,
+        p_week_end: weekForm.week_end,
+      })
+      if (error) {
+        console.error('Error cargando métricas automáticas:', error)
+        setAutoMetrics(null)
+        return
+      }
+      setAutoMetrics((data?.[0] ?? null) as WeeklyAutoMetrics | null)
+    }
+    loadAutoMetrics()
+  }, [id, weekForm.week_start, weekForm.week_end])
+
+  useEffect(() => {
     if (!id) return
     async function reloadLiAccounts() {
       const { data } = await supabase
@@ -248,7 +279,7 @@ export function AdminClient() {
         supabase.from('client_portal_status').select('*').eq('client_id', id).order('updated_at', { ascending: false }).limit(8),
         supabase.from('metrics_templates').select('*').order('name'),
         supabase.from('client_metrics_config').select('*').eq('client_id', id).maybeSingle(),
-        supabase.from('client_metrics').select('*').eq('client_id', id).order('week_start', { ascending: false }),
+        supabase.from('registro_semanal_fullfillment').select('*').eq('client_id', id).order('fecha_inicio', { ascending: false }),
         supabase.from('client_creatives').select('*').eq('client_id', id).order('created_at', { ascending: false }),
         supabase.from('sales_materials').select('*').eq('client_id', id).order('order_index', { ascending: true }),
         supabase.from('client_closer_calls').select('id, lead_nombre:lead_name, fecha_llamada, notas:notes').eq('client_id', id).eq('owner_type', 'client').order('created_at', { ascending: false }),
@@ -274,7 +305,7 @@ export function AdminClient() {
       setRegistros((registrosRes.data ?? []) as RegistroSemanal[])
       setHistory((historyRes.data ?? []) as ClientPortalStatus[])
       setTemplates((templatesRes.data ?? []) as MetricsTemplate[])
-      setMetricsHistory((metricsHistoryRes.data ?? []) as ClientMetrics[])
+      setMetricsHistory((metricsHistoryRes.data ?? []) as WeeklyFullfillment[])
 
       const { data: liBookingsData } = await supabase
         .from('li_account_metrics')
@@ -489,94 +520,63 @@ export function AdminClient() {
 
   async function handleSaveWeek() {
     if (!id) return
-    console.log('Saving week:', { clientId: id, weekForm })
+    console.log('Saving week:', { clientId: id, weekForm, autoMetrics })
     try {
       const n = (v: string) => (v !== '' ? parseFloat(v) : null)
       const payload = {
         client_id: id,
-        week_number: weekForm.week_number,
-        year: weekForm.year,
-        week_start: weekForm.week_start || new Date().toISOString().split('T')[0],
-        week_end: weekForm.week_end || null,
-        ads_investment: n(weekForm.ads_investment),
-        ads_leads: n(weekForm.ads_leads),
-        ads_cpl: n(weekForm.ads_cpl),
-        ads_qualified_leads: n(weekForm.ads_qualified_leads),
-        ads_bookings: n(weekForm.ads_bookings),
-        ads_cpbc: n(weekForm.ads_cpbc),
-        ads_show_rate: n(weekForm.ads_show_rate),
-        ads_close_rate: n(weekForm.ads_close_rate),
-        li_connections_sent: n(weekForm.li_connections_sent),
-        li_connections_accepted: n(weekForm.li_connections_accepted),
-        li_accept_rate: n(weekForm.li_accept_rate),
-        li_messages_sent: n(weekForm.li_messages_sent),
-        li_replies: n(weekForm.li_replies),
-        li_reply_rate: n(weekForm.li_reply_rate),
-        li_offer_rate: n(weekForm.li_offer_rate),
-        li_calendly_rate: n(weekForm.li_calendly_rate),
-        li_booking_rate: n(weekForm.li_booking_rate),
-        li_bookings: n(weekForm.li_bookings),
+        semana: weekForm.week_number,
+        año: weekForm.year,
+        fecha_inicio: weekForm.week_start || new Date().toISOString().split('T')[0],
+        fecha_fin: weekForm.week_end || null,
+        inversion: autoMetrics?.inversion ?? null,
+        leads: autoMetrics?.leads ?? null,
+        calificados: autoMetrics?.calificados ?? null,
+        cpl: autoMetrics?.cpl ?? null,
+        cpbc: autoMetrics?.cpbc ?? null,
+        agendas_generadas: autoMetrics?.agendas_generadas ?? null,
+        llamadas_realizadas: autoMetrics?.llamadas_realizadas ?? null,
+        no_shows: autoMetrics?.no_shows ?? null,
+        show_rate: autoMetrics?.show_rate ?? null,
+        calificados_manual: n(weekForm.calificados_manual),
+        cerrados: n(weekForm.cerrados),
+        tasa_calificacion: n(weekForm.tasa_calificacion),
+        tasa_cierre: n(weekForm.tasa_cierre),
+        notas: weekForm.notas || null,
+        updated_at: new Date().toISOString(),
       }
 
-      const { data: existing, error: existingError } = await supabase
-        .from('client_metrics')
-        .select('id')
-        .eq('client_id', id)
-        .eq('week_number', weekForm.week_number)
-        .eq('year', weekForm.year)
-        .maybeSingle()
-      console.log('Supabase result:', { data: existing, error: existingError })
-
-      if (existing) {
-        const { data, error } = await supabase
-          .from('client_metrics')
-          .update({ ...payload, updated_at: new Date().toISOString() })
-          .eq('id', existing.id)
-        console.log('Supabase result:', { data, error })
-      } else {
-        const { data, error } = await supabase.from('client_metrics').insert(payload)
-        console.log('Supabase result:', { data, error })
-      }
+      const { data, error } = await supabase
+        .from('registro_semanal_fullfillment')
+        .upsert(payload, { onConflict: 'client_id,semana,año' })
+      console.log('Supabase result:', { data, error })
 
       setWeekSaveSuccess(true)
       setTimeout(() => setWeekSaveSuccess(false), 2000)
 
       const { data: refreshed } = await supabase
-        .from('client_metrics')
+        .from('registro_semanal_fullfillment')
         .select('*')
         .eq('client_id', id)
-        .order('week_start', { ascending: false })
+        .order('fecha_inicio', { ascending: false })
         .limit(8)
-      setMetricsHistory((refreshed ?? []) as ClientMetrics[])
+      setMetricsHistory((refreshed ?? []) as WeeklyFullfillment[])
     } catch (err) {
       console.error('Error guardando métricas:', err)
     }
   }
 
-  function editWeek(m: ClientMetrics) {
+  function editWeek(m: WeeklyFullfillment) {
     setWeekForm({
-      week_number: m.week_number,
-      year: m.year,
-      week_start: m.week_start ?? '',
-      week_end: (m as ClientMetrics & { week_end?: string }).week_end ?? '',
-      ads_investment: m.ads_investment?.toString() ?? '',
-      ads_leads: m.ads_leads?.toString() ?? '',
-      ads_cpl: m.ads_cpl?.toString() ?? '',
-      ads_qualified_leads: m.ads_qualified_leads?.toString() ?? '',
-      ads_bookings: m.ads_bookings?.toString() ?? '',
-      ads_cpbc: m.ads_cpbc?.toString() ?? '',
-      ads_show_rate: m.ads_show_rate?.toString() ?? '',
-      ads_close_rate: m.ads_close_rate?.toString() ?? '',
-      li_connections_sent: m.li_connections_sent?.toString() ?? '',
-      li_connections_accepted: m.li_connections_accepted?.toString() ?? '',
-      li_accept_rate: m.li_accept_rate?.toString() ?? '',
-      li_messages_sent: m.li_messages_sent?.toString() ?? '',
-      li_replies: m.li_replies?.toString() ?? '',
-      li_reply_rate: m.li_reply_rate?.toString() ?? '',
-      li_offer_rate: m.li_offer_rate?.toString() ?? '',
-      li_calendly_rate: m.li_calendly_rate?.toString() ?? '',
-      li_booking_rate: m.li_booking_rate?.toString() ?? '',
-      li_bookings: m.li_bookings?.toString() ?? '',
+      week_number: m.semana,
+      year: m.año,
+      week_start: m.fecha_inicio ?? '',
+      week_end: m.fecha_fin ?? '',
+      calificados_manual: m.calificados_manual?.toString() ?? '',
+      cerrados: m.cerrados?.toString() ?? '',
+      tasa_calificacion: m.tasa_calificacion?.toString() ?? '',
+      tasa_cierre: m.tasa_cierre?.toString() ?? '',
+      notas: m.notas ?? '',
     })
   }
 
@@ -1683,34 +1683,77 @@ export function AdminClient() {
 
               {metricsConfig.show_ads_section && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ color: '#8a8c9e', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Meta Ads
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#60a5fa', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 99, padding: '3px 10px' }}>
+                      AUTOMÁTICO
+                    </span>
+                    <span style={{ color: '#555669', fontSize: 12 }}>
+                      calculado en base a ads_metricas_diarias y client_closer_calls para el rango de fechas de arriba
+                    </span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     {([
-                      ['ads_investment', 'Inversión ($)'],
-                      ['ads_leads', 'Leads generados'],
-                      ['ads_cpl', 'CPL ($)'],
-                      ['ads_qualified_leads', 'Leads calificados'],
-                      ['ads_bookings', 'Agendas'],
-                      ['ads_cpbc', 'CPBC ($)'],
-                      ['ads_show_rate', 'Show rate (%)'],
-                      ['ads_close_rate', 'Close rate (%)'],
-                    ] as [keyof typeof weekForm, string][]).map(([key, label]) => (
+                      ['inversion', 'Inversión ($)'],
+                      ['leads', 'Leads generados'],
+                      ['cpl', 'CPL ($)'],
+                      ['calificados', 'Calificados (ads)'],
+                      ['agendas_generadas', 'Agendas generadas'],
+                      ['llamadas_realizadas', 'Llamadas realizadas'],
+                      ['no_shows', 'No-shows'],
+                      ['cpbc', 'CPBC ($)'],
+                      ['show_rate', 'Show rate (%)'],
+                    ] as [keyof WeeklyAutoMetrics, string][]).map(([key, label]) => (
                       <div key={key}>
                         <label style={labelStyle}>{label}</label>
                         <input
-                          type="number"
-                          value={weekForm[key] as string}
-                          onChange={(e) => setWeekForm((p) => ({ ...p, [key]: e.target.value }))}
-                          style={inputStyle}
-                          step="any"
+                          type="text"
+                          readOnly
+                          disabled
+                          value={autoMetrics?.[key] ?? '—'}
+                          style={{ ...inputStyle, opacity: 0.6, cursor: 'not-allowed' }}
                         />
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#e5182b', background: 'rgba(229,24,43,0.1)', border: '1px solid rgba(229,24,43,0.25)', borderRadius: 99, padding: '3px 10px' }}>
+                    MANUAL
+                  </span>
+                  <span style={{ color: '#555669', fontSize: 12 }}>
+                    se carga a mano después de cada reunión
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                  {([
+                    ['calificados_manual', 'Calificados (manual, si difiere de ads)'],
+                    ['cerrados', 'Cerrados'],
+                    ['tasa_calificacion', 'Tasa de calificación (%)'],
+                    ['tasa_cierre', 'Tasa de cierre (%)'],
+                  ] as [keyof typeof weekForm, string][]).map(([key, label]) => (
+                    <div key={key}>
+                      <label style={labelStyle}>{label}</label>
+                      <input
+                        type="number"
+                        value={weekForm[key] as string}
+                        onChange={(e) => setWeekForm((p) => ({ ...p, [key]: e.target.value }))}
+                        style={inputStyle}
+                        step="any"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <label style={labelStyle}>Notas</label>
+                <textarea
+                  value={weekForm.notas}
+                  onChange={(e) => setWeekForm((p) => ({ ...p, notas: e.target.value }))}
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: 70 }}
+                  rows={3}
+                />
+              </div>
 
               {metricsConfig.show_li_section && (
                 <div style={{ marginBottom: 16 }}>
@@ -1945,16 +1988,16 @@ export function AdminClient() {
                       {metricsHistory.map((m) => (
                         <tr key={m.id}>
                           <td style={{ padding: '10px 12px', color: '#f0f1f7' }}>
-                            S{m.week_number} / {m.year}
+                            S{m.semana} / {m.año}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
-                            {liBookingsByWeek[`${m.week_number}-${m.year}`] ?? '—'}
+                            {liBookingsByWeek[`${m.semana}-${m.año}`] ?? '—'}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
-                            {m.ads_cpbc ? `$${m.ads_cpbc}` : '—'}
+                            {m.cpbc ? `$${m.cpbc}` : '—'}
                           </td>
                           <td style={{ padding: '10px 12px', color: '#555669' }}>
-                            {formatWeekRange(m.week_start, (m as ClientMetrics & { week_end?: string }).week_end)}
+                            {formatWeekRange(m.fecha_inicio ?? undefined, m.fecha_fin ?? undefined)}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
                             <button
@@ -1975,14 +2018,14 @@ export function AdminClient() {
                             <button
                               onClick={async () => {
                                 if (confirm('¿Eliminar métricas de esta semana?')) {
-                                  await supabase.from('client_metrics').delete().eq('id', m.id)
+                                  await supabase.from('registro_semanal_fullfillment').delete().eq('id', m.id)
                                   const { data } = await supabase
-                                    .from('client_metrics')
+                                    .from('registro_semanal_fullfillment')
                                     .select('*')
                                     .eq('client_id', id)
-                                    .order('week_start', { ascending: false })
+                                    .order('fecha_inicio', { ascending: false })
                                     .limit(8)
-                                  setMetricsHistory((data ?? []) as ClientMetrics[])
+                                  setMetricsHistory((data ?? []) as WeeklyFullfillment[])
                                 }
                               }}
                               style={{
