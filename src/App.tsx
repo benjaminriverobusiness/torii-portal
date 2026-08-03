@@ -9,6 +9,10 @@ import { ReportesPage } from './pages/ReportesPage'
 import { RecorridoPage } from './pages/RecorridoPage'
 import { VentasPage } from './pages/VentasPage'
 // import { CreativosPage } from './pages/CreativosPage'
+import { AcademiaLayout } from './pages/academia/AcademiaLayout'
+import { ModulesList } from './pages/academia/ModulesList'
+import { ModuleView } from './pages/academia/ModuleView'
+import { TeamManagement } from './pages/academia/TeamManagement'
 import { Spinner } from './components/Spinner'
 
 function ProtectedRoute({
@@ -110,6 +114,18 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/portal/academia"
+        element={
+          <ProtectedRoute requiredRole="client">
+            <AcademiaLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<ModulesList />} />
+        <Route path="modulo/:moduleId" element={<ModuleView />} />
+        <Route path="equipo" element={<TeamManagement />} />
+      </Route>
       {/* <Route
         path="/portal/creativos"
         element={
