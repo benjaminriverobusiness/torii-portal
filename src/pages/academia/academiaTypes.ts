@@ -9,6 +9,7 @@ export interface AcademyTeamMember {
   role: 'admin' | 'setter' | 'closer' | 'manager' | null
   status: 'capacitacion' | 'fase_de_prueba' | 'setter_oficial' | 'activo' | 'inactivo'
   active: boolean
+  avatar_url: string | null
   created_at: string
   updated_at: string
 }
