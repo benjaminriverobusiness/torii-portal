@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { Navbar } from '../../components/Navbar'
 import { Spinner } from '../../components/Spinner'
 import { useClient } from '../../hooks/useClient'
@@ -13,8 +13,6 @@ function storageKey(clientId: string) {
 
 export function AcademiaLayout() {
   const { client, loading: clientLoading } = useClient()
-  const navigate = useNavigate()
-  const location = useLocation()
   const [teamMembers, setTeamMembers] = useState<AcademyTeamMember[]>([])
   const [loadingTeam, setLoadingTeam] = useState(true)
   const [activeTeamMemberId, setActiveTeamMemberIdState] = useState<string | null>(null)
@@ -75,8 +73,6 @@ export function AcademiaLayout() {
     )
   }
 
-  const isEquipoView = location.pathname.startsWith('/portal/academia/equipo')
-
   return (
     <AcademiaContext.Provider
       value={{ client, teamMembers, activeTeamMemberId, setActiveTeamMemberId, activeTeamMember, reloadTeamMembers }}
@@ -113,17 +109,6 @@ export function AcademiaLayout() {
                 </select>
               )}
             </div>
-            <button
-              onClick={() => navigate(isEquipoView ? '/portal/academia' : '/portal/academia/equipo')}
-              style={{
-                background: isEquipoView ? 'rgba(229,24,43,0.1)' : 'rgba(255,255,255,0.05)',
-                border: isEquipoView ? '1px solid rgba(229,24,43,0.3)' : '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8, color: isEquipoView ? '#e5182b' : '#8a8c9e', fontSize: 13, fontWeight: 600,
-                padding: '7px 14px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
-              }}
-            >
-              {isEquipoView ? '← Volver a formación' : 'Gestionar equipo'}
-            </button>
           </div>
 
           <Outlet />
