@@ -8,6 +8,7 @@ import { NewClient } from './pages/NewClient'
 import { ReportesPage } from './pages/ReportesPage'
 import { RecorridoPage } from './pages/RecorridoPage'
 import { VentasPage } from './pages/VentasPage'
+import { ReferidosPage } from './pages/ReferidosPage'
 // import { CreativosPage } from './pages/CreativosPage'
 import { AcademiaLayout } from './pages/academia/AcademiaLayout'
 import { ModulesList } from './pages/academia/ModulesList'
@@ -110,6 +111,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="client">
             <VentasPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal/referidos"
+        element={
+          <ProtectedRoute requiredRole="client">
+            <ReferidosPage />
           </ProtectedRoute>
         }
       />
