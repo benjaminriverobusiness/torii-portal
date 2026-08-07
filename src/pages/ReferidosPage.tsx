@@ -4,19 +4,49 @@ import { supabase } from '../lib/supabase'
 import { Navbar } from '../components/Navbar'
 import { Spinner } from '../components/Spinner'
 
-// Sistema de Referidos con IA — vista de solo lectura para el asesor/
-// cliente. Sin crear/editar/borrar: eso vive del lado del admin. Select
-// explícito de columnas (sin '*') para que ghl_contact_id ni viaje acá —
-// ese campo es exclusivo del sync con GHL del Paso 5.
+// Sistema de Referidos con IA — el asesor puede ver los referidos que llegan
+// del bot de GHL y también cargar/editar referidos a mano. `estado` es
+// exclusivo del bot de GHL y del webhook de agendamiento: nunca se muestra
+// ni se edita desde el Portal, ni al crear ni al editar — al cargar a mano
+// se calcula una sola vez (según si hay teléfono) y de ahí en más queda
+// fuera de alcance. Select explícito de columnas (sin '*') para que
+// ghl_contact_id ni viaje acá — ese campo es exclusivo del sync con GHL.
 interface Referido {
   id: string
   referido_nombre: string
   presentado_por: string | null
+  referido_telefono: string | null
   perfil_referido: string | null
   warm_intro: boolean
+  incentivo: string | null
   estado: string
   fecha_pedido: string
 }
+
+interface ReferidoFormState {
+  referido_nombre: string
+  presentado_por: string
+  referido_telefono: string
+  perfil_referido: string
+  warm_intro: boolean
+  incentivo: string
+}
+
+const EMPTY_FORM: ReferidoFormState = {
+  referido_nombre: '',
+  presentado_por: '',
+  referido_telefono: '',
+  perfil_referido: '',
+  warm_intro: true,
+  incentivo: '',
+}
+
+const INCENTIVO_OPTIONS: { value: string; label: string }[] = [
+  { value: 'relacional', label: 'Relacional' },
+  { value: 'servicio', label: 'Servicio' },
+  { value: 'monetario', label: 'Monetario' },
+  { value: 'ninguno', label: 'Ninguno' },
+]
 
 const ESTADO_LABELS: Record<string, string> = {
   pendiente_datos: 'Esperando datos de contacto',
@@ -67,12 +97,130 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const GRID_COLUMNS = '2fr 1.4fr 2fr 90px 1.4fr 110px'
+const GRID_COLUMNS = '2fr 1.4fr 2fr 90px 1.4fr 110px 50px'
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  backgroundColor: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.10)',
+  borderRadius: 8,
+  padding: '11px 14px',
+  color: '#f0f1f7',
+  fontSize: 14,
+  outline: 'none',
+  boxSizing: 'border-box',
+  fontFamily: 'DM Sans, sans-serif',
+  marginBottom: 16,
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  color: '#8a8c9e',
+  fontSize: 12,
+  marginBottom: 8,
+  fontWeight: 500,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+}
+
+// ─── Modal de alta/edición ──────────────────────────────────────────────
+// Campos editables: referido_nombre, presentado_por, referido_telefono,
+// perfil_referido, warm_intro, incentivo. `estado` (y id/client_id/
+// origen_call_id/ghl_contact_id/created_at) nunca aparecen acá.
+
+function ReferidoModal({
+  isEditing, form, setForm, saving, error, onSave, onClose,
+}: {
+  isEditing: boolean
+  form: ReferidoFormState
+  setForm: React.Dispatch<React.SetStateAction<ReferidoFormState>>
+  saving: boolean
+  error: string | null
+  onSave: () => void
+  onClose: () => void
+}) {
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 22, fontWeight: 800, color: '#f0f1f7', margin: 0 }}>
+            {isEditing ? 'Editar referido' : 'Agregar referido'}
+          </h2>
+          <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
+        </div>
+
+        <label style={labelStyle}>Nombre del referido *</label>
+        <input style={inputStyle} type="text" required value={form.referido_nombre} onChange={(e) => setForm((f) => ({ ...f, referido_nombre: e.target.value }))} />
+
+        <label style={labelStyle}>Presentado por *</label>
+        <input style={inputStyle} type="text" required placeholder="Nombre del cliente que hizo la referencia" value={form.presentado_por} onChange={(e) => setForm((f) => ({ ...f, presentado_por: e.target.value }))} />
+
+        <label style={labelStyle}>Teléfono</label>
+        <input style={inputStyle} type="text" value={form.referido_telefono} onChange={(e) => setForm((f) => ({ ...f, referido_telefono: e.target.value }))} />
+
+        <label style={labelStyle}>Perfil del referido</label>
+        <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={form.perfil_referido} onChange={(e) => setForm((f) => ({ ...f, perfil_referido: e.target.value }))} />
+
+        <label style={labelStyle}>Incentivo</label>
+        <select style={{ ...inputStyle, backgroundColor: '#0d0e17' }} value={form.incentivo} onChange={(e) => setForm((f) => ({ ...f, incentivo: e.target.value }))}>
+          <option value="">Sin especificar</option>
+          {INCENTIVO_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8, cursor: 'pointer' }} onClick={() => setForm((f) => ({ ...f, warm_intro: !f.warm_intro }))}>
+          <div style={{ width: 40, height: 22, borderRadius: 11, background: form.warm_intro ? '#e5182b' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+            <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: form.warm_intro ? 20 : 2, transition: 'left 0.2s' }} />
+          </div>
+          <span style={{ fontSize: 14, color: '#f0f1f7', userSelect: 'none' }}>Warm intro (ya hubo contacto directo)</span>
+        </div>
+
+        {error && <p style={{ color: '#f87171', fontSize: 13, margin: '16px 0 0' }}>{error}</p>}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
+          <button style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={onClose}>
+            Cancelar
+          </button>
+          <button
+            style={{ padding: '10px 24px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+            onClick={onSave}
+            disabled={saving}
+          >
+            {saving ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function ReferidosPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [referidos, setReferidos] = useState<Referido[]>([])
+  const [clientId, setClientId] = useState<string | null>(null)
+
+  const [showModal, setShowModal] = useState(false)
+  const [editingReferido, setEditingReferido] = useState<Referido | null>(null)
+  const [form, setForm] = useState<ReferidoFormState>(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+
+  async function loadReferidos(cid: string) {
+    const { data } = await supabase
+      .from('referidos')
+      .select('id, referido_nombre, presentado_por, referido_telefono, perfil_referido, warm_intro, incentivo, estado, fecha_pedido')
+      .eq('client_id', cid)
+      .order('fecha_pedido', { ascending: false })
+    setReferidos((data ?? []) as Referido[])
+  }
 
   useEffect(() => {
     if (!user) return
@@ -84,20 +232,95 @@ export function ReferidosPage() {
           .eq('profile_id', user!.id)
           .single()
         if (!clientData) return
-
-        const { data } = await supabase
-          .from('referidos')
-          .select('id, referido_nombre, presentado_por, perfil_referido, warm_intro, estado, fecha_pedido')
-          .eq('client_id', clientData.id)
-          .order('fecha_pedido', { ascending: false })
-
-        setReferidos((data ?? []) as Referido[])
+        setClientId(clientData.id)
+        await loadReferidos(clientData.id)
       } finally {
         setLoading(false)
       }
     }
     load()
   }, [user])
+
+  function openNew() {
+    setEditingReferido(null)
+    setForm(EMPTY_FORM)
+    setFormError(null)
+    setShowModal(true)
+  }
+
+  function openEdit(r: Referido) {
+    setEditingReferido(r)
+    setForm({
+      referido_nombre: r.referido_nombre,
+      presentado_por: r.presentado_por ?? '',
+      referido_telefono: r.referido_telefono ?? '',
+      perfil_referido: r.perfil_referido ?? '',
+      warm_intro: r.warm_intro,
+      incentivo: r.incentivo ?? '',
+    })
+    setFormError(null)
+    setShowModal(true)
+  }
+
+  async function handleSave() {
+    if (!clientId) return
+    if (!form.referido_nombre.trim() || !form.presentado_por.trim()) {
+      setFormError('Nombre del referido y quién lo presentó son obligatorios.')
+      return
+    }
+    setSaving(true)
+    setFormError(null)
+    try {
+      if (editingReferido) {
+        // Edición: `estado` solo se recalcula si todavía está en uno de los
+        // 2 estados "pre-contacto" (pendiente_datos/pendiente_contacto),
+        // con la misma regla que el alta — o sea, mientras el bot de GHL
+        // todavía no tomó el referido, el Portal puede seguir ajustando el
+        // estado según si hay teléfono cargado. Una vez que el bot/webhook
+        // lo movió a contactado/en_proceso/cerrado/no_califico, `estado`
+        // queda excluido del UPDATE bajo cualquier circunstancia — es
+        // exclusivo del bot de GHL y del webhook de agendamiento de ahí en más.
+        const updatePayload: Record<string, unknown> = {
+          referido_nombre: form.referido_nombre.trim(),
+          presentado_por: form.presentado_por.trim(),
+          referido_telefono: form.referido_telefono.trim() || null,
+          perfil_referido: form.perfil_referido.trim() || null,
+          warm_intro: form.warm_intro,
+          incentivo: form.incentivo || null,
+        }
+        if (editingReferido.estado === 'pendiente_datos' || editingReferido.estado === 'pendiente_contacto') {
+          updatePayload.estado = form.referido_telefono.trim() ? 'pendiente_contacto' : 'pendiente_datos'
+        }
+        const { error } = await supabase
+          .from('referidos')
+          .update(updatePayload)
+          .eq('id', editingReferido.id)
+        if (error) throw error
+      } else {
+        const estado = form.referido_telefono.trim() ? 'pendiente_contacto' : 'pendiente_datos'
+        const { error } = await supabase.from('referidos').insert({
+          client_id: clientId,
+          referido_nombre: form.referido_nombre.trim(),
+          presentado_por: form.presentado_por.trim(),
+          referido_telefono: form.referido_telefono.trim() || null,
+          perfil_referido: form.perfil_referido.trim() || null,
+          warm_intro: form.warm_intro,
+          incentivo: form.incentivo || null,
+          origen_call_id: null,
+          estado,
+          fecha_pedido: new Date().toISOString().slice(0, 10),
+        })
+        if (error) throw error
+      }
+      await loadReferidos(clientId)
+      setShowModal(false)
+    } catch (e) {
+      console.error(e)
+      setFormError('No se pudo guardar. Probá de nuevo.')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
@@ -135,6 +358,16 @@ export function ReferidosPage() {
             </p>
           </div>
 
+          {/* Acciones */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+            <button
+              onClick={openNew}
+              style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+            >
+              + Agregar referido
+            </button>
+          </div>
+
           {referidos.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
               <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
@@ -167,6 +400,7 @@ export function ReferidosPage() {
                 <div>Warm intro</div>
                 <div>Estado</div>
                 <div>Fecha de pedido</div>
+                <div />
               </div>
 
               {/* Rows */}
@@ -188,11 +422,32 @@ export function ReferidosPage() {
                   <div><WarmIntroMark value={r.warm_intro} /></div>
                   <div><EstadoBadge estado={r.estado} /></div>
                   <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(r.fecha_pedido)}</div>
+                  <div>
+                    <button
+                      title="Editar"
+                      onClick={() => openEdit(r)}
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      ✎
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+      )}
+
+      {showModal && (
+        <ReferidoModal
+          isEditing={!!editingReferido}
+          form={form}
+          setForm={setForm}
+          saving={saving}
+          error={formError}
+          onSave={handleSave}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   )
