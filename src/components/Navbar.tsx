@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: 'Mi Recorrido', to: '/portal/recorrido' },
   { label: 'Ventas', to: '/portal/ventas' },
   { label: 'Referidos', to: '/portal/referidos' },
+  { label: 'Reportes', to: '/portal/reportes' },
   { label: 'Academia', to: '/portal/academia' },
   // { label: 'Creativos', to: '/portal/creativos' },
 ]
