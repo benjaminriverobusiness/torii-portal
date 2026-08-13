@@ -196,11 +196,13 @@ export function Portal() {
   const [selectedMetricIndex, setSelectedMetricIndex] = useState(0)
   const [liAccountMetrics, setLiAccountMetrics] = useState<LiAccountMetric[]>([])
   const [leads, setLeads] = useState<any[]>([]) // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [adsTotalsData, setAdsTotalsData] = useState<{ inversion: number | null; leads: number | null; impresiones: number | null; clics: number | null }[]>([])
+  const [campaignStartDate, setCampaignStartDate] = useState<string | null>(null)
 
   useEffect(() => {
     if (!client?.id) return
     async function fetchMetrics() {
-      const [metricsRes, configRes, leadsRes] = await Promise.all([
+      const [metricsRes, configRes, leadsRes, adsTotalsRes, campaignStartRes] = await Promise.all([
         supabase
           .from('registro_semanal_fullfillment')
           .select(WEEKLY_METRICS_SELECT)
@@ -216,10 +218,28 @@ export function Portal() {
           .select('*, asistio:se_presento, calificado:califico, cerrado:cerro')
           .eq('client_id', client!.id)
           .eq('owner_type', 'client'),
+        // Totales de Ads sin filtro de fecha — mismo criterio que client_closer_calls
+        // arriba: traer todas las filas y sumar en JS.
+        supabase
+          .from('ads_metricas_diarias')
+          .select('inversion, leads, impresiones, clics, ads_campanas!inner(client_id)')
+          .eq('ads_campanas.client_id', client!.id),
+        // Fecha real de arranque de campaña = la fecha más vieja con datos de
+        // Ads para este cliente. Si no hay ninguna fila (cliente sin Ads
+        // todavía), campaignStartDate queda null y el fallback es
+        // client.start_date (ver effectiveStartDate más abajo).
+        supabase
+          .from('ads_metricas_diarias')
+          .select('fecha, ads_campanas!inner(client_id)')
+          .eq('ads_campanas.client_id', client!.id)
+          .order('fecha', { ascending: true })
+          .limit(1),
       ])
       setMetrics((metricsRes.data ?? []) as unknown as ClientMetrics[])
       setMetricsConfig(configRes.data as ClientMetricsConfig | null)
       setLeads(leadsRes.data ?? [])
+      setAdsTotalsData(adsTotalsRes.data ?? [])
+      setCampaignStartDate(campaignStartRes.data?.[0]?.fecha ?? null)
     }
     fetchMetrics()
   }, [client?.id])
@@ -311,10 +331,15 @@ export function Portal() {
 
   if (!status) return null
 
+  // Fecha real de arranque = la más vieja con datos de Ads. client.start_date
+  // (fecha de contrato/onboarding con Torii) queda como único fallback, para
+  // clientes que todavía no tienen ninguna fila en ads_metricas_diarias.
+  const effectiveStartDate = campaignStartDate ?? client?.start_date
+
   const daysActive = (() => {
     try {
-      if (!client?.start_date) return 0
-      const start = new Date(client.start_date)
+      if (!effectiveStartDate) return 0
+      const start = new Date(effectiveStartDate)
       const today = new Date()
       const diff = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
       return Math.max(0, diff)
@@ -339,6 +364,11 @@ export function Portal() {
   const calificacionRateTotal = leads.length > 0 ? Math.round((calificados.length / leads.length) * 100) : null
   const cerrados = leads.filter(l => l.cerrado)
   const closeRateTotal = calificados.length > 0 ? Math.round((cerrados.length / calificados.length) * 100) : null
+
+  const inversionTotal = adsTotalsData.reduce((sum, r) => sum + (r.inversion ?? 0), 0)
+  const leadsAdsTotal = adsTotalsData.reduce((sum, r) => sum + (r.leads ?? 0), 0)
+  const impresionesTotal = adsTotalsData.reduce((sum, r) => sum + (r.impresiones ?? 0), 0)
+  const clicsTotal = adsTotalsData.reduce((sum, r) => sum + (r.clics ?? 0), 0)
 
   console.log('Rendering portal with:', {
     daysActive,
@@ -490,6 +520,10 @@ export function Portal() {
             <KpiCard label="SHOW RATE TOTAL" value={showRateTotal} suffix="%" objective={60} colorLogic="showRate" delay={100} />
             <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} />
             <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} />
+            <KpiCard label="INVERSIÓN TOTAL" value={inversionTotal} prefix="$" colorLogic="neutral" delay={400} />
+            <KpiCard label="LEADS TOTALES" value={leadsAdsTotal} colorLogic="neutral" delay={500} />
+            <KpiCard label="IMPRESIONES" value={impresionesTotal} colorLogic="neutral" delay={600} />
+            <KpiCard label="CLICS" value={clicsTotal} colorLogic="neutral" delay={700} />
           </div>
         </div>
         )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}
@@ -542,7 +576,25 @@ export function Portal() {
         </div>
         )} catch(e) { console.error('WinNextStep error:', e); return <div style={{color:'red',padding:16}}>Error en Win/NextStep</div> } })()}
 
-        {/* MÉTRICAS POR SEMANA */}
+        {/* VIDEOS */}
+        {(() => { try { return videos.length > 0 ? (
+        <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
+          <SectionLabel text="INFORMES EN VIDEO" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="video-grid">
+            {videos.map((v) => <VideoCard key={v.id} video={v} />)}
+          </div>
+        </div>
+        ) : null } catch(e) { console.error('Videos error:', e); return <div style={{color:'red',padding:16}}>Error en Videos</div> } })()}
+
+        {/* DOCUMENTS */}
+        {(() => { try { return documents.length > 0 ? (
+        <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
+          <SectionLabel text="INFORMES Y DOCUMENTOS" />
+          <div>{documents.map((d) => <DocumentCard key={d.id} document={d} />)}</div>
+        </div>
+        ) : null } catch(e) { console.error('Documents error:', e); return <div style={{color:'red',padding:16}}>Error en Documentos</div> } })()}
+
+        {/* MÉTRICAS POR SEMANA — secundaria, agrupada con el historial semanal de más abajo */}
         {(() => { try { return (
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="MÉTRICAS POR SEMANA" />
@@ -625,24 +677,6 @@ export function Portal() {
           />
         </div>
         ) } catch(e) { console.error('Metrics error:', e); return null } })()}
-
-        {/* VIDEOS */}
-        {(() => { try { return videos.length > 0 ? (
-        <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
-          <SectionLabel text="INFORMES EN VIDEO" />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="video-grid">
-            {videos.map((v) => <VideoCard key={v.id} video={v} />)}
-          </div>
-        </div>
-        ) : null } catch(e) { console.error('Videos error:', e); return <div style={{color:'red',padding:16}}>Error en Videos</div> } })()}
-
-        {/* DOCUMENTS */}
-        {(() => { try { return documents.length > 0 ? (
-        <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
-          <SectionLabel text="INFORMES Y DOCUMENTOS" />
-          <div>{documents.map((d) => <DocumentCard key={d.id} document={d} />)}</div>
-        </div>
-        ) : null } catch(e) { console.error('Documents error:', e); return <div style={{color:'red',padding:16}}>Error en Documentos</div> } })()}
 
         {/* HISTORY */}
         {(() => { try {
