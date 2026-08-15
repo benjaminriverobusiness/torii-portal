@@ -34,7 +34,7 @@ interface CrmLead {
   created_at: string
   updated_at: string
   closer?: string
-  calificacion?: 'A' | 'B' | 'C'
+  calificacion?: 'Calificado' | 'Calificado tipo B' | 'Semicalificado'
   segunda_reunion?: boolean
   fecha_segunda_reunion?: string
   resultado_segunda_reunion?: string
@@ -93,6 +93,14 @@ const CAPACIDAD_AHORRO_OPTIONS = [
   'Media (500-1000 USD/mes)',
   'Baja (<500 USD/mes)',
   'No especificó',
+]
+
+// Reemplaza los 2 booleanos separados calificaba/califico — quedan en la
+// tabla sin usarse acá, ver migración migrate_calificacion_to_3_valores.
+const CALIFICACION_OPTIONS = [
+  'Calificado',
+  'Calificado tipo B',
+  'Semicalificado',
 ]
 
 const CRM_LEAD_SELECT = `
@@ -389,6 +397,23 @@ function selectColumn(
   }
 }
 
+// Sin EditableCell — el valor llega automático desde ghl-appointment-webhook
+// (ad_id se escribe siempre, sin importar owner_type), así que no tiene
+// sentido dejarlo editable a mano acá.
+function readOnlyColumn(key: string, label: string, minPx: number, field: keyof CrmLead): ColumnDef {
+  return {
+    key, label, minPx,
+    render: (l) => {
+      const v = l[field]
+      return (
+        <span style={{ color: '#8a8c9e', fontSize: 13, padding: '4px 6px' }}>
+          {v === null || v === undefined || v === '' ? '—' : String(v)}
+        </span>
+      )
+    },
+  }
+}
+
 function boolColumn(key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string): ColumnDef {
   return {
     key, label, minPx,
@@ -416,11 +441,12 @@ const ALL_COLUMNS: ColumnDef[] = [
   textColumn('nombre', 'Nombre del lead', 220, 'lead_nombre', 'lead_name', { validate: (v) => v.trim().length > 0, autoFocusOnCreate: true }),
   textColumn('telefono', 'Teléfono', 130, 'lead_telefono', 'lead_phone'),
   textColumn('correo', 'Correo', 180, 'lead_email', 'lead_email'),
-  dateColumn('fecha_agenda', 'Fecha cita agendada', 150, 'fecha_agenda', 'fecha_agenda'),
-  textColumn('ad', 'Ad', 110, 'ad_id', 'ad_id'),
-  boolColumn('calificaba', 'Calificaba?', 100, 'calificaba', 'calificaba'),
+  // Solo lectura — llega automático desde ghl-appointment-webhook.
+  readOnlyColumn('ad', 'Ad', 110, 'ad_id'),
   boolColumn('asistio', 'Se presentó?', 100, 'asistio', 'se_presento'),
-  boolColumn('calificado', 'Calificado', 100, 'calificado', 'califico'),
+  // Reemplaza calificaba/califico (booleanos viejos, ver migración) — quedan
+  // en la tabla sin usarse en el frontend.
+  selectColumn('calificacion', 'Calificación', 170, 'calificacion', 'calificacion', CALIFICACION_OPTIONS),
   selectColumn('situacion_resultado', 'Situación 1ra cita', 170, 'situacion_resultado', 'situacion_resultado', SITUACION_PRIMERA_CITA_OPTIONS),
   {
     key: 'segunda_reunion', label: 'Fecha 2da cita', minPx: 130,
@@ -480,7 +506,6 @@ const ALL_COLUMNS: ColumnDef[] = [
       )
     },
   },
-  textColumn('monto', 'Monto del cierre', 130, 'monto', 'precio', { numeric: true }),
   textColumn('producto', 'Producto', 140, 'producto', 'producto'),
   textColumn('comision_estimada', 'Comisión estimada', 160, 'comision_estimada', 'comision_estimada', { numeric: true }),
   textColumn('motivo_no_cierre', 'Motivo no cierre', 170, 'motivo_no_cierre', 'loss_reason'),
@@ -491,8 +516,11 @@ const ALL_COLUMNS: ColumnDef[] = [
   textColumn('edad', 'Edad', 80, 'edad', 'edad', { numeric: true }),
   textColumn('hijos_casado', 'Hijos/Casado', 150, 'hijos_casado', 'hijos_casado'),
   textColumn('notas', 'Notas closer', 220, 'notas', 'notes'),
-  // ── Campo real del Portal que no está en el Sheet ──
-  dateColumn('llamada', 'Fecha llamada', 130, 'fecha_llamada', 'fecha_llamada'),
+  // fecha_agenda (Fecha cita agendada) se eliminó de la grilla — era el
+  // mismo concepto duplicado de fecha_llamada, que ya se llena sola desde
+  // ghl-appointment-webhook. Este es el campo real, renombrado para que
+  // quede claro que es la fecha de la cita, no un log de una llamada pasada.
+  dateColumn('llamada', 'Fecha llamada agendada', 160, 'fecha_llamada', 'fecha_llamada'),
   // ── Closer se movió del puesto 12 del Sheet a acá, al final ──
   {
     key: 'closer', label: 'Closer', minPx: 120,
@@ -517,15 +545,14 @@ const ALL_COLUMNS: ColumnDef[] = [
   dateColumn('next_followup_date', 'Próximo follow-up', 150, 'next_followup_date', 'next_followup_date'),
 ]
 
-// Suma manual (no calculada) de los minPx de las 28 columnas de ALL_COLUMNS + 50px
-// de la columna de borrar (ícono chico, ya no hay botón "Acciones"/"Ver").
-// nombre220 + telefono130 + correo180 + fecha_agenda150 + ad110 + calificaba100 + asistio100
-// + calificado100 + situacion_resultado170 + segunda_reunion130 + resultado150 + cerrado90
-// + monto130 + producto140 + comision_estimada160 + motivo_no_cierre170 + situacion_laboral210
-// + nivel_ingresos230 + capacidad_ahorro210 + preocupacion_actual210 + edad80 + hijos_casado150
-// + notas220 + llamada130 + closer120 + objeciones200 + recording_url200 + next_followup_date150
-// + borrar50 = 4390
-const TABLE_MIN_WIDTH_PX = 4390
+// Ancho de la columna de numeración (# de fila, puramente visual) y de la
+// columna de borrar (ícono chico, sticky a la derecha).
+const ROWNUM_MIN_PX = 44
+const DELETE_COL_MIN_PX = 50
+
+// Derivado de ALL_COLUMNS en vez de sumado a mano — evita que quede
+// desincronizado cada vez que se agrega/saca una columna.
+const TABLE_MIN_WIDTH_PX = ROWNUM_MIN_PX + ALL_COLUMNS.reduce((sum, c) => sum + c.minPx, 0) + DELETE_COL_MIN_PX
 
 // ─── Material sub-components ──────────────────────────────────
 
@@ -695,6 +722,58 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
   )
 }
 
+// ─── Orden de la tabla ──────────────────────────────────────────
+// Dropdown genérico: cualquier columna numérica o de fecha. Más 3 accesos
+// rápidos (calificación/se presentó/cerró) que no entran en esa lista
+// porque no son ni numéricas ni fecha, pero el usuario los pidió igual.
+
+type SortableKey =
+  | 'comision_estimada' | 'edad'
+  | 'fecha_segunda_reunion' | 'fecha_llamada' | 'next_followup_date'
+  | 'calificacion' | 'asistio' | 'cerrado'
+
+const SORT_FIELD_OPTIONS: { key: SortableKey; label: string }[] = [
+  { key: 'comision_estimada', label: 'Comisión estimada' },
+  { key: 'edad', label: 'Edad' },
+  { key: 'fecha_segunda_reunion', label: 'Fecha 2da cita' },
+  { key: 'fecha_llamada', label: 'Fecha llamada agendada' },
+  { key: 'next_followup_date', label: 'Próximo follow-up' },
+]
+
+const QUICK_SORT_OPTIONS: { key: SortableKey; label: string }[] = [
+  { key: 'calificacion', label: 'Calificación' },
+  { key: 'asistio', label: 'Se presentó' },
+  { key: 'cerrado', label: 'Cerró' },
+]
+
+// Nulls siempre al final, sea cual sea la dirección — que un lead sin dato
+// "gane" el orden por estar vacío sería confuso.
+function compareLeadsBy(a: CrmLead, b: CrmLead, field: SortableKey): number {
+  const av = a[field]
+  const bv = b[field]
+
+  if (field === 'asistio' || field === 'cerrado') {
+    const an = av === true ? 1 : av === false ? 0 : -1
+    const bn = bv === true ? 1 : bv === false ? 0 : -1
+    return an - bn
+  }
+  if (field === 'edad' || field === 'comision_estimada') {
+    const an = typeof av === 'number' ? av : -Infinity
+    const bn = typeof bv === 'number' ? bv : -Infinity
+    return an - bn
+  }
+  if (field === 'calificacion') {
+    if (!av && !bv) return 0
+    if (!av) return -1
+    if (!bv) return 1
+    return String(av).localeCompare(String(bv))
+  }
+  // Campos de fecha (fecha_segunda_reunion, fecha_llamada, next_followup_date)
+  const at = av ? new Date(String(av)).getTime() : -Infinity
+  const bt = bv ? new Date(String(bv)).getTime() : -Infinity
+  return at - bt
+}
+
 // ─── Main page ────────────────────────────────────────────────
 
 export function VentasPage() {
@@ -715,6 +794,8 @@ export function VentasPage() {
   const [newLeadId, setNewLeadId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [addingRow, setAddingRow] = useState(false)
+  const [sortField, setSortField] = useState<SortableKey | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -844,6 +925,28 @@ export function VentasPage() {
     }
   })
 
+  const displayedLeads = sortField
+    ? [...leads].sort((a, b) => {
+        const cmp = compareLeadsBy(a, b, sortField)
+        return sortDir === 'asc' ? cmp : -cmp
+      })
+    : leads
+
+  function handleSortFieldChange(field: SortableKey | '') {
+    if (!field) { setSortField(null); return }
+    setSortField(field)
+    setSortDir('asc')
+  }
+
+  function handleQuickSort(field: SortableKey) {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+  }
+
   const rowCtx: RowCtx = {
     closers, savingCell, errorCell, saveField: saveInlineField,
     newLeadId, onAutoFocusHandled: () => setNewLeadId(null),
@@ -852,7 +955,7 @@ export function VentasPage() {
   // (nada de minmax()/fr), así no hay ninguna sizing algorithm que pueda
   // comprimirla. Todas las columnas están siempre visibles, así que el grid
   // es fijo — sin selector, sin filtrado.
-  const GRID = [...ALL_COLUMNS.map((c) => `${c.minPx}px`), '50px'].join(' ')
+  const GRID = [`${ROWNUM_MIN_PX}px`, ...ALL_COLUMNS.map((c) => `${c.minPx}px`), `${DELETE_COL_MIN_PX}px`].join(' ')
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
@@ -973,7 +1076,7 @@ export function VentasPage() {
           )}
 
           {/* Pipeline header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <SectionPill text="PIPELINE" />
             <button
               style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: addingRow ? 'not-allowed' : 'pointer', opacity: addingRow ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
@@ -982,6 +1085,67 @@ export function VentasPage() {
             >
               + Nueva llamada
             </button>
+          </div>
+
+          {/* Orden — dropdown genérico (numéricas/fecha) + accesos rápidos */}
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+            <span style={{ color: '#555669', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Ordenar por
+            </span>
+            <select
+              value={sortField && SORT_FIELD_OPTIONS.some((o) => o.key === sortField) ? sortField : ''}
+              onChange={(e) => handleSortFieldChange(e.target.value as SortableKey | '')}
+              style={{
+                background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
+                color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
+              }}
+            >
+              <option value="">Sin ordenar</option>
+              {SORT_FIELD_OPTIONS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+            </select>
+            <button
+              onClick={() => setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+              disabled={!sortField}
+              title={sortDir === 'asc' ? 'Ascendente' : 'Descendente'}
+              style={{
+                padding: '6px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 8, color: sortField ? '#f0f1f7' : '#333', fontSize: 13, cursor: sortField ? 'pointer' : 'not-allowed',
+                fontFamily: 'DM Sans, sans-serif',
+              }}
+            >
+              {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
+            </button>
+
+            <span style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+
+            {QUICK_SORT_OPTIONS.map((o) => {
+              const active = sortField === o.key
+              return (
+                <button
+                  key={o.key}
+                  onClick={() => handleQuickSort(o.key)}
+                  style={{
+                    padding: '6px 12px',
+                    background: active ? 'rgba(229,24,43,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: active ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: active ? '#e5182b' : '#8a8c9e',
+                    fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+                  }}
+                >
+                  {o.label}{active ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                </button>
+              )
+            })}
+
+            {sortField && (
+              <button
+                onClick={() => setSortField(null)}
+                style={{ padding: '6px 10px', background: 'transparent', border: 'none', color: '#555669', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'DM Sans, sans-serif' }}
+              >
+                Limpiar orden
+              </button>
+            )}
           </div>
 
           {/* Leads table / cards */}
@@ -998,7 +1162,7 @@ export function VentasPage() {
             </div>
           ) : isMobile ? (
             <div style={{ marginBottom: 12 }}>
-              {leads.map((lead) => (
+              {displayedLeads.map((lead) => (
                 <div key={lead.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                     <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
@@ -1016,8 +1180,8 @@ export function VentasPage() {
                     <span style={{ fontSize: 12, color: lead.asistio ? '#4ade80' : '#f87171' }}>
                       {lead.asistio ? '✓' : '✗'} Asistió
                     </span>
-                    <span style={{ fontSize: 12, color: lead.calificado ? '#4ade80' : '#f87171' }}>
-                      {lead.calificado ? '✓' : '✗'} Calificado
+                    <span style={{ fontSize: 12, color: lead.calificacion ? '#4ade80' : '#555669' }}>
+                      {lead.calificacion ?? 'Sin clasificar'}
                     </span>
                     {lead.cerrado
                       ? <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: '#071a0f', color: '#4ade80' }}>Cerrado</span>
@@ -1040,28 +1204,37 @@ export function VentasPage() {
           ) : (
             <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
               {/* Fuerza bruta a propósito: contenedor exterior con overflowX:auto + width:100%,
-                  contenedor interior con minWidth FIJO hardcodeado (TABLE_MIN_WIDTH_PX, suma manual
-                  de los minPx de las 28 columnas), y cada columna es un track de ancho fijo en px
-                  (ver GRID). Nada de fit-content/minmax()/fr acá — cero ambigüedad de sizing.
-                  Bordes reales entre celdas/filas (grid-line, no solo espaciado) para que se vea
-                  como una hoja de cálculo. */}
+                  contenedor interior con minWidth FIJO derivado (TABLE_MIN_WIDTH_PX, suma de los
+                  minPx de ALL_COLUMNS), y cada columna es un track de ancho fijo en px (ver GRID).
+                  Nada de fit-content/minmax()/fr acá — cero ambigüedad de sizing. Bordes reales
+                  entre celdas/filas (grid-line, no solo espaciado) para que se vea como una hoja
+                  de cálculo. La columna de borrar es sticky a la derecha: dentro de este mismo
+                  contenedor con overflowX, "right:0" la pega al borde visible del scroll horizontal,
+                  no al borde del documento — necesita su propio background (no puede ser
+                  transparente) para tapar el contenido que pasa por debajo al scrollear. */}
               <div style={{ overflowX: 'auto', width: '100%' }}>
                 <div style={{ minWidth: `${TABLE_MIN_WIDTH_PX}px` }}>
                   <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, borderBottom: '1px solid rgba(255,255,255,0.12)', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    <div style={{ flexShrink: 0, minWidth: ROWNUM_MIN_PX, padding: '10px 12px', borderRight: '1px solid rgba(255,255,255,0.07)' }}>#</div>
                     {ALL_COLUMNS.map((c) => (
                       <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, padding: '10px 12px', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.label.toUpperCase()}</div>
                     ))}
-                    <div style={{ flexShrink: 0, minWidth: 50, padding: '10px 12px' }} />
+                    <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '10px 12px', position: 'sticky', right: 0, background: '#0d0e17', borderLeft: '1px solid rgba(255,255,255,0.12)' }} />
                   </div>
-                  {leads.map((lead, i) => (
+                  {displayedLeads.map((lead, i) => {
+                    const rowBg = i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)'
+                    return (
                     <div
                       key={lead.id}
-                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'stretch', borderBottom: '1px solid rgba(255,255,255,0.06)', background: i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)' }}
+                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'stretch', borderBottom: '1px solid rgba(255,255,255,0.06)', background: rowBg }}
                     >
+                      <div style={{ flexShrink: 0, minWidth: ROWNUM_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', color: '#555669', fontSize: 13, borderRight: '1px solid rgba(255,255,255,0.07)' }}>
+                        {i + 1}
+                      </div>
                       {ALL_COLUMNS.map((c) => (
                         <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, overflow: 'hidden', padding: '6px 10px', display: 'flex', alignItems: 'center', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.render(lead, rowCtx)}</div>
                       ))}
-                      <div style={{ flexShrink: 0, minWidth: 50, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', right: 0, background: rowBg, borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
                         {confirmDeleteId === lead.id ? (
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button title="Confirmar" onClick={() => handleDeleteLead(lead)} style={{ background: 'transparent', border: 'none', color: '#4ade80', fontSize: 15, cursor: 'pointer', padding: 0 }}>✓</button>
@@ -1072,7 +1245,8 @@ export function VentasPage() {
                         )}
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>

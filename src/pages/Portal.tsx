@@ -370,6 +370,15 @@ export function Portal() {
   const impresionesTotal = adsTotalsData.reduce((sum, r) => sum + (r.impresiones ?? 0), 0)
   const clicsTotal = adsTotalsData.reduce((sum, r) => sum + (r.clics ?? 0), 0)
 
+  // Solo 'Calificado' cuenta como calificó para este número — 'Calificado
+  // tipo B' y 'Semicalificado' quedan afuera a propósito (confirmado).
+  const agendasCalificadasEfectivas = leads.filter(
+    (l) => l.asistio === true && l.calificacion === 'Calificado'
+  ).length
+  const cpbcTotal = agendasCalificadasEfectivas > 0
+    ? inversionTotal / agendasCalificadasEfectivas
+    : null
+
   console.log('Rendering portal with:', {
     daysActive,
     activePhase: phases?.find((p) => p.id === status?.active_phase_id),
@@ -521,9 +530,10 @@ export function Portal() {
             <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} />
             <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} />
             <KpiCard label="INVERSIÓN TOTAL" value={inversionTotal} prefix="$" colorLogic="neutral" delay={400} />
-            <KpiCard label="LEADS TOTALES" value={leadsAdsTotal} colorLogic="neutral" delay={500} />
+            <KpiCard label="AGENDAS (ADS)" value={leadsAdsTotal} colorLogic="neutral" delay={500} />
             <KpiCard label="IMPRESIONES" value={impresionesTotal} colorLogic="neutral" delay={600} />
             <KpiCard label="CLICS" value={clicsTotal} colorLogic="neutral" delay={700} />
+            <KpiCard label="CPBC TOTAL" value={cpbcTotal} prefix="$" colorLogic="neutral" delay={800} />
           </div>
         </div>
         )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}

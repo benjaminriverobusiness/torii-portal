@@ -88,7 +88,7 @@ function MetricCard({
         backgroundColor: 'rgba(255,255,255,0.02)',
         border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: '12px',
-        padding: '16px 20px',
+        padding: '12px 16px',
       }}
     >
       <div
@@ -105,7 +105,7 @@ function MetricCard({
       <div
         style={{
           fontFamily: 'Bricolage Grotesque, sans-serif',
-          fontSize: 28,
+          fontSize: 20,
           fontWeight: 700,
           color,
         }}
@@ -306,21 +306,21 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               />
             )}
             {config.show_ads_leads && (
-              <MetricCard label="LEADS GENERADOS" value={selectedMetric?.ads_leads} color="#f0f1f7" />
+              <MetricCard label="AGENDAS (ADS)" value={selectedMetric?.ads_leads} color="#f0f1f7" />
             )}
             {config.show_ads_cpl && (
-              <MetricCard label="COSTO POR LEAD" value={selectedMetric?.ads_cpl} color="#f0f1f7" prefix="$" />
+              <MetricCard label="CPL" value={selectedMetric?.ads_cpl} color="#f0f1f7" prefix="$" />
             )}
             {config.show_ads_qualified && (
               <MetricCard
-                label="LEADS CALIFICADOS"
+                label="AGENDAS CALIFICADAS"
                 value={selectedMetric?.ads_qualified_leads}
                 color="#60a5fa"
               />
             )}
             {config.show_ads_cpbc && (
               <MetricCard
-                label="COSTO / BOOKING"
+                label="CPBC"
                 value={selectedMetric?.ads_cpbc}
                 color={
                   cpbc_objective

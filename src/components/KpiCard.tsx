@@ -77,7 +77,7 @@ export function KpiCard({
         backgroundColor: 'rgba(255,255,255,0.03)',
         border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 16,
-        padding: 24,
+        padding: 16,
       }}
     >
       <div
@@ -94,7 +94,7 @@ export function KpiCard({
       <div
         style={{
           fontFamily: 'Bricolage Grotesque, sans-serif',
-          fontSize: 56,
+          fontSize: 36,
           fontWeight: 800,
           color: color,
           lineHeight: 1,
