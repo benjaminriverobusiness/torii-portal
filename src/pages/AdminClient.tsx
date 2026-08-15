@@ -31,6 +31,10 @@ interface WeeklyAutoMetrics {
   llamadas_realizadas: number | null
   no_shows: number | null
   show_rate: number | null
+  calificados_closer: number | null
+  cerrados: number | null
+  tasa_calificacion: number | null
+  tasa_cierre: number | null
 }
 
 interface WeeklyFullfillment extends WeeklyAutoMetrics {
@@ -130,10 +134,6 @@ export function AdminClient() {
     year: new Date().getFullYear(),
     week_start: new Date().toISOString().split('T')[0],
     week_end: '',
-    calificados_manual: '',
-    cerrados: '',
-    tasa_calificacion: '',
-    tasa_cierre: '',
     notas: '',
   })
   const [autoMetrics, setAutoMetrics] = useState<WeeklyAutoMetrics | null>(null)
@@ -522,7 +522,6 @@ export function AdminClient() {
     if (!id) return
     console.log('Saving week:', { clientId: id, weekForm, autoMetrics })
     try {
-      const n = (v: string) => (v !== '' ? parseFloat(v) : null)
       const payload = {
         client_id: id,
         semana: weekForm.week_number,
@@ -538,10 +537,10 @@ export function AdminClient() {
         llamadas_realizadas: autoMetrics?.llamadas_realizadas ?? null,
         no_shows: autoMetrics?.no_shows ?? null,
         show_rate: autoMetrics?.show_rate ?? null,
-        calificados_manual: n(weekForm.calificados_manual),
-        cerrados: n(weekForm.cerrados),
-        tasa_calificacion: n(weekForm.tasa_calificacion),
-        tasa_cierre: n(weekForm.tasa_cierre),
+        calificados_manual: autoMetrics?.calificados_closer ?? null,
+        cerrados: autoMetrics?.cerrados ?? null,
+        tasa_calificacion: autoMetrics?.tasa_calificacion ?? null,
+        tasa_cierre: autoMetrics?.tasa_cierre ?? null,
         notas: weekForm.notas || null,
         updated_at: new Date().toISOString(),
       }
@@ -572,10 +571,6 @@ export function AdminClient() {
       year: m.año,
       week_start: m.fecha_inicio ?? '',
       week_end: m.fecha_fin ?? '',
-      calificados_manual: m.calificados_manual?.toString() ?? '',
-      cerrados: m.cerrados?.toString() ?? '',
-      tasa_calificacion: m.tasa_calificacion?.toString() ?? '',
-      tasa_cierre: m.tasa_cierre?.toString() ?? '',
       notas: m.notas ?? '',
     })
   }
@@ -1702,6 +1697,10 @@ export function AdminClient() {
                       ['no_shows', 'No-shows'],
                       ['cpbc', 'CPBC ($)'],
                       ['show_rate', 'Show rate (%)'],
+                      ['calificados_closer', 'Calificados (closer)'],
+                      ['cerrados', 'Cerrados'],
+                      ['tasa_calificacion', 'Tasa de calificación (%)'],
+                      ['tasa_cierre', 'Tasa de cierre (%)'],
                     ] as [keyof WeeklyAutoMetrics, string][]).map(([key, label]) => (
                       <div key={key}>
                         <label style={labelStyle}>{label}</label>
@@ -1719,39 +1718,15 @@ export function AdminClient() {
               )}
 
               <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#e5182b', background: 'rgba(229,24,43,0.1)', border: '1px solid rgba(229,24,43,0.25)', borderRadius: 99, padding: '3px 10px' }}>
-                    MANUAL
-                  </span>
-                  <span style={{ color: '#555669', fontSize: 12 }}>
-                    se carga a mano después de cada reunión
-                  </span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                  {([
-                    ['calificados_manual', 'Calificados (manual, si difiere de ads)'],
-                    ['cerrados', 'Cerrados'],
-                    ['tasa_calificacion', 'Tasa de calificación (%)'],
-                    ['tasa_cierre', 'Tasa de cierre (%)'],
-                  ] as [keyof typeof weekForm, string][]).map(([key, label]) => (
-                    <div key={key}>
-                      <label style={labelStyle}>{label}</label>
-                      <input
-                        type="number"
-                        value={weekForm[key] as string}
-                        onChange={(e) => setWeekForm((p) => ({ ...p, [key]: e.target.value }))}
-                        style={inputStyle}
-                        step="any"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <label style={labelStyle}>Notas</label>
+                <label style={{ ...labelStyle, color: '#555669' }}>
+                  Notas (opcional) — agregá contexto si el reporte automático no alcanza
+                </label>
                 <textarea
                   value={weekForm.notas}
                   onChange={(e) => setWeekForm((p) => ({ ...p, notas: e.target.value }))}
-                  style={{ ...inputStyle, resize: 'vertical', minHeight: 70 }}
-                  rows={3}
+                  placeholder="Ej: la caída de agendas esta semana fue por el feriado, no por la campaña."
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: 60, opacity: 0.9 }}
+                  rows={2}
                 />
               </div>
 
