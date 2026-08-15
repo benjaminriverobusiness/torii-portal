@@ -746,32 +746,66 @@ const QUICK_SORT_OPTIONS: { key: SortableKey; label: string }[] = [
   { key: 'cerrado', label: 'Cerró' },
 ]
 
-// Nulls siempre al final, sea cual sea la dirección — que un lead sin dato
-// "gane" el orden por estar vacío sería confuso.
+// "Vacío" para efectos de orden: false es un valor real en asistio/cerrado
+// (no está vacío), a diferencia de calificacion/fechas donde cualquier
+// falsy (null/undefined/'') sí lo está.
+function isEmptyForSort(v: unknown, field: SortableKey): boolean {
+  if (field === 'asistio' || field === 'cerrado') return v !== true && v !== false
+  if (field === 'edad' || field === 'comision_estimada') return typeof v !== 'number'
+  return !v
+}
+
+// Compara solo pares donde NINGUNO de los dos está vacío — la posición de
+// los vacíos se resuelve aparte, en el wrapper de sort() de más abajo, para
+// que quede fija al final sea cual sea sortDir. Antes esto vivía acá mismo
+// devolviendo -1/1, pero el wrapper invertía el resultado entero según
+// dirección — incluida esa parte — y los vacíos terminaban primero en modo
+// 'asc' en vez de al final.
 function compareLeadsBy(a: CrmLead, b: CrmLead, field: SortableKey): number {
   const av = a[field]
   const bv = b[field]
 
   if (field === 'asistio' || field === 'cerrado') {
-    const an = av === true ? 1 : av === false ? 0 : -1
-    const bn = bv === true ? 1 : bv === false ? 0 : -1
-    return an - bn
+    return (av === true ? 1 : 0) - (bv === true ? 1 : 0)
   }
   if (field === 'edad' || field === 'comision_estimada') {
-    const an = typeof av === 'number' ? av : -Infinity
-    const bn = typeof bv === 'number' ? bv : -Infinity
-    return an - bn
+    return (av as number) - (bv as number)
   }
   if (field === 'calificacion') {
-    if (!av && !bv) return 0
-    if (!av) return -1
-    if (!bv) return 1
     return String(av).localeCompare(String(bv))
   }
   // Campos de fecha (fecha_segunda_reunion, fecha_llamada, next_followup_date)
-  const at = av ? new Date(String(av)).getTime() : -Infinity
-  const bt = bv ? new Date(String(bv)).getTime() : -Infinity
-  return at - bt
+  return new Date(String(av)).getTime() - new Date(String(bv)).getTime()
+}
+
+// ─── Filtros de la tabla ────────────────────────────────────────
+// Independientes del orden: ocultan filas (a diferencia de sortField, que
+// solo reordena). Se combinan entre sí con AND. Default 'all' en los 3 =
+// sin ningún filtro activo, muestra todo como antes.
+
+type CalificacionFilter = 'all' | 'Calificado' | 'Calificado tipo B' | 'Semicalificado' | 'none'
+type BoolFilter = 'all' | 'yes' | 'no' | 'none'
+
+const CALIFICACION_FILTER_OPTIONS: { value: CalificacionFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'Calificado', label: 'Calificado' },
+  { value: 'Calificado tipo B', label: 'Calificado tipo B' },
+  { value: 'Semicalificado', label: 'Semicalificado' },
+  { value: 'none', label: 'Sin calificar' },
+]
+
+const BOOL_FILTER_OPTIONS: { value: BoolFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'yes', label: 'Sí' },
+  { value: 'no', label: 'No' },
+  { value: 'none', label: 'Sin dato' },
+]
+
+function matchesBoolFilter(v: boolean | null | undefined, filter: BoolFilter): boolean {
+  if (filter === 'all') return true
+  if (filter === 'none') return v !== true && v !== false
+  if (filter === 'yes') return v === true
+  return v === false
 }
 
 // ─── Main page ────────────────────────────────────────────────
@@ -796,6 +830,9 @@ export function VentasPage() {
   const [addingRow, setAddingRow] = useState(false)
   const [sortField, setSortField] = useState<SortableKey | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [filterCalificacion, setFilterCalificacion] = useState<CalificacionFilter>('all')
+  const [filterAsistio, setFilterAsistio] = useState<BoolFilter>('all')
+  const [filterCerrado, setFilterCerrado] = useState<BoolFilter>('all')
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768)
@@ -925,12 +962,33 @@ export function VentasPage() {
     }
   })
 
+  // Primero se filtra (oculta filas), después se ordena lo que queda —
+  // nunca al revés, para que el orden no interfiera con qué está visible.
+  const filteredLeads = leads.filter((l) =>
+    (filterCalificacion === 'all'
+      ? true
+      : filterCalificacion === 'none'
+        ? !l.calificacion
+        : l.calificacion === filterCalificacion)
+    && matchesBoolFilter(l.asistio, filterAsistio)
+    && matchesBoolFilter(l.cerrado, filterCerrado)
+  )
+
   const displayedLeads = sortField
-    ? [...leads].sort((a, b) => {
+    ? [...filteredLeads].sort((a, b) => {
+        // Vacíos siempre al final, sea 'asc' o 'desc' — se resuelve ACÁ,
+        // antes de aplicar el signo de dirección, para que ese signo no
+        // termine invirtiendo también la posición de los vacíos (ver
+        // comentario en compareLeadsBy).
+        const aEmpty = isEmptyForSort(a[sortField], sortField)
+        const bEmpty = isEmptyForSort(b[sortField], sortField)
+        if (aEmpty && bEmpty) return 0
+        if (aEmpty) return 1
+        if (bEmpty) return -1
         const cmp = compareLeadsBy(a, b, sortField)
         return sortDir === 'asc' ? cmp : -cmp
       })
-    : leads
+    : filteredLeads
 
   function handleSortFieldChange(field: SortableKey | '') {
     if (!field) { setSortField(null); return }
@@ -1148,6 +1206,47 @@ export function VentasPage() {
             )}
           </div>
 
+          {/* Filtros — independientes del orden: ocultan filas en vez de solo reordenarlas */}
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+            <span style={{ color: '#555669', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Filtrar por
+            </span>
+            <select
+              value={filterCalificacion}
+              onChange={(e) => setFilterCalificacion(e.target.value as CalificacionFilter)}
+              style={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+            >
+              {CALIFICACION_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>Calificación: {o.label}</option>)}
+            </select>
+            <select
+              value={filterAsistio}
+              onChange={(e) => setFilterAsistio(e.target.value as BoolFilter)}
+              style={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+            >
+              {BOOL_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>Se presentó: {o.label}</option>)}
+            </select>
+            <select
+              value={filterCerrado}
+              onChange={(e) => setFilterCerrado(e.target.value as BoolFilter)}
+              style={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+            >
+              {BOOL_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>Cerró: {o.label}</option>)}
+            </select>
+            {(filterCalificacion !== 'all' || filterAsistio !== 'all' || filterCerrado !== 'all') && (
+              <button
+                onClick={() => { setFilterCalificacion('all'); setFilterAsistio('all'); setFilterCerrado('all') }}
+                style={{ padding: '6px 10px', background: 'transparent', border: 'none', color: '#555669', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'DM Sans, sans-serif' }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+            {filteredLeads.length !== leads.length && (
+              <span style={{ color: '#555669', fontSize: 12 }}>
+                {filteredLeads.length} de {leads.length}
+              </span>
+            )}
+          </div>
+
           {/* Leads table / cards */}
           {leads.length === 0 ? (
             <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
@@ -1159,6 +1258,11 @@ export function VentasPage() {
               </svg>
               <p style={{ color: '#8a8c9e', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Aún no hay llamadas registradas.</p>
               <p style={{ color: '#555669', fontSize: 13, margin: 0 }}>Hacé click en '+ Nueva llamada' para empezar.</p>
+            </div>
+          ) : displayedLeads.length === 0 ? (
+            <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
+              <p style={{ color: '#8a8c9e', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Ningún resultado con estos filtros.</p>
+              <p style={{ color: '#555669', fontSize: 13, margin: 0 }}>Probá cambiarlos o limpiarlos arriba.</p>
             </div>
           ) : isMobile ? (
             <div style={{ marginBottom: 12 }}>
@@ -1219,7 +1323,7 @@ export function VentasPage() {
                     {ALL_COLUMNS.map((c) => (
                       <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, padding: '10px 12px', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.label.toUpperCase()}</div>
                     ))}
-                    <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '10px 12px', position: 'sticky', right: 0, background: '#0d0e17', borderLeft: '1px solid rgba(255,255,255,0.12)' }} />
+                    <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '10px 12px', position: 'sticky', right: 0, background: '#e5182b', borderLeft: '1px solid rgba(255,255,255,0.12)' }} />
                   </div>
                   {displayedLeads.map((lead, i) => {
                     const rowBg = i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)'
@@ -1234,14 +1338,14 @@ export function VentasPage() {
                       {ALL_COLUMNS.map((c) => (
                         <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, overflow: 'hidden', padding: '6px 10px', display: 'flex', alignItems: 'center', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.render(lead, rowCtx)}</div>
                       ))}
-                      <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', right: 0, background: rowBg, borderLeft: '1px solid rgba(255,255,255,0.07)' }}>
+                      <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', right: 0, background: '#e5182b', borderLeft: '1px solid rgba(255,255,255,0.12)' }}>
                         {confirmDeleteId === lead.id ? (
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button title="Confirmar" onClick={() => handleDeleteLead(lead)} style={{ background: 'transparent', border: 'none', color: '#4ade80', fontSize: 15, cursor: 'pointer', padding: 0 }}>✓</button>
-                            <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'transparent', border: 'none', color: '#8a8c9e', fontSize: 15, cursor: 'pointer', padding: 0 }}>✕</button>
+                            <button title="Confirmar" onClick={() => handleDeleteLead(lead)} style={{ background: 'transparent', border: 'none', color: '#bbf7d0', fontWeight: 800, fontSize: 15, cursor: 'pointer', padding: 0 }}>✓</button>
+                            <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: 15, cursor: 'pointer', padding: 0 }}>✕</button>
                           </div>
                         ) : (
-                          <button title="Eliminar llamada" onClick={() => setConfirmDeleteId(lead.id)} style={{ background: 'transparent', border: 'none', color: '#555669', fontSize: 15, cursor: 'pointer', padding: 0 }}>🗑</button>
+                          <button title="Eliminar llamada" onClick={() => setConfirmDeleteId(lead.id)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: 15, cursor: 'pointer', padding: 0 }}>🗑</button>
                         )}
                       </div>
                     </div>
