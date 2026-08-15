@@ -180,34 +180,78 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
   )
 }
 
-const WEEKLY_METRICS_SELECT: string = `
-  id, client_id,
-  week_number:semana, year:año, week_start:fecha_inicio,
-  ads_investment:inversion, ads_leads:leads, ads_cpl:cpl,
-  ads_qualified_leads:calificados, ads_bookings:agendas_generadas,
-  ads_cpbc:cpbc, ads_show_rate:show_rate, ads_close_rate:tasa_cierre,
-  created_at, updated_at
-`
+// ─── Semana calendario en vivo ──────────────────────────────────
+// "Métricas por Semana" ya no lee registro_semanal_fullfillment — se
+// calcula agrupando ads_metricas_diarias/client_closer_calls por semana
+// ISO (lunes a domingo), desde effectiveStartDate hasta hoy. Cada semana
+// del rango existe siempre para navegar, con datos en cero si no hubo
+// actividad, sin depender de que exista una fila cargada a mano.
+
+type WeeklyComputedMetric = ClientMetrics & {
+  week_end: string
+  agendas_generadas: number
+  llamadas_realizadas: number
+  no_shows: number
+  // Criterio nuevo, distinto de ads_qualified_leads (que es de Ads):
+  // basado en client_closer_calls.califico/cerro, confirmado por el
+  // usuario para esta sección.
+  calificados_real: number
+  cerrados_real: number
+  tasa_calificacion_real: number | null
+  tasa_cierre_real: number | null
+  notas: string | null
+}
+
+function mondayOf(d: Date): Date {
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const m = new Date(d)
+  m.setDate(d.getDate() + diff)
+  m.setHours(0, 0, 0, 0)
+  return m
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+function toISODate(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+function isoWeekNumber(d: Date): { week: number; year: number } {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+  const dayNum = date.getUTCDay() || 7
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return { week, year: date.getUTCFullYear() }
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
+function round1(n: number): number {
+  return Math.round(n * 10) / 10
+}
 
 export function Portal() {
   const { client, status, phases, videos, documents, registros, hitos, loading, error } = useClient()
-  const [metrics, setMetrics] = useState<ClientMetrics[]>([])
   const [metricsConfig, setMetricsConfig] = useState<ClientMetricsConfig | null>(null)
   const [selectedMetricIndex, setSelectedMetricIndex] = useState(0)
   const [liAccountMetrics, setLiAccountMetrics] = useState<LiAccountMetric[]>([])
   const [leads, setLeads] = useState<any[]>([]) // eslint-disable-line @typescript-eslint/no-explicit-any
-  const [adsTotalsData, setAdsTotalsData] = useState<{ inversion: number | null; leads: number | null; impresiones: number | null; clics: number | null }[]>([])
+  const [adsTotalsData, setAdsTotalsData] = useState<{ fecha: string; inversion: number | null; leads: number | null; calificados: number | null; impresiones: number | null; clics: number | null }[]>([])
   const [campaignStartDate, setCampaignStartDate] = useState<string | null>(null)
+  const [reportsForNotes, setReportsForNotes] = useState<{ fecha_inicio: string | null; fecha_fin: string | null; narrativa: { resumen_ejecutivo?: string } | null }[]>([])
 
   useEffect(() => {
     if (!client?.id) return
     async function fetchMetrics() {
-      const [metricsRes, configRes, leadsRes, adsTotalsRes, campaignStartRes] = await Promise.all([
-        supabase
-          .from('registro_semanal_fullfillment')
-          .select(WEEKLY_METRICS_SELECT)
-          .eq('client_id', client!.id)
-          .order('fecha_inicio', { ascending: false }),
+      const [configRes, leadsRes, adsTotalsRes, campaignStartRes, reportsRes] = await Promise.all([
         supabase
           .from('client_metrics_config')
           .select('*')
@@ -218,11 +262,12 @@ export function Portal() {
           .select('*, asistio:se_presento, calificado:califico, cerrado:cerro')
           .eq('client_id', client!.id)
           .eq('owner_type', 'client'),
-        // Totales de Ads sin filtro de fecha — mismo criterio que client_closer_calls
-        // arriba: traer todas las filas y sumar en JS.
+        // Con fecha + calificados: sirve tanto para los totales (sumando
+        // todas las filas, como antes) como para agrupar por semana acá
+        // abajo — una sola query para ambos usos.
         supabase
           .from('ads_metricas_diarias')
-          .select('inversion, leads, impresiones, clics, ads_campanas!inner(client_id)')
+          .select('fecha, inversion, leads, calificados, impresiones, clics, ads_campanas!inner(client_id)')
           .eq('ads_campanas.client_id', client!.id),
         // Fecha real de arranque de campaña = la fecha más vieja con datos de
         // Ads para este cliente. Si no hay ninguna fila (cliente sin Ads
@@ -234,21 +279,22 @@ export function Portal() {
           .eq('ads_campanas.client_id', client!.id)
           .order('fecha', { ascending: true })
           .limit(1),
+        // Para la nota automática de cada semana — nunca enviado=false,
+        // mismo criterio que ReportesMensualesPage.
+        supabase
+          .from('reports')
+          .select('fecha_inicio, fecha_fin, narrativa')
+          .eq('client_id', client!.id)
+          .eq('enviado', true),
       ])
-      setMetrics((metricsRes.data ?? []) as unknown as ClientMetrics[])
       setMetricsConfig(configRes.data as ClientMetricsConfig | null)
       setLeads(leadsRes.data ?? [])
-      setAdsTotalsData(adsTotalsRes.data ?? [])
+      setAdsTotalsData((adsTotalsRes.data ?? []) as typeof adsTotalsData)
       setCampaignStartDate(campaignStartRes.data?.[0]?.fecha ?? null)
+      setReportsForNotes((reportsRes.data ?? []) as typeof reportsForNotes)
     }
     fetchMetrics()
   }, [client?.id])
-
-  const selectedMetrics = metrics[selectedMetricIndex] || null
-
-  useEffect(() => {
-    setSelectedMetricIndex(0)
-  }, [metrics])
 
   useEffect(() => {
     if (!client?.id) return
@@ -351,6 +397,76 @@ export function Portal() {
   const circumference = 2 * Math.PI * 52
 
   const activePhase = phases.find((p) => p.id === status.active_phase_id) ?? phases[0]
+
+  // Semanas calendario (lunes a domingo) desde effectiveStartDate hasta la
+  // semana actual, siempre completas — nunca dependen de que exista una
+  // fila cargada a mano. Orden descendente (semana actual = índice 0),
+  // igual que la navegación de siempre.
+  const weeklyData: WeeklyComputedMetric[] = (() => {
+    if (!effectiveStartDate) return []
+    const start = mondayOf(new Date(effectiveStartDate + 'T12:00:00'))
+    const todayMonday = mondayOf(new Date())
+    const todayStr = toISODate(new Date())
+    const weeks: WeeklyComputedMetric[] = []
+
+    for (let d = todayMonday; d.getTime() >= start.getTime(); d = addDays(d, -7)) {
+      const weekStartStr = toISODate(d)
+      const weekEndStr = toISODate(addDays(d, 6))
+      const { week: weekNumber, year } = isoWeekNumber(d)
+
+      const adsInWeek = adsTotalsData.filter((r) => r.fecha >= weekStartStr && r.fecha <= weekEndStr)
+      const inversionSemana = adsInWeek.reduce((s, r) => s + (r.inversion ?? 0), 0)
+      const leadsSemana = adsInWeek.reduce((s, r) => s + (r.leads ?? 0), 0)
+      const calificadosAdsSemana = adsInWeek.reduce((s, r) => s + (r.calificados ?? 0), 0)
+      const cpl = leadsSemana > 0 ? round2(inversionSemana / leadsSemana) : undefined
+      const cpbc = calificadosAdsSemana > 0 ? round2(inversionSemana / calificadosAdsSemana) : undefined
+
+      const callsInWeek = leads.filter((l) => l.fecha_llamada && l.fecha_llamada >= weekStartStr && l.fecha_llamada <= weekEndStr)
+      const agendasGeneradas = callsInWeek.length
+      const llamadasRealizadas = callsInWeek.filter((l) => l.asistio === true).length
+      const noShows = callsInWeek.filter((l) => l.asistio === false && l.fecha_llamada <= todayStr).length
+      const showRate = agendasGeneradas > 0 ? round1((llamadasRealizadas / agendasGeneradas) * 100) : undefined
+
+      const calificadosReal = callsInWeek.filter((l) => l.calificado === true).length
+      const cerradosReal = callsInWeek.filter((l) => l.cerrado === true).length
+      const tasaCalificacionReal = agendasGeneradas > 0 ? round1((calificadosReal / agendasGeneradas) * 100) : null
+      const tasaCierreReal = calificadosReal > 0 ? round1((cerradosReal / calificadosReal) * 100) : null
+
+      const reporteSemana = reportsForNotes.find(
+        (r) => r.fecha_inicio && r.fecha_fin && r.fecha_inicio <= weekEndStr && r.fecha_fin >= weekStartStr
+      )
+
+      weeks.push({
+        id: `week-${weekStartStr}`,
+        client_id: client!.id,
+        created_at: weekStartStr,
+        updated_at: weekStartStr,
+        week_number: weekNumber,
+        year,
+        week_start: weekStartStr,
+        week_end: weekEndStr,
+        ads_investment: inversionSemana,
+        ads_leads: leadsSemana,
+        ads_cpl: cpl,
+        ads_qualified_leads: calificadosAdsSemana,
+        ads_bookings: agendasGeneradas,
+        ads_cpbc: cpbc,
+        ads_show_rate: showRate,
+        ads_close_rate: tasaCierreReal ?? undefined,
+        agendas_generadas: agendasGeneradas,
+        llamadas_realizadas: llamadasRealizadas,
+        no_shows: noShows,
+        calificados_real: calificadosReal,
+        cerrados_real: cerradosReal,
+        tasa_calificacion_real: tasaCalificacionReal,
+        tasa_cierre_real: tasaCierreReal,
+        notas: reporteSemana?.narrativa?.resumen_ejecutivo ?? null,
+      })
+    }
+    return weeks
+  })()
+
+  const selectedMetrics = weeklyData[selectedMetricIndex] ?? null
 
   function normalizeRate(value: number | null | undefined): number {
     if (!value) return 0
@@ -611,20 +727,20 @@ export function Portal() {
           <SectionLabel text="MÉTRICAS POR SEMANA" />
 
           {/* Navegación entre semanas */}
-          {metrics.length > 0 && (
+          {weeklyData.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <button
-                disabled={selectedMetricIndex === metrics.length - 1}
+                disabled={selectedMetricIndex === weeklyData.length - 1}
                 onClick={() => setSelectedMetricIndex(prev => prev + 1)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px',
-                  backgroundColor: selectedMetricIndex === metrics.length - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                  backgroundColor: selectedMetricIndex === weeklyData.length - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
                   border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 8,
-                  color: selectedMetricIndex === metrics.length - 1 ? '#333' : '#8a8c9e',
+                  color: selectedMetricIndex === weeklyData.length - 1 ? '#333' : '#8a8c9e',
                   fontSize: 13,
-                  cursor: selectedMetricIndex === metrics.length - 1 ? 'not-allowed' : 'pointer',
+                  cursor: selectedMetricIndex === weeklyData.length - 1 ? 'not-allowed' : 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
                 }}
               >
@@ -654,7 +770,7 @@ export function Portal() {
                 )}
                 {selectedMetrics?.week_start && (
                   <span style={{ color: '#8a8c9e', fontSize: 12 }}>
-                    {formatWeekRange(selectedMetrics.week_start, (selectedMetrics as ClientMetrics & { week_end?: string }).week_end)}
+                    {formatWeekRange(selectedMetrics.week_start, selectedMetrics.week_end)}
                   </span>
                 )}
               </div>
@@ -679,8 +795,35 @@ export function Portal() {
             </div>
           )}
 
+          {/* Calidad de las llamadas — criterio de closer (client_closer_calls),
+              distinto del calificados de Ads que ya muestra MetricsSection. */}
+          {selectedMetrics && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }} className="week-quality-grid">
+              {[
+                { label: 'CALIFICADOS', value: selectedMetrics.calificados_real },
+                { label: 'CERRADOS', value: selectedMetrics.cerrados_real },
+                { label: 'TASA CALIFICACIÓN', value: selectedMetrics.tasa_calificacion_real, suffix: '%' },
+                { label: 'TASA CIERRE', value: selectedMetrics.tasa_cierre_real, suffix: '%' },
+              ].map((s) => (
+                <div key={s.label} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 16px' }}>
+                  <div style={{ textTransform: 'uppercase', fontSize: 10, color: '#555669', letterSpacing: '0.1em', marginBottom: 6 }}>{s.label}</div>
+                  <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 700, color: '#f0f1f7' }}>
+                    {s.value !== null && s.value !== undefined ? `${s.value}${s.suffix ?? ''}` : '—'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {selectedMetrics?.notas && (
+            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+              <div style={{ textTransform: 'uppercase', fontSize: 10, color: '#555669', letterSpacing: '0.1em', marginBottom: 8 }}>NOTA DEL REPORTE DE ESTA SEMANA</div>
+              <p style={{ color: '#c9ced9', fontSize: 13, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedMetrics.notas}</p>
+            </div>
+          )}
+
           <MetricsSection
-            metrics={metrics}
+            metrics={weeklyData}
             config={metricsConfig}
             cpbc_objective={status?.cpbc_objective ?? undefined}
             liAccountMetrics={liAccountMetrics}
@@ -776,6 +919,7 @@ export function Portal() {
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; }
           .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .week-quality-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .video-grid { grid-template-columns: 1fr !important; }
           #win-grid { grid-template-columns: 1fr !important; }
         }
