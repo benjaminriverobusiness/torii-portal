@@ -525,15 +525,15 @@ export function Portal() {
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="MÉTRICAS TOTALES" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
-            <KpiCard label="AGENDAS EFECTIVAS" value={agendasEfectivas} colorLogic="neutral" delay={0} />
-            <KpiCard label="SHOW RATE TOTAL" value={showRateTotal} suffix="%" objective={60} colorLogic="showRate" delay={100} />
-            <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} />
-            <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} />
-            <KpiCard label="INVERSIÓN TOTAL" value={inversionTotal} prefix="$" colorLogic="neutral" delay={400} />
-            <KpiCard label="AGENDAS (ADS)" value={leadsAdsTotal} colorLogic="neutral" delay={500} />
-            <KpiCard label="IMPRESIONES" value={impresionesTotal} colorLogic="neutral" delay={600} />
-            <KpiCard label="CLICS" value={clicsTotal} colorLogic="neutral" delay={700} />
-            <KpiCard label="CPBC TOTAL" value={cpbcTotal} prefix="$" colorLogic="neutral" delay={800} />
+            <KpiCard label="AGENDAS EFECTIVAS" value={agendasEfectivas} colorLogic="neutral" delay={0} tooltip="Cantidad de llamadas donde el lead se presentó (se_presento = true)." />
+            <KpiCard label="SHOW RATE TOTAL" value={showRateTotal} suffix="%" objective={60} colorLogic="showRate" delay={100} tooltip="Se presentó / Total de llamadas × 100." />
+            <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} tooltip="Se presentó Y calificó (Calificado o Calificado tipo B) / Total de llamadas × 100." />
+            <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} tooltip="Cerró / Se presentó y calificó (Calificado o Calificado tipo B) × 100." />
+            <KpiCard label="INVERSIÓN TOTAL" value={inversionTotal} prefix="$" colorLogic="neutral" delay={400} tooltip="Suma de la inversión en Meta Ads desde el arranque real de la campaña." />
+            <KpiCard label="AGENDAS (ADS)" value={leadsAdsTotal} colorLogic="neutral" delay={500} tooltip="Cantidad de agendas generadas por los anuncios de Meta Ads, calificadas o no." />
+            <KpiCard label="IMPRESIONES" value={impresionesTotal} colorLogic="neutral" delay={600} tooltip="Suma total desde el arranque real de la campaña." />
+            <KpiCard label="CLICS" value={clicsTotal} colorLogic="neutral" delay={700} tooltip="Suma total desde el arranque real de la campaña." />
+            <KpiCard label="CPBC TOTAL" value={cpbcTotal} prefix="$" colorLogic="neutral" delay={800} tooltip="Inversión total / cantidad de llamadas donde se presentó Y quedó específicamente como 'Calificado' (no cuenta 'Calificado tipo B' ni 'Semicalificado')." />
           </div>
         </div>
         )} catch(e) { console.error('KPIs error:', e); return <div style={{color:'red',padding:16}}>Error en KPIs</div> } })()}

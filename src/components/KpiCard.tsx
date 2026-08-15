@@ -9,6 +9,7 @@ interface KpiCardProps {
   objectiveLabel?: string
   colorLogic?: 'showRate' | 'closingRate' | 'cpbc' | 'neutral'
   delay?: number
+  tooltip?: string
 }
 
 function getColor(value: number, logic: string, objective?: number | null): string {
@@ -42,8 +43,10 @@ export function KpiCard({
   objective,
   colorLogic = 'neutral',
   delay = 0,
+  tooltip,
 }: KpiCardProps) {
   const [width, setWidth] = useState(0)
+  const [showTooltip, setShowTooltip] = useState(false)
   const mounted = useRef(false)
 
   const displayValue = value ?? 0
@@ -82,14 +85,69 @@ export function KpiCard({
     >
       <div
         style={{
-          textTransform: 'uppercase',
-          fontSize: 11,
-          letterSpacing: '0.1em',
-          color: '#555669',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
           marginBottom: 12,
         }}
       >
-        {label}
+        <span
+          style={{
+            textTransform: 'uppercase',
+            fontSize: 11,
+            letterSpacing: '0.1em',
+            color: '#555669',
+          }}
+        >
+          {label}
+        </span>
+        {tooltip && (
+          <span
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onClick={(e) => { e.stopPropagation(); setShowTooltip((v) => !v) }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 13,
+              height: 13,
+              borderRadius: '50%',
+              fontSize: 11,
+              lineHeight: 1,
+              color: showTooltip ? '#8a8c9e' : '#555669',
+              cursor: 'help',
+              flexShrink: 0,
+            }}
+          >
+            ⓘ
+          </span>
+        )}
+        {tooltip && showTooltip && (
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: 'calc(100% + 8px)',
+              zIndex: 20,
+              background: '#0d0e17',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 10,
+              padding: '10px 14px',
+              color: '#f0f1f7',
+              fontSize: 12.5,
+              fontWeight: 400,
+              lineHeight: 1.5,
+              textTransform: 'none',
+              letterSpacing: 'normal',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            }}
+          >
+            {tooltip}
+          </div>
+        )}
       </div>
       <div
         style={{
