@@ -360,10 +360,11 @@ export function Portal() {
   const agendasEfectivas = leads.filter(l => l.asistio === true).length
   const withAsistio = leads.filter(l => l.asistio)
   const showRateTotal = leads.length > 0 ? Math.round((withAsistio.length / leads.length) * 100) : null
-  const calificados = leads.filter(l => l.asistio === true && (l.calificacion === 'Calificado' || l.calificacion === 'Calificado tipo B'))
-  const calificacionRateTotal = leads.length > 0 ? Math.round((calificados.length / leads.length) * 100) : null
+  const calificadosEstricto = leads.filter(l => l.asistio === true && l.calificacion === 'Calificado')
+  const calificacionRateTotal = leads.length > 0 ? Math.round((calificadosEstricto.length / leads.length) * 100) : null
+  const calificadosAmplio = leads.filter(l => l.asistio === true && (l.calificacion === 'Calificado' || l.calificacion === 'Calificado tipo B'))
   const cerrados = leads.filter(l => l.cerrado)
-  const closeRateTotal = calificados.length > 0 ? Math.round((cerrados.length / calificados.length) * 100) : null
+  const closeRateTotal = calificadosAmplio.length > 0 ? Math.round((cerrados.length / calificadosAmplio.length) * 100) : null
 
   const inversionTotal = adsTotalsData.reduce((sum, r) => sum + (r.inversion ?? 0), 0)
   const leadsAdsTotal = adsTotalsData.reduce((sum, r) => sum + (r.leads ?? 0), 0)
@@ -527,7 +528,7 @@ export function Portal() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="kpi-grid">
             <KpiCard label="AGENDAS EFECTIVAS" value={agendasEfectivas} colorLogic="neutral" delay={0} tooltip="Cantidad de llamadas donde el lead se presentó (se_presento = true)." />
             <KpiCard label="SHOW RATE TOTAL" value={showRateTotal} suffix="%" objective={60} colorLogic="showRate" delay={100} tooltip="Se presentó / Total de llamadas × 100." />
-            <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} tooltip="Se presentó Y calificó (Calificado o Calificado tipo B) / Total de llamadas × 100." />
+            <KpiCard label="TASA CALIFICACIÓN" value={calificacionRateTotal} suffix="%" colorLogic="neutral" delay={200} tooltip="Se presentó Y quedó como 'Calificado' / Total de llamadas × 100. No incluye 'Calificado tipo B' ni 'Semicalificado'." />
             <KpiCard label="CLOSE RATE TOTAL" value={closeRateTotal} suffix="%" objective={25} colorLogic="closingRate" delay={300} tooltip="Cerró / Se presentó y calificó (Calificado o Calificado tipo B) × 100." />
             <KpiCard label="INVERSIÓN TOTAL" value={inversionTotal} prefix="$" colorLogic="neutral" delay={400} tooltip="Suma de la inversión en Meta Ads desde el arranque real de la campaña." />
             <KpiCard label="AGENDAS (ADS)" value={leadsAdsTotal} colorLogic="neutral" delay={500} tooltip="Cantidad de agendas generadas por los anuncios de Meta Ads, calificadas o no." />
