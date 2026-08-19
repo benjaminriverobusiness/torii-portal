@@ -63,17 +63,18 @@ interface SalesMaterial {
   created_at: string
 }
 
+// Situación 1ra/2da cita ya NO son arrays hardcodeados — vienen de
+// client_situacion_options (editable desde el modal "Gestionar listas"),
+// ver SituacionOption más abajo y el fetch en el componente principal.
+interface SituacionOption {
+  id: string
+  tipo: 'primera_cita' | 'segunda_cita'
+  valor: string
+  orden: number
+}
+
 // Opciones de los <select> — se usan directo en las columnas editables de
 // ALL_COLUMNS (ya no hay un form de modal separado).
-const SITUACION_PRIMERA_CITA_OPTIONS = [
-  'Cerrado',
-  'No cerrado',
-  'Reagendado',
-  'No asistió',
-  'Pendiente de cerrar',
-  'Necesita 2da cita',
-]
-
 const SITUACION_LABORAL_OPTIONS = [
   'Empleado',
   'Persona física con actividad empresarial',
@@ -159,6 +160,8 @@ function getEmbedUrl(url: string): string {
 
 interface RowCtx {
   closers: ClientCloser[]
+  situacionPrimera: string[]
+  situacionSegunda: string[]
   savingCell: string | null
   errorCell: string | null
   saveField: (lead: CrmLead, uiPatch: Partial<CrmLead>, dbPatch: Record<string, unknown>) => void
@@ -212,14 +215,15 @@ function BoolIcon({ value }: { value: boolean | null | undefined }) {
 }
 
 // ─── EditableCell — el único componente que sabe editar una celda ─────────
-// 4 tipos: bool (click alterna), select/date (control nativo siempre presente,
-// el navegador se encarga del picker), text/number (input siempre presente).
+// 5 tipos: bool (click alterna Sí/No), tristate (click cicla Sí→No→Sin
+// definir), select/date (control nativo siempre presente, el navegador se
+// encarga del picker), text/number (input siempre presente).
 // Todos comparten: guardado optimista directo (sin confirmar aparte), mini
 // spinner mientras guarda, flash de error + revert si falla.
 
 interface EditableCellProps {
   value: string | number | boolean | null | undefined
-  type: 'text' | 'number' | 'date' | 'select' | 'bool'
+  type: 'text' | 'number' | 'date' | 'select' | 'bool' | 'tristate'
   options?: string[]
   editable?: boolean
   disabledTitle?: string
@@ -256,6 +260,26 @@ function EditableCell({
     return (
       <div
         onClick={() => !saving && onSave(String(!boolValue))}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: saving ? 'default' : 'pointer', fontSize: 18 }}
+      >
+        <BoolIcon value={boolValue} />
+        {feedback}
+      </div>
+    )
+  }
+
+  if (type === 'tristate') {
+    const boolValue = value as boolean | null | undefined
+    if (!editable) {
+      return <div title={disabledTitle}><BoolIcon value={boolValue} /></div>
+    }
+    // Cicla Sí → No → Sin definir → Sí... (a diferencia de 'bool', que solo
+    // alterna entre Sí/No y nunca puede volver a quedar sin marcar).
+    const nextValue = boolValue === true ? 'false' : boolValue === false ? 'null' : 'true'
+    return (
+      <div
+        onClick={() => !saving && onSave(nextValue)}
+        title="Click para cambiar: Sí → No → Sin definir"
         style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: saving ? 'default' : 'pointer', fontSize: 18 }}
       >
         <BoolIcon value={boolValue} />
@@ -397,57 +421,62 @@ function selectColumn(
   }
 }
 
-// Sin EditableCell — el valor llega automático desde ghl-appointment-webhook
-// (ad_id se escribe siempre, sin importar owner_type), así que no tiene
-// sentido dejarlo editable a mano acá.
-function readOnlyColumn(key: string, label: string, minPx: number, field: keyof CrmLead): ColumnDef {
-  return {
-    key, label, minPx,
-    render: (l) => {
-      const v = l[field]
-      return (
-        <span style={{ color: '#8a8c9e', fontSize: 13, padding: '4px 6px' }}>
-          {v === null || v === undefined || v === '' ? '—' : String(v)}
-        </span>
-      )
-    },
-  }
-}
-
-function boolColumn(key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string): ColumnDef {
+// Permite volver a "sin definir" (null), a diferencia de un toggle binario —
+// tipo 'tristate' en EditableCell. onSave recibe 'true'/'false'/'null'.
+function triStateColumn(key: string, label: string, minPx: number, field: keyof CrmLead, dbField: string): ColumnDef {
   return {
     key, label, minPx,
     render: (l, ctx) => {
       const cellKey = `${l.id}:${dbField}`
       return (
         <EditableCell
-          type="bool"
-          value={l[field] as boolean | undefined}
+          type="tristate"
+          value={l[field] as boolean | null | undefined}
           saving={ctx.savingCell === cellKey}
           errored={ctx.errorCell === cellKey}
-          onSave={(v) => ctx.saveField(l, { [field]: v === 'true' } as Partial<CrmLead>, { [dbField]: v === 'true' })}
+          onSave={(v) => {
+            const parsed = v === 'true' ? true : v === 'false' ? false : undefined
+            ctx.saveField(l, { [field]: parsed } as Partial<CrmLead>, { [dbField]: parsed === undefined ? null : parsed })
+          }}
         />
       )
     },
   }
 }
 
-const RESULTADO_SEGUNDA_CITA_OPTIONS = [
-  'Cerrado', 'No cerrado', 'Reagendado', 'No asistió', 'Pendiente de cerrar',
-]
-
 const ALL_COLUMNS: ColumnDef[] = [
   // ── Orden acordado (Closer al final, después de Notas closer) ──
   textColumn('nombre', 'Nombre del lead', 220, 'lead_nombre', 'lead_name', { validate: (v) => v.trim().length > 0, autoFocusOnCreate: true }),
   textColumn('telefono', 'Teléfono', 130, 'lead_telefono', 'lead_phone'),
   textColumn('correo', 'Correo', 180, 'lead_email', 'lead_email'),
-  // Solo lectura — llega automático desde ghl-appointment-webhook.
-  readOnlyColumn('ad', 'Ad', 110, 'ad_id'),
-  boolColumn('asistio', 'Se presentó?', 100, 'asistio', 'se_presento'),
+  // Editable — el auto-completado desde ghl-appointment-webhook sigue
+  // existiendo si corre, pero hoy nunca trae dato (Workflow de GHL sin
+  // configurar la atribución de anuncio) así que tiene que poder cargarse
+  // a mano. Mismo criterio que el Hub: texto libre, no dropdown.
+  textColumn('ad', 'Ad', 110, 'ad_id', 'ad_id'),
+  triStateColumn('asistio', 'Se presentó', 100, 'asistio', 'se_presento'),
   // Reemplaza calificaba/califico (booleanos viejos, ver migración) — quedan
   // en la tabla sin usarse en el frontend.
   selectColumn('calificacion', 'Calificación', 170, 'calificacion', 'calificacion', CALIFICACION_OPTIONS),
-  selectColumn('situacion_resultado', 'Situación 1ra cita', 170, 'situacion_resultado', 'situacion_resultado', SITUACION_PRIMERA_CITA_OPTIONS),
+  {
+    // Opciones dinámicas (client_situacion_options, editables desde
+    // "Gestionar listas") — no puede ser selectColumn(), que solo acepta
+    // un array fijo definido a nivel de módulo.
+    key: 'situacion_resultado', label: 'Situación 1ra cita', minPx: 170,
+    render: (l, ctx) => {
+      const cellKey = `${l.id}:situacion_resultado`
+      return (
+        <EditableCell
+          type="select"
+          options={ctx.situacionPrimera}
+          value={l.situacion_resultado}
+          saving={ctx.savingCell === cellKey}
+          errored={ctx.errorCell === cellKey}
+          onSave={(v) => ctx.saveField(l, { situacion_resultado: v || undefined }, { situacion_resultado: v || null })}
+        />
+      )
+    },
+  },
   {
     key: 'segunda_reunion', label: 'Fecha 2da cita', minPx: 130,
     // Mental model simple para Raúl: si hay fecha, hay 2da cita. Poner una
@@ -476,7 +505,7 @@ const ALL_COLUMNS: ColumnDef[] = [
       return (
         <EditableCell
           type="select"
-          options={RESULTADO_SEGUNDA_CITA_OPTIONS}
+          options={ctx.situacionSegunda}
           value={l.resultado_segunda_reunion}
           saving={ctx.savingCell === cellKey}
           errored={ctx.errorCell === cellKey}
@@ -808,6 +837,123 @@ function matchesBoolFilter(v: boolean | null | undefined, filter: BoolFilter): b
   return v === false
 }
 
+// ─── Modal "Gestionar listas" ───────────────────────────────────
+// CRUD de closers (agregar/activar-desactivar/eliminar) + opciones de
+// Situación 1ra/2da cita (agregar/eliminar) — todo lo que antes era
+// hardcodeado o solo editable por un admin en otro repo.
+
+function AddRow({ placeholder, onAdd }: { placeholder: string; onAdd: (value: string) => void }) {
+  const [value, setValue] = useState('')
+  function submit() {
+    if (!value.trim()) return
+    onAdd(value)
+    setValue('')
+  }
+  return (
+    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+      <input
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
+        style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 12px', color: '#f0f1f7', fontSize: 13, fontFamily: 'DM Sans, sans-serif', outline: 'none' }}
+      />
+      <button
+        onClick={submit}
+        style={{ padding: '8px 16px', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.3)', borderRadius: 8, color: '#e5182b', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+      >
+        + Agregar
+      </button>
+    </div>
+  )
+}
+
+function ListasModal({
+  closers, onAddCloser, onToggleCloserActive, onDeleteCloser,
+  situacionPrimera, situacionSegunda, onAddSituacion, onDeleteSituacion,
+  onClose,
+}: {
+  closers: ClientCloser[]
+  onAddCloser: (name: string) => void
+  onToggleCloserActive: (c: ClientCloser) => void
+  onDeleteCloser: (c: ClientCloser) => void
+  situacionPrimera: SituacionOption[]
+  situacionSegunda: SituacionOption[]
+  onAddSituacion: (tipo: SituacionOption['tipo'], valor: string) => void
+  onDeleteSituacion: (tipo: SituacionOption['tipo'], opt: SituacionOption) => void
+  onClose: () => void
+}) {
+  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, marginBottom: 6 }
+  const sectionTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }
+  const deleteBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 13, padding: '2px 6px' }
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      onClick={onClose}
+    >
+      <div
+        style={{ width: '100%', maxWidth: 560, maxHeight: '85vh', overflowY: 'auto', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 800, color: '#f0f1f7', margin: 0 }}>
+            Gestionar listas
+          </h2>
+          <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
+        </div>
+
+        {/* Closers */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={sectionTitle}>Closers</div>
+          {closers.length === 0 && <p style={{ color: '#555669', fontSize: 13 }}>Sin closers cargados.</p>}
+          {closers.map((c) => (
+            <div key={c.id} style={rowStyle}>
+              <span style={{ color: c.active ? '#f0f1f7' : '#555669', fontSize: 13 }}>{c.name}</span>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  onClick={() => onToggleCloserActive(c)}
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: c.active ? '#4ade80' : '#8a8c9e', cursor: 'pointer', fontSize: 12, padding: '3px 8px', fontFamily: 'DM Sans, sans-serif' }}
+                >
+                  {c.active ? 'Activo' : 'Inactivo'}
+                </button>
+                <button onClick={() => onDeleteCloser(c)} style={deleteBtn}>Eliminar</button>
+              </div>
+            </div>
+          ))}
+          <AddRow placeholder="Nombre del closer" onAdd={onAddCloser} />
+        </div>
+
+        {/* Situación 1ra cita */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={sectionTitle}>Situación 1ra cita</div>
+          {situacionPrimera.length === 0 && <p style={{ color: '#555669', fontSize: 13 }}>Sin opciones cargadas.</p>}
+          {situacionPrimera.map((o) => (
+            <div key={o.id} style={rowStyle}>
+              <span style={{ color: '#f0f1f7', fontSize: 13 }}>{o.valor}</span>
+              <button onClick={() => onDeleteSituacion('primera_cita', o)} style={deleteBtn}>Eliminar</button>
+            </div>
+          ))}
+          <AddRow placeholder="Nueva opción" onAdd={(v) => onAddSituacion('primera_cita', v)} />
+        </div>
+
+        {/* Situación 2da cita */}
+        <div>
+          <div style={sectionTitle}>Situación 2da cita</div>
+          {situacionSegunda.length === 0 && <p style={{ color: '#555669', fontSize: 13 }}>Sin opciones cargadas.</p>}
+          {situacionSegunda.map((o) => (
+            <div key={o.id} style={rowStyle}>
+              <span style={{ color: '#f0f1f7', fontSize: 13 }}>{o.valor}</span>
+              <button onClick={() => onDeleteSituacion('segunda_cita', o)} style={deleteBtn}>Eliminar</button>
+            </div>
+          ))}
+          <AddRow placeholder="Nueva opción" onAdd={(v) => onAddSituacion('segunda_cita', v)} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────
 
 export function VentasPage() {
@@ -819,6 +965,9 @@ export function VentasPage() {
 
   const [closers, setClosers] = useState<ClientCloser[]>([])
   const [showCloserChart, setShowCloserChart] = useState(false)
+  const [situacionPrimera, setSituacionPrimera] = useState<SituacionOption[]>([])
+  const [situacionSegunda, setSituacionSegunda] = useState<SituacionOption[]>([])
+  const [listasModalOpen, setListasModalOpen] = useState(false)
 
   const [previewMaterial, setPreviewMaterial] = useState<SalesMaterial | null>(null)
   const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null)
@@ -849,16 +998,22 @@ export function VentasPage() {
         const c = clientData as Client
         setClient(c)
 
-        const [{ data: leadsData }, { data: matsData }, { data: closersData }, { data: configData }] = await Promise.all([
+        const [{ data: leadsData }, { data: matsData }, { data: closersData }, { data: configData }, { data: situacionData }] = await Promise.all([
           supabase.from('client_closer_calls').select(CRM_LEAD_SELECT).eq('client_id', c.id).eq('owner_type', 'client').order('created_at', { ascending: false }),
           supabase.from('sales_materials').select('*').eq('client_id', c.id).order('order_index', { ascending: true }),
-          supabase.from('client_closers').select('*').eq('client_id', c.id).eq('active', true).order('name'),
+          // Sin filtro de active acá — el modal de gestión necesita ver
+          // también los inactivos para poder reactivarlos.
+          supabase.from('client_closers').select('*').eq('client_id', c.id).order('name'),
           supabase.from('client_metrics_config').select('show_closer_chart').eq('client_id', c.id).maybeSingle(),
+          supabase.from('client_situacion_options').select('*').eq('client_id', c.id).order('orden'),
         ])
         setLeads((leadsData ?? []) as CrmLead[])
         setMaterials((matsData ?? []) as SalesMaterial[])
         setClosers((closersData ?? []) as ClientCloser[])
         setShowCloserChart((configData as { show_closer_chart?: boolean } | null)?.show_closer_chart || false)
+        const situacionOpts = (situacionData ?? []) as SituacionOption[]
+        setSituacionPrimera(situacionOpts.filter((o) => o.tipo === 'primera_cita'))
+        setSituacionSegunda(situacionOpts.filter((o) => o.tipo === 'segunda_cita'))
       } finally {
         setLoading(false)
       }
@@ -922,6 +1077,54 @@ export function VentasPage() {
       console.error(error)
       setLeads(prevLeads)
     }
+  }
+
+  // ── CRUD de closers ──────────────────────────────────────────
+  async function handleAddCloser(name: string) {
+    const trimmed = name.trim()
+    if (!client || !trimmed) return
+    const { data, error } = await supabase
+      .from('client_closers')
+      .insert({ client_id: client.id, name: trimmed, active: true })
+      .select()
+      .single()
+    if (error) { console.error(error); return }
+    setClosers((prev) => [...prev, data as ClientCloser].sort((a, b) => a.name.localeCompare(b.name)))
+  }
+
+  async function handleToggleCloserActive(closer: ClientCloser) {
+    const { error } = await supabase.from('client_closers').update({ active: !closer.active }).eq('id', closer.id)
+    if (error) { console.error(error); return }
+    setClosers((prev) => prev.map((c) => (c.id === closer.id ? { ...c, active: !c.active } : c)))
+  }
+
+  async function handleDeleteCloser(closer: ClientCloser) {
+    const { error } = await supabase.from('client_closers').delete().eq('id', closer.id)
+    if (error) { console.error(error); return }
+    setClosers((prev) => prev.filter((c) => c.id !== closer.id))
+  }
+
+  // ── CRUD de opciones de Situación 1ra/2da cita ───────────────
+  async function handleAddSituacion(tipo: SituacionOption['tipo'], valor: string) {
+    const trimmed = valor.trim()
+    if (!client || !trimmed) return
+    const list = tipo === 'primera_cita' ? situacionPrimera : situacionSegunda
+    const nextOrden = list.length > 0 ? Math.max(...list.map((o) => o.orden)) + 1 : 0
+    const { data, error } = await supabase
+      .from('client_situacion_options')
+      .insert({ client_id: client.id, tipo, valor: trimmed, orden: nextOrden })
+      .select()
+      .single()
+    if (error) { console.error(error); return }
+    const setter = tipo === 'primera_cita' ? setSituacionPrimera : setSituacionSegunda
+    setter((prev) => [...prev, data as SituacionOption])
+  }
+
+  async function handleDeleteSituacion(tipo: SituacionOption['tipo'], opt: SituacionOption) {
+    const { error } = await supabase.from('client_situacion_options').delete().eq('id', opt.id)
+    if (error) { console.error(error); return }
+    const setter = tipo === 'primera_cita' ? setSituacionPrimera : setSituacionSegunda
+    setter((prev) => prev.filter((o) => o.id !== opt.id))
   }
 
   // ── Metrics ────────────────────────────────────────────────
@@ -1006,7 +1209,13 @@ export function VentasPage() {
   }
 
   const rowCtx: RowCtx = {
-    closers, savingCell, errorCell, saveField: saveInlineField,
+    // El dropdown de la columna Closer solo debe ofrecer los activos —
+    // `closers` (el state) trae también los inactivos, para el modal de
+    // gestión más abajo.
+    closers: closers.filter((c) => c.active),
+    situacionPrimera: situacionPrimera.map((o) => o.valor),
+    situacionSegunda: situacionSegunda.map((o) => o.valor),
+    savingCell, errorCell, saveField: saveInlineField,
     newLeadId, onAutoFocusHandled: () => setNewLeadId(null),
   }
   // Fuerza bruta a propósito: cada columna es un track de ancho FIJO en px
@@ -1136,13 +1345,21 @@ export function VentasPage() {
           {/* Pipeline header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <SectionPill text="PIPELINE" />
-            <button
-              style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: addingRow ? 'not-allowed' : 'pointer', opacity: addingRow ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
-              onClick={handleAddRow}
-              disabled={addingRow}
-            >
-              + Nueva llamada
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setListasModalOpen(true)}
+                style={{ padding: '8px 18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f1f7', fontWeight: 600, fontSize: 13, borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+              >
+                ⚙ Gestionar listas
+              </button>
+              <button
+                style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: addingRow ? 'not-allowed' : 'pointer', opacity: addingRow ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+                onClick={handleAddRow}
+                disabled={addingRow}
+              >
+                + Nueva llamada
+              </button>
+            </div>
           </div>
 
           {/* Orden — dropdown genérico (numéricas/fecha) + accesos rápidos */}
@@ -1430,6 +1647,19 @@ export function VentasPage() {
       {/* Modals */}
       {previewMaterial && <MaterialPreviewModal material={previewMaterial} onClose={() => setPreviewMaterial(null)} />}
       {playingVideo && <VideoModal url={playingVideo.url} title={playingVideo.title} onClose={() => setPlayingVideo(null)} />}
+      {listasModalOpen && (
+        <ListasModal
+          closers={closers}
+          onAddCloser={handleAddCloser}
+          onToggleCloserActive={handleToggleCloserActive}
+          onDeleteCloser={handleDeleteCloser}
+          situacionPrimera={situacionPrimera}
+          situacionSegunda={situacionSegunda}
+          onAddSituacion={handleAddSituacion}
+          onDeleteSituacion={handleDeleteSituacion}
+          onClose={() => setListasModalOpen(false)}
+        />
+      )}
 
       <style>{`
         @media (max-width: 900px) {
