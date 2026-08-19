@@ -21,6 +21,9 @@ interface Referido {
   incentivo: string | null
   estado: string
   fecha_pedido: string
+  notas: string | null
+  fecha_contacto: string | null
+  fecha_cierre: string | null
 }
 
 interface ReferidoFormState {
@@ -97,7 +100,37 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const GRID_COLUMNS = '2fr 1.4fr 2fr 90px 1.4fr 110px 50px'
+// Para fecha_contacto/fecha_cierre (timestamptz) — a diferencia de
+// formatDate() de arriba, estos ya traen hora real, así que no hace falta
+// el truco de +T12:00:00 (ese es solo para evitar corrimiento de día en
+// columnas `date` puras).
+function formatDateTime(dateStr: string | null): string {
+  if (!dateStr) return '—'
+  return new Date(dateStr).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+// Los 3 mensajes que pide el punto C: qué falta para avanzar, y si el
+// contacto automático por WhatsApp está activo (nunca lo está hoy — no hay
+// ningún flag de "bot activo" en la base para ningún cliente/agente, así
+// que este mensaje es el mismo para todos, no depende del referido).
+const BOT_WHATSAPP_DISCLAIMER =
+  "El contacto automático por WhatsApp todavía no está activo para ningún agente — el bot de GHL para esto no está terminado de configurar. Por ahora el equipo de Torii contacta a los referidos a mano."
+
+function getEstadoGuidance(estado: string): { missing: string; bot: string | null } {
+  if (estado === 'pendiente_datos') {
+    return { missing: 'Falta el teléfono del referido para poder contactarlo.', bot: BOT_WHATSAPP_DISCLAIMER }
+  }
+  if (estado === 'pendiente_contacto') {
+    return { missing: 'Ya tiene teléfono cargado — está listo para que lo contacten.', bot: BOT_WHATSAPP_DISCLAIMER }
+  }
+  if (estado === 'contactado' || estado === 'en_proceso') {
+    return { missing: 'Ya está en conversación con el equipo de Torii.', bot: BOT_WHATSAPP_DISCLAIMER }
+  }
+  // cerrado / no_califico — proceso terminado, no aplica ninguno de los 2 mensajes.
+  return { missing: 'Proceso terminado.', bot: null }
+}
+
+const GRID_COLUMNS = '2fr 1.4fr 2fr 90px 1.4fr 110px 90px'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -212,11 +245,13 @@ export function ReferidosPage() {
   const [form, setForm] = useState<ReferidoFormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   async function loadReferidos(cid: string) {
     const { data } = await supabase
       .from('referidos')
-      .select('id, referido_nombre, presentado_por, referido_telefono, perfil_referido, warm_intro, incentivo, estado, fecha_pedido')
+      .select('id, referido_nombre, presentado_por, referido_telefono, perfil_referido, warm_intro, incentivo, estado, fecha_pedido, notas, fecha_contacto, fecha_cierre')
       .eq('client_id', cid)
       .order('fecha_pedido', { ascending: false })
     setReferidos((data ?? []) as Referido[])
@@ -322,6 +357,21 @@ export function ReferidosPage() {
     }
   }
 
+  async function handleDelete(r: Referido) {
+    setConfirmDeleteId(null)
+    if (!clientId) return
+    const prev = referidos
+    setReferidos((cur) => cur.filter((x) => x.id !== r.id))
+    if (expandedId === r.id) setExpandedId(null)
+    // client_closer_calls.referido_id -> ON DELETE SET NULL: no borra
+    // ninguna llamada/venta real, solo la desvincula de este referido.
+    const { error } = await supabase.from('referidos').delete().eq('id', r.id)
+    if (error) {
+      console.error(error)
+      setReferidos(prev)
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
@@ -404,35 +454,87 @@ export function ReferidosPage() {
               </div>
 
               {/* Rows */}
-              {referidos.map((r) => (
-                <div
-                  key={r.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: GRID_COLUMNS,
-                    gap: 12,
-                    padding: '16px 20px',
-                    borderTop: '1px solid rgba(255,255,255,0.05)',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{r.referido_nombre}</div>
-                  <div style={{ color: '#8a8c9e', fontSize: 13 }}>{r.presentado_por || '—'}</div>
-                  <div style={{ color: '#8a8c9e', fontSize: 13, lineHeight: 1.5 }}>{r.perfil_referido || '—'}</div>
-                  <div><WarmIntroMark value={r.warm_intro} /></div>
-                  <div><EstadoBadge estado={r.estado} /></div>
-                  <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(r.fecha_pedido)}</div>
-                  <div>
-                    <button
-                      title="Editar"
-                      onClick={() => openEdit(r)}
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-                    >
-                      ✎
-                    </button>
+              {referidos.map((r) => {
+                const expanded = expandedId === r.id
+                const guidance = getEstadoGuidance(r.estado)
+                return (
+                <div key={r.id}>
+                  <div
+                    onClick={() => setExpandedId(expanded ? null : r.id)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: GRID_COLUMNS,
+                      gap: 12,
+                      padding: '16px 20px',
+                      borderTop: '1px solid rgba(255,255,255,0.05)',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      background: expanded ? 'rgba(255,255,255,0.02)' : 'transparent',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>{r.referido_nombre}</div>
+                    <div style={{ color: '#8a8c9e', fontSize: 13 }}>{r.presentado_por || '—'}</div>
+                    <div style={{ color: '#8a8c9e', fontSize: 13, lineHeight: 1.5 }}>{r.perfil_referido || '—'}</div>
+                    <div><WarmIntroMark value={r.warm_intro} /></div>
+                    <div><EstadoBadge estado={r.estado} /></div>
+                    <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(r.fecha_pedido)}</div>
+                    <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                      <button
+                        title="Editar"
+                        onClick={() => openEdit(r)}
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      >
+                        ✎
+                      </button>
+                      {confirmDeleteId === r.id ? (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button title="Confirmar" onClick={() => handleDelete(r)} style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6, color: '#4ade80', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✓</button>
+                          <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#8a8c9e', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✕</button>
+                        </div>
+                      ) : (
+                        <button
+                          title="Eliminar"
+                          onClick={() => setConfirmDeleteId(r.id)}
+                          style={{ background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.25)', borderRadius: 6, color: '#e5182b', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        >
+                          🗑
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {expanded && (
+                    <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.015)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 18 }} className="referido-detail-grid">
+                        {[
+                          { label: 'Teléfono', value: r.referido_telefono || '—' },
+                          { label: 'Incentivo', value: INCENTIVO_OPTIONS.find((o) => o.value === r.incentivo)?.label ?? '—' },
+                          { label: 'Fecha de contacto', value: formatDateTime(r.fecha_contacto) },
+                          { label: 'Fecha de cierre', value: formatDateTime(r.fecha_cierre) },
+                        ].map((f) => (
+                          <div key={f.label}>
+                            <div style={{ color: '#555669', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{f.label}</div>
+                            <div style={{ color: '#f0f1f7', fontSize: 13 }}>{f.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ marginBottom: 18 }}>
+                        <div style={{ color: '#555669', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notas</div>
+                        <div style={{ color: '#f0f1f7', fontSize: 13, lineHeight: 1.5 }}>{r.notas || '—'}</div>
+                      </div>
+
+                      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px' }}>
+                        <p style={{ color: '#c9ced9', fontSize: 13, lineHeight: 1.6, margin: guidance.bot ? '0 0 8px' : 0 }}>{guidance.missing}</p>
+                        {guidance.bot && (
+                          <p style={{ color: '#8a8c9e', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{guidance.bot}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
