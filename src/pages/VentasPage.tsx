@@ -449,6 +449,12 @@ const ALL_COLUMNS: ColumnDef[] = [
   textColumn('nombre', 'Nombre del lead', 220, 'lead_nombre', 'lead_name', { validate: (v) => v.trim().length > 0, autoFocusOnCreate: true }),
   textColumn('telefono', 'Teléfono', 130, 'lead_telefono', 'lead_phone'),
   textColumn('correo', 'Correo', 180, 'lead_email', 'lead_email'),
+  // fecha_agenda (Fecha cita agendada) se eliminó de la grilla — era el
+  // mismo concepto duplicado de fecha_llamada, que ya se llena sola desde
+  // ghl-appointment-webhook. Este es el campo real, renombrado para que
+  // quede claro que es la fecha de la cita, no un log de una llamada pasada.
+  // Vive acá, en el puesto que ocupaba fecha_agenda, por pedido del usuario.
+  dateColumn('llamada', 'Fecha llamada agendada', 160, 'fecha_llamada', 'fecha_llamada'),
   // Editable — el auto-completado desde ghl-appointment-webhook sigue
   // existiendo si corre, pero hoy nunca trae dato (Workflow de GHL sin
   // configurar la atribución de anuncio) así que tiene que poder cargarse
@@ -545,11 +551,6 @@ const ALL_COLUMNS: ColumnDef[] = [
   textColumn('edad', 'Edad', 80, 'edad', 'edad', { numeric: true }),
   textColumn('hijos_casado', 'Hijos/Casado', 150, 'hijos_casado', 'hijos_casado'),
   textColumn('notas', 'Notas closer', 220, 'notas', 'notes'),
-  // fecha_agenda (Fecha cita agendada) se eliminó de la grilla — era el
-  // mismo concepto duplicado de fecha_llamada, que ya se llena sola desde
-  // ghl-appointment-webhook. Este es el campo real, renombrado para que
-  // quede claro que es la fecha de la cita, no un log de una llamada pasada.
-  dateColumn('llamada', 'Fecha llamada agendada', 160, 'fecha_llamada', 'fecha_llamada'),
   // ── Closer se movió del puesto 12 del Sheet a acá, al final ──
   {
     key: 'closer', label: 'Closer', minPx: 120,
