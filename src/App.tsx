@@ -6,6 +6,7 @@ import { Admin } from './pages/Admin'
 import { AdminClient } from './pages/AdminClient'
 import { NewClient } from './pages/NewClient'
 import { ReportesPage } from './pages/ReportesPage'
+import { ChatPage } from './pages/ChatPage'
 import { RecorridoPage } from './pages/RecorridoPage'
 import { VentasPage } from './pages/VentasPage'
 import { ReferidosPage } from './pages/ReferidosPage'
@@ -96,6 +97,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute requiredRole="client">
             <ReportesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal/chat"
+        element={
+          <ProtectedRoute requiredRole="client">
+            <ChatPage />
           </ProtectedRoute>
         }
       />

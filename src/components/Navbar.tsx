@@ -9,6 +9,7 @@ interface NavbarProps {
 
 const NAV_LINKS = [
   { label: 'Inicio', to: '/portal' },
+  { label: 'Chat', to: '/portal/chat' },
   { label: 'Mi Recorrido', to: '/portal/recorrido' },
   { label: 'Ventas', to: '/portal/ventas' },
   { label: 'Referidos', to: '/portal/referidos' },
