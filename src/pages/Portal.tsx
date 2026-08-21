@@ -427,10 +427,15 @@ export function Portal() {
       const noShows = callsInWeek.filter((l) => l.asistio === false && l.fecha_llamada <= todayStr).length
       const showRate = agendasGeneradas > 0 ? round1((llamadasRealizadas / agendasGeneradas) * 100) : undefined
 
-      const calificadosReal = callsInWeek.filter((l) => l.calificado === true).length
+      // califico (booleano viejo) quedó congelado en false para leads nuevos desde
+      // que el CRM migró a calificacion (3 valores) — mismo criterio que cpbcTotal
+      // más abajo: 'Calificado' estricto para calificación, 'Calificado' + 'Calificado
+      // tipo B' (ampio) para el denominador de cierre, igual que closeRateTotal.
+      const calificadosReal = callsInWeek.filter((l) => l.asistio === true && l.calificacion === 'Calificado').length
+      const calificadosAmplioSemana = callsInWeek.filter((l) => l.asistio === true && (l.calificacion === 'Calificado' || l.calificacion === 'Calificado tipo B')).length
       const cerradosReal = callsInWeek.filter((l) => l.cerrado === true).length
       const tasaCalificacionReal = agendasGeneradas > 0 ? round1((calificadosReal / agendasGeneradas) * 100) : null
-      const tasaCierreReal = calificadosReal > 0 ? round1((cerradosReal / calificadosReal) * 100) : null
+      const tasaCierreReal = calificadosAmplioSemana > 0 ? round1((cerradosReal / calificadosAmplioSemana) * 100) : null
 
       const reporteSemana = reportsForNotes.find(
         (r) => r.fecha_inicio && r.fecha_fin && r.fecha_inicio <= weekEndStr && r.fecha_fin >= weekStartStr

@@ -1151,17 +1151,22 @@ export function VentasPage() {
       return dateA - dateB
     })
 
+  // calificado (alias de califico, booleano viejo) quedó congelado en false para
+  // leads nuevos desde que el CRM migró a calificacion (3 valores) — mismo criterio
+  // que Portal.tsx: 'Calificado' estricto para la línea de calificación, 'Calificado'
+  // + 'Calificado tipo B' (ampio) para el denominador de close rate.
   const salesChartData = sortedLeads.map((_, index) => {
     const leadsHastaAqui = sortedLeads.slice(0, index + 1)
     const total = leadsHastaAqui.length
     const asistieron = leadsHastaAqui.filter((l) => isTrue(l.asistio)).length
-    const calificados = leadsHastaAqui.filter((l) => isTrue(l.calificado)).length
+    const calificadosEstricto = leadsHastaAqui.filter((l) => isTrue(l.asistio) && l.calificacion === 'Calificado').length
+    const calificadosAmplio = leadsHastaAqui.filter((l) => isTrue(l.asistio) && (l.calificacion === 'Calificado' || l.calificacion === 'Calificado tipo B')).length
     const cerrados = leadsHastaAqui.filter((l) => isTrue(l.cerrado)).length
     return {
       agenda: index + 1,
       show_rate: total > 0 ? Math.round(asistieron / total * 100) : 0,
-      calificacion: total > 0 ? Math.round(calificados / total * 100) : 0,
-      close_rate: calificados > 0 ? Math.round(cerrados / calificados * 100) : 0,
+      calificacion: total > 0 ? Math.round(calificadosEstricto / total * 100) : 0,
+      close_rate: calificadosAmplio > 0 ? Math.round(cerrados / calificadosAmplio * 100) : 0,
     }
   })
 
