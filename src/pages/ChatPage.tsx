@@ -164,9 +164,10 @@ function ChatBubble({
 // ─── Main page ────────────────────────────────────────────────
 
 export function ChatPage() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [clientId, setClientId] = useState<string | null>(null)
+  const [clientName, setClientName] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessageRow[]>([])
   const [calls, setCalls] = useState<CloserCallRow[]>([])
   const [texto, setTexto] = useState('')
@@ -190,12 +191,13 @@ export function ChatPage() {
       try {
         const { data: clientData } = await supabase
           .from('clients')
-          .select('id')
+          .select('id, name')
           .eq('profile_id', user!.id)
           .single()
         if (!clientData) return
         const cid = clientData.id as string
         setClientId(cid)
+        setClientName(clientData.name as string)
 
         const [{ data: msgsData }] = await Promise.all([
           supabase
@@ -279,7 +281,7 @@ export function ChatPage() {
     const trimmed = texto.trim()
     if (!trimmed || !user || !clientId || sending) return
     setSending(true)
-    const senderName = profile?.name || user.email || 'Cliente'
+    const senderName = clientName || user.email || 'Cliente'
     const optimistic: ChatMessageRow = {
       id: `optimistic-${Date.now()}`,
       client_id: clientId,
