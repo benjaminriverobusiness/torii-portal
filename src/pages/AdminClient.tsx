@@ -739,11 +739,11 @@ export function AdminClient() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+    border: '1px solid rgba(var(--overlay-rgb),0.10)',
     borderRadius: 8,
     padding: '11px 14px',
-    color: '#f0f1f7',
+    color: 'var(--text-primary)',
     fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box',
@@ -752,24 +752,24 @@ export function AdminClient() {
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
-    color: '#8a8c9e',
+    color: 'var(--text-secondary)',
     fontSize: 12,
     marginBottom: 8,
     fontWeight: 500,
   }
 
   const sectionTitle: React.CSSProperties = {
-    color: '#f0f1f7',
+    color: 'var(--text-primary)',
     fontSize: 14,
     fontWeight: 600,
     marginBottom: 16,
     paddingBottom: 8,
-    borderBottom: '1px solid rgba(255,255,255,0.07)',
+    borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)',
   }
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#08090f' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
         <Navbar isAdmin showNav={false} />
         <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
           <Spinner size={36} />
@@ -779,10 +779,10 @@ export function AdminClient() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
       <Navbar isAdmin />
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 24px' }}>
-        <Link to="/admin" style={{ color: '#8a8c9e', fontSize: 14, textDecoration: 'none', display: 'block', marginBottom: 24 }}>
+        <Link to="/admin" style={{ color: 'var(--text-secondary)', fontSize: 14, textDecoration: 'none', display: 'block', marginBottom: 24 }}>
           ← Volver
         </Link>
 
@@ -791,17 +791,17 @@ export function AdminClient() {
             style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontSize: 28,
-              color: '#f0f1f7',
+              color: 'var(--text-primary)',
               margin: '0 0 4px',
             }}
           >
             {client?.name}
           </h1>
-          <p style={{ color: '#555669', fontSize: 14, margin: 0 }}>{client?.email}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>{client?.email}</p>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: 32 }}>
+        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', marginBottom: 32 }}>
           {(['preview', 'phases', 'update'] as Tab[]).map((t) => (
             <button
               key={t}
@@ -809,9 +809,9 @@ export function AdminClient() {
               style={{
                 background: 'none',
                 border: 'none',
-                borderBottom: tab === t ? '2px solid #e5182b' : '2px solid transparent',
+                borderBottom: tab === t ? '2px solid var(--accent)' : '2px solid transparent',
                 padding: '12px 20px',
-                color: tab === t ? '#f0f1f7' : '#555669',
+                color: tab === t ? 'var(--text-primary)' : 'var(--text-muted)',
                 fontSize: 14,
                 fontWeight: tab === t ? 600 : 400,
                 cursor: 'pointer',
@@ -830,18 +830,18 @@ export function AdminClient() {
           <div>
             <div
               style={{
-                backgroundColor: 'rgba(229,24,43,0.08)',
-                borderBottom: '1px solid rgba(229,24,43,0.22)',
+                backgroundColor: 'rgba(var(--accent-rgb),0.08)',
+                borderBottom: '1px solid rgba(var(--accent-rgb),0.22)',
                 padding: '10px 20px',
                 marginBottom: 24,
                 borderRadius: 8,
               }}
             >
-              <span style={{ color: '#e5182b', fontSize: 13 }}>👁 Vista previa del cliente</span>
+              <span style={{ color: 'var(--accent)', fontSize: 13 }}>👁 Vista previa del cliente</span>
             </div>
 
             {!status ? (
-              <p style={{ color: '#555669', textAlign: 'center', padding: 40 }}>
+              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>
                 Sin datos de portal todavía. Ve a "Actualizar" para configurarlo.
               </p>
             ) : (
@@ -849,8 +849,8 @@ export function AdminClient() {
                 {/* Hero */}
                 <div
                   style={{
-                    background: 'radial-gradient(ellipse at 50% 0%, rgba(229,24,43,0.06) 0%, transparent 65%), rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.07)',
+                    background: 'radial-gradient(ellipse at 50% 0%, rgba(var(--accent-rgb),0.06) 0%, transparent 65%), rgba(var(--overlay-rgb),0.03)',
+                    border: '1px solid rgba(var(--overlay-rgb),0.07)',
                     borderRadius: 16,
                     padding: 36,
                     marginBottom: 32,
@@ -864,9 +864,9 @@ export function AdminClient() {
                           textTransform: 'uppercase',
                           fontSize: 11,
                           letterSpacing: '0.1em',
-                          color: '#e5182b',
-                          backgroundColor: 'rgba(229,24,43,0.10)',
-                          border: '1px solid rgba(229,24,43,0.22)',
+                          color: 'var(--accent)',
+                          backgroundColor: 'rgba(var(--accent-rgb),0.10)',
+                          border: '1px solid rgba(var(--accent-rgb),0.22)',
                           borderRadius: 99,
                           padding: '5px 14px',
                           marginBottom: 16,
@@ -878,13 +878,13 @@ export function AdminClient() {
                         style={{
                           fontFamily: 'Bricolage Grotesque, sans-serif',
                           fontSize: 28,
-                          color: '#f0f1f7',
+                          color: 'var(--text-primary)',
                           margin: '0 0 12px',
                         }}
                       >
                         {phases.find((p) => p.id === status.active_phase_id)?.phase_name ?? 'Sin etapa'}
                       </h2>
-                      <p style={{ color: '#8a8c9e', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.7, margin: 0 }}>
                         {phases.find((p) => p.id === status.active_phase_id)?.phase_description}
                       </p>
                     </div>
@@ -894,8 +894,8 @@ export function AdminClient() {
                 {/* Journey Map */}
                 <div
                   style={{
-                    backgroundColor: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.07)',
+                    backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+                    border: '1px solid rgba(var(--overlay-rgb),0.07)',
                     borderRadius: 16,
                     padding: '48px 40px',
                     marginBottom: 32,
@@ -919,13 +919,13 @@ export function AdminClient() {
 
                 {/* Win + Next step */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }}>
-                  <div style={{ borderLeft: '3px solid #e5182b', borderTop: '1px solid rgba(255,255,255,0.07)', borderRight: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', borderRadius: '0 16px 16px 0', backgroundColor: 'rgba(255,255,255,0.03)', padding: 24 }}>
-                    <div style={{ color: '#e5182b', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>ÚLTIMO RESULTADO</div>
-                    <p style={{ color: '#f0f1f7', fontSize: 15, lineHeight: 1.7, margin: 0 }}>{status.current_win ?? '—'}</p>
+                  <div style={{ borderLeft: '3px solid var(--accent)', borderTop: '1px solid rgba(var(--overlay-rgb),0.07)', borderRight: '1px solid rgba(var(--overlay-rgb),0.07)', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '0 16px 16px 0', backgroundColor: 'rgba(var(--overlay-rgb),0.03)', padding: 24 }}>
+                    <div style={{ color: 'var(--accent)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>ÚLTIMO RESULTADO</div>
+                    <p style={{ color: 'var(--text-primary)', fontSize: 15, lineHeight: 1.7, margin: 0 }}>{status.current_win ?? '—'}</p>
                   </div>
-                  <div style={{ borderLeft: '3px solid #60a5fa', borderTop: '1px solid rgba(255,255,255,0.07)', borderRight: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', borderRadius: '0 16px 16px 0', backgroundColor: 'rgba(255,255,255,0.03)', padding: 24 }}>
-                    <div style={{ color: '#60a5fa', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>PRÓXIMOS 7 DÍAS</div>
-                    <p style={{ color: '#f0f1f7', fontSize: 15, lineHeight: 1.7, margin: 0 }}>{status.next_step ?? '—'}</p>
+                  <div style={{ borderLeft: '3px solid var(--info)', borderTop: '1px solid rgba(var(--overlay-rgb),0.07)', borderRight: '1px solid rgba(var(--overlay-rgb),0.07)', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '0 16px 16px 0', backgroundColor: 'rgba(var(--overlay-rgb),0.03)', padding: 24 }}>
+                    <div style={{ color: 'var(--info)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>PRÓXIMOS 7 DÍAS</div>
+                    <p style={{ color: 'var(--text-primary)', fontSize: 15, lineHeight: 1.7, margin: 0 }}>{status.next_step ?? '—'}</p>
                   </div>
                 </div>
 
@@ -953,7 +953,7 @@ export function AdminClient() {
         {tab === 'phases' && (
           <div>
             {error && (
-              <div style={{ color: '#f87171', fontSize: 13, marginBottom: 16, backgroundColor: 'rgba(248,113,113,0.1)', padding: '10px 16px', borderRadius: 8 }}>
+              <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 16, backgroundColor: 'rgba(var(--danger-rgb),0.1)', padding: '10px 16px', borderRadius: 8 }}>
                 {error}
               </div>
             )}
@@ -964,16 +964,16 @@ export function AdminClient() {
                 onClick={() => setShowCopyModal(true)}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  backgroundColor: 'rgba(var(--overlay-rgb),0.05)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.1)',
                   borderRadius: '8px',
-                  color: '#8a8c9e',
+                  color: 'var(--text-secondary)',
                   fontSize: '13px',
                   cursor: 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = '#f0f1f7' }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#8a8c9e' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(var(--overlay-rgb),0.08)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(var(--overlay-rgb),0.05)'; e.currentTarget.style.color = 'var(--text-secondary)' }}
               >
                 Copiar etapas a otro cliente
               </button>
@@ -986,45 +986,45 @@ export function AdminClient() {
                 onClick={() => setShowCopyModal(false)}
               >
                 <div
-                  style={{ width: '100%', maxWidth: '480px', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '32px' }}
+                  style={{ width: '100%', maxWidth: '480px', background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '20px', padding: '32px' }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {copySuccess ? (
-                    <div style={{ color: '#4ade80', fontSize: '16px', fontWeight: 700, textAlign: 'center', padding: '24px 0' }}>
+                    <div style={{ color: 'var(--success)', fontSize: '16px', fontWeight: 700, textAlign: 'center', padding: '24px 0' }}>
                       ✓ Etapas copiadas exitosamente
                     </div>
                   ) : (
                     <>
-                      <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: '20px', fontWeight: 800, color: '#f0f1f7', margin: '0 0 8px' }}>
+                      <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
                         Copiar etapas a otro cliente
                       </h2>
-                      <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 24px' }}>
+                      <p style={{ color: 'var(--danger)', fontSize: '13px', margin: '0 0 24px' }}>
                         Las etapas actuales del cliente destino serán reemplazadas.
                       </p>
 
-                      <p style={{ color: '#8a8c9e', fontSize: '13px', margin: '0 0 12px' }}>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '0 0 12px' }}>
                         Se copiarán estas {phases.length} etapas:
                       </p>
                       <div style={{ marginBottom: '8px' }}>
                         {phases.map((phase) => (
                           <div key={phase.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '6px 0' }}>
-                            <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: '#e5182b', color: 'white', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: 'var(--accent)', color: 'white', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               {phase.phase_order}
                             </div>
-                            <span style={{ color: '#f0f1f7', fontSize: '14px' }}>{phase.phase_name}</span>
+                            <span style={{ color: 'var(--text-primary)', fontSize: '14px' }}>{phase.phase_name}</span>
                           </div>
                         ))}
                       </div>
 
-                      <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.07)', margin: '20px 0' }} />
+                      <div style={{ height: 1, backgroundColor: 'rgba(var(--overlay-rgb),0.07)', margin: '20px 0' }} />
 
-                      <label style={{ display: 'block', color: '#8a8c9e', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+                      <label style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
                         Copiar a:
                       </label>
                       <select
                         value={copyTargetClientId}
                         onChange={(e) => setCopyTargetClientId(e.target.value)}
-                        style={{ width: '100%', background: '#080910', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px 14px', color: '#f0f1f7', fontSize: '14px', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                        style={{ width: '100%', background: 'var(--bg)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '8px', padding: '10px 14px', color: 'var(--text-primary)', fontSize: '14px', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
                       >
                         <option value="">Seleccionar cliente...</option>
                         {allClients.map((c) => (
@@ -1035,14 +1035,14 @@ export function AdminClient() {
                       <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
                         <button
                           onClick={() => setShowCopyModal(false)}
-                          style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', color: '#f0f1f7', fontSize: '14px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ padding: '10px 20px', backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '14px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                         >
                           Cancelar
                         </button>
                         <button
                           onClick={handleCopyPhases}
                           disabled={!copyTargetClientId || copying}
-                          style={{ padding: '10px 20px', backgroundColor: '#e5182b', border: 'none', borderRadius: '8px', color: 'white', fontSize: '14px', fontWeight: 600, cursor: !copyTargetClientId || copying ? 'not-allowed' : 'pointer', opacity: copying ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ padding: '10px 20px', backgroundColor: 'var(--accent)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '14px', fontWeight: 600, cursor: !copyTargetClientId || copying ? 'not-allowed' : 'pointer', opacity: copying ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
                         >
                           {copying ? 'Copiando...' : 'Copiar etapas →'}
                         </button>
@@ -1057,8 +1057,8 @@ export function AdminClient() {
               <div
                 key={phase.id}
                 style={{
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.07)',
                   borderRadius: 12,
                   padding: 20,
                   marginBottom: 12,
@@ -1077,7 +1077,7 @@ export function AdminClient() {
                       style={{ ...inputStyle, resize: 'vertical', height: '80px', marginBottom: 12 }}
                     />
                     <div style={{ marginTop: 12, marginBottom: 12 }}>
-                      <label style={{ fontSize: 12, fontWeight: 600, color: '#8a8c9e', marginBottom: 6, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         URL del video explicativo (YouTube o Loom) — opcional
                       </label>
                       <input
@@ -1091,13 +1091,13 @@ export function AdminClient() {
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => savePhaseEdit(phase)}
-                        style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                       >
                         Guardar
                       </button>
                       <button
                         onClick={() => setEditingPhaseId(null)}
-                        style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 6, padding: '8px 16px', color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                       >
                         Cancelar
                       </button>
@@ -1110,12 +1110,12 @@ export function AdminClient() {
                         width: 36,
                         height: 36,
                         borderRadius: '50%',
-                        backgroundColor: 'rgba(201,168,76,0.15)',
-                        border: '1px solid rgba(201,168,76,0.3)',
+                        backgroundColor: 'rgba(var(--gold-rgb),0.15)',
+                        border: '1px solid rgba(var(--gold-rgb),0.3)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#c9a84c',
+                        color: 'var(--gold)',
                         fontWeight: 700,
                         fontSize: 14,
                         flexShrink: 0,
@@ -1124,29 +1124,29 @@ export function AdminClient() {
                       {phase.phase_order}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{phase.phase_name}</div>
-                      <div style={{ color: '#8a8c9e', fontSize: 13, lineHeight: 1.5 }}>{phase.phase_description}</div>
+                      <div style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{phase.phase_name}</div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5 }}>{phase.phase_description}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                       <button
                         onClick={() => reorderPhase(phase, 'up')}
                         disabled={i === 0}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '4px 8px', color: i === 0 ? '#333' : '#8a8c9e', cursor: i === 0 ? 'default' : 'pointer', fontSize: 12 }}
+                        style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.10)', borderRadius: 6, padding: '4px 8px', color: i === 0 ? 'var(--text-ghost)' : 'var(--text-secondary)', cursor: i === 0 ? 'default' : 'pointer', fontSize: 12 }}
                       >↑</button>
                       <button
                         onClick={() => reorderPhase(phase, 'down')}
                         disabled={i === phases.length - 1}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '4px 8px', color: i === phases.length - 1 ? '#333' : '#8a8c9e', cursor: i === phases.length - 1 ? 'default' : 'pointer', fontSize: 12 }}
+                        style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.10)', borderRadius: 6, padding: '4px 8px', color: i === phases.length - 1 ? 'var(--text-ghost)' : 'var(--text-secondary)', cursor: i === phases.length - 1 ? 'default' : 'pointer', fontSize: 12 }}
                       >↓</button>
                       <button
                         onClick={() => { setEditingPhaseId(phase.id); setEditPhaseName(phase.phase_name); setEditPhaseDesc(phase.phase_description ?? ''); setEditPhaseVideoUrl(phase.video_url ?? '') }}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '4px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12 }}
+                        style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.10)', borderRadius: 6, padding: '4px 10px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12 }}
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => deletePhase(phase)}
-                        style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 6, padding: '4px 10px', color: '#f87171', cursor: 'pointer', fontSize: 12 }}
+                        style={{ background: 'rgba(var(--danger-rgb),0.1)', border: '1px solid rgba(var(--danger-rgb),0.2)', borderRadius: 6, padding: '4px 10px', color: 'var(--danger)', cursor: 'pointer', fontSize: 12 }}
                       >
                         Eliminar
                       </button>
@@ -1159,8 +1159,8 @@ export function AdminClient() {
             {addingPhase ? (
               <div
                 style={{
-                  backgroundColor: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.07)',
                   borderRadius: 12,
                   padding: 20,
                   marginBottom: 12,
@@ -1182,13 +1182,13 @@ export function AdminClient() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     onClick={addPhase}
-                    style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Guardar etapa
                   </button>
                   <button
                     onClick={() => setAddingPhase(false)}
-                    style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 6, padding: '8px 16px', color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Cancelar
                   </button>
@@ -1200,17 +1200,17 @@ export function AdminClient() {
                 style={{
                   width: '100%',
                   backgroundColor: 'transparent',
-                  border: '2px dashed rgba(255,255,255,0.12)',
+                  border: '2px dashed rgba(var(--overlay-rgb),0.12)',
                   borderRadius: 12,
                   padding: 16,
-                  color: '#555669',
+                  color: 'var(--text-muted)',
                   fontSize: 14,
                   cursor: 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
                   transition: 'border-color 0.2s, color 0.2s',
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.3)'; e.currentTarget.style.color = 'var(--accent)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.12)'; e.currentTarget.style.color = 'var(--text-muted)' }}
               >
                 + Agregar etapa
               </button>
@@ -1222,8 +1222,8 @@ export function AdminClient() {
         {tab === 'update' && (
           <div>
             {/* DATOS DEL CLIENTE */}
-            <div style={{ marginBottom: 32, padding: '20px 24px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', marginTop: 0 }}>
+            <div style={{ marginBottom: 32, padding: '20px 24px', backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 12 }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', marginTop: 0 }}>
                 DATOS DEL CLIENTE
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1241,7 +1241,7 @@ export function AdminClient() {
                 </div>
                 <div>
                   <label style={labelStyle}>Canal</label>
-                  <select value={clientForm.canal} onChange={(e) => setClientForm(p => ({ ...p, canal: e.target.value }))} style={{ ...inputStyle, backgroundColor: '#0d0e17' }}>
+                  <select value={clientForm.canal} onChange={(e) => setClientForm(p => ({ ...p, canal: e.target.value }))} style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }}>
                     <option value="">Sin canal</option>
                     <option value="Meta Ads">Meta Ads</option>
                     <option value="LinkedIn Outbound">LinkedIn Outbound</option>
@@ -1250,7 +1250,7 @@ export function AdminClient() {
                 </div>
                 <div>
                   <label style={labelStyle}>Fecha de inicio del servicio</label>
-                  <input type="date" value={clientForm.start_date} onChange={(e) => setClientForm(p => ({ ...p, start_date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                  <input type="date" value={clientForm.start_date} onChange={(e) => setClientForm(p => ({ ...p, start_date: e.target.value }))} style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Duración (días)</label>
@@ -1276,29 +1276,29 @@ export function AdminClient() {
                     setSavingClient(false)
                   }}
                   disabled={savingClient}
-                  style={{ padding: '10px 20px', backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f0f1f7', fontSize: 14, fontWeight: 600, cursor: savingClient ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: savingClient ? 0.7 : 1 }}
+                  style={{ padding: '10px 20px', backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, cursor: savingClient ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: savingClient ? 0.7 : 1 }}
                 >
                   Guardar datos del cliente
                 </button>
-                {clientSaveSuccess && <span style={{ color: '#4ade80', fontSize: 13 }}>✓ Datos guardados</span>}
+                {clientSaveSuccess && <span style={{ color: 'var(--success)', fontSize: 13 }}>✓ Datos guardados</span>}
               </div>
             </div>
 
             {/* CLOSERS */}
-            <div style={{ marginBottom: 32, padding: '20px 24px', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', marginTop: 0 }}>
+            <div style={{ marginBottom: 32, padding: '20px 24px', backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 12 }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '16px', marginTop: 0 }}>
                 CLOSERS
               </p>
               {closers.map((closer) => (
-                <div key={closer.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '6px' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: closer.active ? '#4ade80' : '#555669', flexShrink: 0 }} />
-                  <span style={{ flex: 1, color: '#f0f1f7', fontSize: 13, fontWeight: 700 }}>{closer.name}</span>
+                <div key={closer.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 14px', background: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '8px', marginBottom: '6px' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: closer.active ? 'var(--success)' : 'var(--text-muted)', flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: 'var(--text-primary)', fontSize: 13, fontWeight: 700 }}>{closer.name}</span>
                   <button
                     onClick={async () => {
                       await supabase.from('client_closers').update({ active: !closer.active }).eq('id', closer.id)
                       await reloadClosers()
                     }}
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                    style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 6, padding: '3px 10px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
                   >
                     {closer.active ? 'Desactivar' : 'Activar'}
                   </button>
@@ -1307,7 +1307,7 @@ export function AdminClient() {
                       await supabase.from('client_closers').delete().eq('id', closer.id)
                       await reloadClosers()
                     }}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}
                   >
                     ✕
                   </button>
@@ -1330,13 +1330,13 @@ export function AdminClient() {
                       setAddingCloser(false)
                       await reloadClosers()
                     }}
-                    style={{ padding: '10px 16px', background: '#e5182b', border: 'none', borderRadius: 8, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', whiteSpace: 'nowrap' }}
+                    style={{ padding: '10px 16px', background: 'var(--accent)', border: 'none', borderRadius: 8, color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', whiteSpace: 'nowrap' }}
                   >
                     Agregar
                   </button>
                   <button
                     onClick={() => { setAddingCloser(false); setNewCloserName('') }}
-                    style={{ padding: '10px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    style={{ padding: '10px 16px', background: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                   >
                     Cancelar
                   </button>
@@ -1344,9 +1344,9 @@ export function AdminClient() {
               ) : (
                 <button
                   onClick={() => setAddingCloser(true)}
-                  style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', color: '#555669', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', marginTop: closers.length > 0 ? 8 : 0 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                  style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(var(--overlay-rgb),0.12)', borderRadius: 8, padding: '10px 16px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', marginTop: closers.length > 0 ? 8 : 0 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.3)'; e.currentTarget.style.color = 'var(--accent)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.12)'; e.currentTarget.style.color = 'var(--text-muted)' }}
                 >
                   + Agregar closer
                 </button>
@@ -1360,7 +1360,7 @@ export function AdminClient() {
               {/* Selector de plantilla */}
               {templates.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ color: '#8a8c9e', fontSize: '12px', marginBottom: '8px' }}>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }}>
                     Aplicar plantilla:
                   </div>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1398,14 +1398,14 @@ export function AdminClient() {
                           fontFamily: 'DM Sans, sans-serif',
                           ...(t.name === metricsConfig.template_name
                             ? {
-                                background: 'rgba(229,24,43,0.15)',
-                                outline: '1px solid rgba(229,24,43,0.4)',
-                                color: '#e5182b',
+                                background: 'rgba(var(--accent-rgb),0.15)',
+                                outline: '1px solid rgba(var(--accent-rgb),0.4)',
+                                color: 'var(--accent)',
                               }
                             : {
-                                background: 'rgba(255,255,255,0.04)',
-                                outline: '1px solid rgba(255,255,255,0.1)',
-                                color: '#8a8c9e',
+                                background: 'rgba(var(--overlay-rgb),0.04)',
+                                outline: '1px solid rgba(var(--overlay-rgb),0.1)',
+                                color: 'var(--text-secondary)',
                               }),
                         }}
                       >
@@ -1429,20 +1429,20 @@ export function AdminClient() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '12px 16px',
-                    backgroundColor: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.07)',
+                    backgroundColor: 'rgba(var(--overlay-rgb),0.02)',
+                    border: '1px solid rgba(var(--overlay-rgb),0.07)',
                     borderRadius: '10px',
                     marginBottom: '8px',
                   }}
                 >
-                  <span style={{ color: '#f0f1f7', fontSize: 14 }}>{label}</span>
+                  <span style={{ color: 'var(--text-primary)', fontSize: 14 }}>{label}</span>
                   <div
                     onClick={() => setMetricsConfig((p) => ({ ...p, [key]: !p[key] }))}
                     style={{
                       width: 40,
                       height: 22,
                       borderRadius: 11,
-                      backgroundColor: metricsConfig[key] ? '#e5182b' : 'rgba(255,255,255,0.1)',
+                      backgroundColor: metricsConfig[key] ? 'var(--accent)' : 'rgba(var(--overlay-rgb),0.1)',
                       cursor: 'pointer',
                       position: 'relative',
                       transition: 'background-color 0.2s',
@@ -1455,6 +1455,7 @@ export function AdminClient() {
                         height: 18,
                         borderRadius: '50%',
                         backgroundColor: 'white',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                         position: 'absolute',
                         top: 2,
                         left: metricsConfig[key] ? 20 : 2,
@@ -1468,7 +1469,7 @@ export function AdminClient() {
               {/* Toggles métricas Ads */}
               {metricsConfig.show_ads_section && (
                 <div style={{ marginTop: 16, marginBottom: 8 }}>
-                  <div style={{ color: '#8a8c9e', fontSize: '12px', marginBottom: '10px' }}>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '10px' }}>
                     Métricas de Ads a mostrar:
                   </div>
                   <div
@@ -1505,10 +1506,10 @@ export function AdminClient() {
                             width: 16,
                             height: 16,
                             borderRadius: 3,
-                            backgroundColor: metricsConfig[key] ? '#e5182b' : 'transparent',
+                            backgroundColor: metricsConfig[key] ? 'var(--accent)' : 'transparent',
                             border: metricsConfig[key]
-                              ? '1px solid #e5182b'
-                              : '1px solid rgba(255,255,255,0.2)',
+                              ? '1px solid var(--accent)'
+                              : '1px solid rgba(var(--overlay-rgb),0.2)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1527,7 +1528,7 @@ export function AdminClient() {
                             </svg>
                           )}
                         </div>
-                        <span style={{ color: '#8a8c9e', fontSize: 13 }}>{label}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{label}</span>
                       </div>
                     ))}
                   </div>
@@ -1537,7 +1538,7 @@ export function AdminClient() {
               {/* Toggles métricas LinkedIn */}
               {metricsConfig.show_li_section && (
                 <div style={{ marginTop: 16, marginBottom: 8 }}>
-                  <div style={{ color: '#8a8c9e', fontSize: '12px', marginBottom: '10px' }}>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '10px' }}>
                     Métricas de LinkedIn a mostrar:
                   </div>
                   <div
@@ -1573,10 +1574,10 @@ export function AdminClient() {
                             width: 16,
                             height: 16,
                             borderRadius: 3,
-                            backgroundColor: metricsConfig[key] ? '#e5182b' : 'transparent',
+                            backgroundColor: metricsConfig[key] ? 'var(--accent)' : 'transparent',
                             border: metricsConfig[key]
-                              ? '1px solid #e5182b'
-                              : '1px solid rgba(255,255,255,0.2)',
+                              ? '1px solid var(--accent)'
+                              : '1px solid rgba(var(--overlay-rgb),0.2)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1595,7 +1596,7 @@ export function AdminClient() {
                             </svg>
                           )}
                         </div>
-                        <span style={{ color: '#8a8c9e', fontSize: 13 }}>{label}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{label}</span>
                       </div>
                     ))}
                   </div>
@@ -1604,7 +1605,7 @@ export function AdminClient() {
 
               {/* Botón guardar config */}
               {configSaveSuccess && (
-                <div style={{ color: '#4ade80', fontSize: 13, marginTop: 12 }}>
+                <div style={{ color: 'var(--success)', fontSize: 13, marginTop: 12 }}>
                   ✓ Configuración guardada
                 </div>
               )}
@@ -1614,11 +1615,11 @@ export function AdminClient() {
                   width: '100%',
                   marginTop: 16,
                   marginBottom: 32,
-                  backgroundColor: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.12)',
                   borderRadius: 8,
                   padding: '12px',
-                  color: '#f0f1f7',
+                  color: 'var(--text-primary)',
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -1662,7 +1663,7 @@ export function AdminClient() {
                     type="date"
                     value={weekForm.week_start}
                     onChange={(e) => setWeekForm((p) => ({ ...p, week_start: e.target.value }))}
-                    style={{ ...inputStyle, colorScheme: 'dark' }}
+                    style={inputStyle}
                   />
                 </div>
                 <div>
@@ -1671,7 +1672,7 @@ export function AdminClient() {
                     type="date"
                     value={weekForm.week_end}
                     onChange={(e) => setWeekForm((p) => ({ ...p, week_end: e.target.value }))}
-                    style={{ ...inputStyle, colorScheme: 'dark' }}
+                    style={inputStyle}
                   />
                 </div>
               </div>
@@ -1679,10 +1680,10 @@ export function AdminClient() {
               {metricsConfig.show_ads_section && (
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: '#60a5fa', background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: 99, padding: '3px 10px' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--info)', background: 'rgba(var(--info-rgb),0.1)', border: '1px solid rgba(var(--info-rgb),0.25)', borderRadius: 99, padding: '3px 10px' }}>
                       AUTOMÁTICO
                     </span>
-                    <span style={{ color: '#555669', fontSize: 12 }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
                       calculado en base a ads_metricas_diarias y client_closer_calls para el rango de fechas de arriba
                     </span>
                   </div>
@@ -1718,7 +1719,7 @@ export function AdminClient() {
               )}
 
               <div style={{ marginBottom: 16 }}>
-                <label style={{ ...labelStyle, color: '#555669' }}>
+                <label style={{ ...labelStyle, color: 'var(--text-muted)' }}>
                   Notas (opcional) — agregá contexto si el reporte automático no alcanza
                 </label>
                 <textarea
@@ -1732,7 +1733,7 @@ export function AdminClient() {
 
               {metricsConfig.show_li_section && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)' }}>
                     CUENTAS DE LINKEDIN
                   </div>
 
@@ -1745,21 +1746,21 @@ export function AdminClient() {
                     }
                     const totalBookings = liAccounts.reduce((sum, a) => sum + (parseFloat(String(a.bookings || 0)) || 0), 0)
                     return (
-                      <div style={{ backgroundColor: 'rgba(192,132,252,0.06)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#c084fc', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>PROMEDIOS CALCULADOS</div>
+                      <div style={{ backgroundColor: 'rgba(var(--purple-rgb),0.06)', border: '1px solid rgba(var(--purple-rgb),0.2)', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>PROMEDIOS CALCULADOS</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                           {(['accept_rate', 'reply_rate', 'offer_rate', 'calendly_rate', 'booking_rate'] as (keyof LiAccountMetric)[]).map(field => {
                             const val = avgField(field)
                             return (
-                              <div key={field} style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 12px' }}>
-                                <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{String(field).replace('_rate', ' rate').replace('_', ' ')}</div>
-                                <div style={{ fontSize: 18, fontWeight: 700, color: val != null ? '#c084fc' : '#333' }}>{val != null ? `${val}%` : '—'}</div>
+                              <div key={field} style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.03)', borderRadius: 6, padding: '8px 12px' }}>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{String(field).replace('_rate', ' rate').replace('_', ' ')}</div>
+                                <div style={{ fontSize: 18, fontWeight: 700, color: val != null ? 'var(--purple)' : 'var(--text-ghost)' }}>{val != null ? `${val}%` : '—'}</div>
                               </div>
                             )
                           })}
-                          <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 12px' }}>
-                            <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>agendas total</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: '#c084fc' }}>{totalBookings}</div>
+                          <div style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.03)', borderRadius: 6, padding: '8px 12px' }}>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>agendas total</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--purple)' }}>{totalBookings}</div>
                           </div>
                         </div>
                       </div>
@@ -1768,7 +1769,7 @@ export function AdminClient() {
 
                   {/* Lista de cuentas */}
                   {liAccounts.map(account => (
-                    <div key={account.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px', marginBottom: 8 }}>
+                    <div key={account.id} style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 10, padding: '14px 16px', marginBottom: 8 }}>
                       {editingLiAccountId === account.id ? (
                         <div>
                           <div style={{ marginBottom: 10 }}>
@@ -1804,13 +1805,13 @@ export function AdminClient() {
                           <div style={{ display: 'flex', gap: 8 }}>
                             <button
                               onClick={() => handleSaveLiAccountEdit(account.id)}
-                              style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '7px 14px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                              style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '7px 14px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                             >
                               Guardar
                             </button>
                             <button
                               onClick={() => setEditingLiAccountId(null)}
-                              style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '7px 14px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                              style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 6, padding: '7px 14px', color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                             >
                               Cancelar
                             </button>
@@ -1819,15 +1820,15 @@ export function AdminClient() {
                       ) : (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                            <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{account.account_name}</span>
+                            <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 700 }}>{account.account_name}</span>
                             <div style={{ display: 'flex', gap: 6 }}>
                               <button
                                 onClick={() => { setEditingLiAccountId(account.id); setEditingLiAccountForm({ account_name: account.account_name, accept_rate: account.accept_rate, reply_rate: account.reply_rate, offer_rate: account.offer_rate, calendly_rate: account.calendly_rate, booking_rate: account.booking_rate, bookings: account.bookings }) }}
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 6, padding: '3px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                                style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.10)', borderRadius: 6, padding: '3px 10px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
                               >
                                 Editar
                               </button>
-                              <button onClick={() => handleDeleteLiAccount(account.id)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>✕</button>
+                              <button onClick={() => handleDeleteLiAccount(account.id)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>✕</button>
                             </div>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
@@ -1840,8 +1841,8 @@ export function AdminClient() {
                               { label: 'Agendas', value: account.bookings, noSuffix: true },
                             ].map(({ label, value, noSuffix }) => (
                               <div key={label}>
-                                <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>{label}</div>
-                                <div style={{ fontSize: 14, color: value != null ? '#8a8c9e' : '#555669' }}>{value != null ? `${value}${noSuffix ? '' : '%'}` : '—'}</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>{label}</div>
+                                <div style={{ fontSize: 14, color: value != null ? 'var(--text-secondary)' : 'var(--text-muted)' }}>{value != null ? `${value}${noSuffix ? '' : '%'}` : '—'}</div>
                               </div>
                             ))}
                           </div>
@@ -1852,7 +1853,7 @@ export function AdminClient() {
 
                   {/* Form nueva cuenta */}
                   {addingLiAccount ? (
-                    <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 16, marginBottom: 8 }}>
+                    <div style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 10, padding: 16, marginBottom: 8 }}>
                       <div style={{ marginBottom: 12 }}>
                         <label style={labelStyle}>Nombre de cuenta *</label>
                         <input
@@ -1887,13 +1888,13 @@ export function AdminClient() {
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button
                           onClick={handleAddLiAccount}
-                          style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                         >
                           Agregar cuenta
                         </button>
                         <button
                           onClick={() => { setAddingLiAccount(false); setNewLiAccount({ account_name: '', accept_rate: '', reply_rate: '', offer_rate: '', calendly_rate: '', booking_rate: '', bookings: '' }) }}
-                          style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 6, padding: '8px 16px', color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                         >
                           Cancelar
                         </button>
@@ -1902,7 +1903,7 @@ export function AdminClient() {
                   ) : (
                     <button
                       onClick={() => setAddingLiAccount(true)}
-                      style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', color: '#555669', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(var(--overlay-rgb),0.12)', borderRadius: 8, padding: '10px 16px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                     >
                       + Agregar cuenta
                     </button>
@@ -1911,7 +1912,7 @@ export function AdminClient() {
               )}
 
               {weekSaveSuccess && (
-                <div style={{ color: '#4ade80', fontSize: 13, marginBottom: 8 }}>
+                <div style={{ color: 'var(--success)', fontSize: 13, marginBottom: 8 }}>
                   ✓ Métricas guardadas
                 </div>
               )}
@@ -1919,7 +1920,7 @@ export function AdminClient() {
                 onClick={handleSaveWeek}
                 style={{
                   width: '100%',
-                  backgroundColor: '#e5182b',
+                  backgroundColor: 'var(--accent)',
                   border: 'none',
                   borderRadius: 8,
                   padding: '14px',
@@ -1937,7 +1938,7 @@ export function AdminClient() {
               {/* Historial semanas */}
               {metricsHistory.length > 0 && (
                 <div>
-                  <div style={{ color: '#8a8c9e', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Semanas cargadas
                   </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -1948,10 +1949,10 @@ export function AdminClient() {
                             key={h}
                             style={{
                               textAlign: 'left',
-                              color: '#555669',
+                              color: 'var(--text-muted)',
                               fontWeight: 600,
                               padding: '8px 12px',
-                              borderBottom: '1px solid rgba(255,255,255,0.06)',
+                              borderBottom: '1px solid rgba(var(--overlay-rgb),0.06)',
                             }}
                           >
                             {h}
@@ -1962,16 +1963,16 @@ export function AdminClient() {
                     <tbody>
                       {metricsHistory.map((m) => (
                         <tr key={m.id}>
-                          <td style={{ padding: '10px 12px', color: '#f0f1f7' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-primary)' }}>
                             S{m.semana} / {m.año}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
                             {liBookingsByWeek[`${m.semana}-${m.año}`] ?? '—'}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#8a8c9e' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
                             {m.cpbc ? `$${m.cpbc}` : '—'}
                           </td>
-                          <td style={{ padding: '10px 12px', color: '#555669' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
                             {formatWeekRange(m.fecha_inicio ?? undefined, m.fecha_fin ?? undefined)}
                           </td>
                           <td style={{ padding: '10px 12px' }}>
@@ -1979,10 +1980,10 @@ export function AdminClient() {
                               onClick={() => editWeek(m)}
                               style={{
                                 background: 'none',
-                                border: '1px solid rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(var(--overlay-rgb),0.1)',
                                 borderRadius: 6,
                                 padding: '4px 10px',
-                                color: '#8a8c9e',
+                                color: 'var(--text-secondary)',
                                 cursor: 'pointer',
                                 fontSize: 12,
                                 fontFamily: 'DM Sans, sans-serif',
@@ -2006,7 +2007,7 @@ export function AdminClient() {
                               style={{
                                 background: 'transparent',
                                 border: 'none',
-                                color: '#f87171',
+                                color: 'var(--danger)',
                                 cursor: 'pointer',
                                 fontSize: 14,
                                 marginLeft: 8,
@@ -2024,12 +2025,12 @@ export function AdminClient() {
             </div>
 
             {success && (
-              <div style={{ backgroundColor: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, padding: '12px 20px', color: '#4ade80', fontSize: 14, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ backgroundColor: 'rgba(var(--success-rgb),0.1)', border: '1px solid rgba(var(--success-rgb),0.3)', borderRadius: 8, padding: '12px 20px', color: 'var(--success)', fontSize: 14, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                 Dashboard actualizado ✓
               </div>
             )}
             {error && (
-              <div style={{ color: '#f87171', fontSize: 13, marginBottom: 16, backgroundColor: 'rgba(248,113,113,0.1)', padding: '10px 16px', borderRadius: 8 }}>
+              <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 16, backgroundColor: 'rgba(var(--danger-rgb),0.1)', padding: '10px 16px', borderRadius: 8 }}>
                 {error}
               </div>
             )}
@@ -2043,7 +2044,7 @@ export function AdminClient() {
                   <select
                     value={activePhaseId}
                     onChange={(e) => setActivePhaseId(e.target.value)}
-                    style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                    style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }}
                   >
                     <option value="">Sin etapa activa</option>
                     {phases.map((p) => (
@@ -2103,7 +2104,7 @@ export function AdminClient() {
               <p style={sectionTitle}>COMUNICACIÓN</p>
               <div>
                 <label style={labelStyle}>Fecha última call</label>
-                <input type="date" value={lastCallDate} onChange={(e) => setLastCallDate(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <input type="date" value={lastCallDate} onChange={(e) => setLastCallDate(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
@@ -2113,15 +2114,15 @@ export function AdminClient() {
               {videos.map((v) => (
                 <div
                   key={v.id}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, marginBottom: 8 }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', backgroundColor: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, marginBottom: 8 }}
                 >
                   <div>
-                    <div style={{ color: '#f0f1f7', fontSize: 13, fontWeight: 600 }}>{v.title}</div>
-                    <div style={{ color: '#555669', fontSize: 12 }}>{v.video_url}</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}>{v.title}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>{v.video_url}</div>
                   </div>
                   <button
                     onClick={() => deleteVideo(v.id)}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12, padding: '4px 8px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 12, padding: '4px 8px' }}
                   >
                     Eliminar
                   </button>
@@ -2130,7 +2131,7 @@ export function AdminClient() {
               {newVideos.map((v, i) => (
                 <div
                   key={i}
-                  style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, marginBottom: 12 }}
+                  style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, padding: 16, marginBottom: 12 }}
                 >
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                     <div>
@@ -2179,13 +2180,13 @@ export function AdminClient() {
                           updated[i] = { ...updated[i], sent_at: e.target.value }
                           setNewVideos(updated)
                         }}
-                        style={{ ...inputStyle, colorScheme: 'dark' }}
+                        style={inputStyle}
                       />
                     </div>
                   </div>
                   <button
                     onClick={() => setNewVideos(newVideos.filter((_, j) => j !== i))}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 12 }}
                   >
                     Quitar
                   </button>
@@ -2195,10 +2196,10 @@ export function AdminClient() {
                 onClick={() => setNewVideos([...newVideos, {}])}
                 style={{
                   backgroundColor: 'transparent',
-                  border: '2px dashed rgba(255,255,255,0.12)',
+                  border: '2px dashed rgba(var(--overlay-rgb),0.12)',
                   borderRadius: 8,
                   padding: '10px 16px',
-                  color: '#555669',
+                  color: 'var(--text-muted)',
                   fontSize: 13,
                   cursor: 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
@@ -2214,15 +2215,15 @@ export function AdminClient() {
               {documents.map((d) => (
                 <div
                   key={d.id}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, marginBottom: 8 }}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', backgroundColor: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, marginBottom: 8 }}
                 >
                   <div>
-                    <div style={{ color: '#f0f1f7', fontSize: 13, fontWeight: 600 }}>{d.name}</div>
-                    <div style={{ color: '#555669', fontSize: 12 }}>{d.file_url}</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 600 }}>{d.name}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>{d.file_url}</div>
                   </div>
                   <button
                     onClick={() => deleteDocument(d.id)}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12, padding: '4px 8px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 12, padding: '4px 8px' }}
                   >
                     Eliminar
                   </button>
@@ -2231,7 +2232,7 @@ export function AdminClient() {
               {newDocs.map((d, i) => (
                 <div
                   key={i}
-                  style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, marginBottom: 12 }}
+                  style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, padding: 16, marginBottom: 12 }}
                 >
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                     <div>
@@ -2279,7 +2280,7 @@ export function AdminClient() {
                           updated[i] = { ...updated[i], file_type: e.target.value }
                           setNewDocs(updated)
                         }}
-                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                        style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }}
                       >
                         <option value="pdf">PDF</option>
                         <option value="google_doc">Google Doc</option>
@@ -2296,13 +2297,13 @@ export function AdminClient() {
                           updated[i] = { ...updated[i], upload_date: e.target.value }
                           setNewDocs(updated)
                         }}
-                        style={{ ...inputStyle, colorScheme: 'dark' }}
+                        style={inputStyle}
                       />
                     </div>
                   </div>
                   <button
                     onClick={() => setNewDocs(newDocs.filter((_, j) => j !== i))}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 12 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 12 }}
                   >
                     Quitar
                   </button>
@@ -2312,10 +2313,10 @@ export function AdminClient() {
                 onClick={() => setNewDocs([...newDocs, {}])}
                 style={{
                   backgroundColor: 'transparent',
-                  border: '2px dashed rgba(255,255,255,0.12)',
+                  border: '2px dashed rgba(var(--overlay-rgb),0.12)',
                   borderRadius: 8,
                   padding: '10px 16px',
-                  color: '#555669',
+                  color: 'var(--text-muted)',
                   fontSize: 13,
                   cursor: 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
@@ -2333,31 +2334,31 @@ export function AdminClient() {
               {creatives.map((c) => (
                 <div
                   key={c.id}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '8px' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '8px', marginBottom: '8px' }}
                 >
                   {/* Type badge */}
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 4, flexShrink: 0,
-                    ...(c.type === 'image' ? { background: '#1a0807', color: '#fb923c' }
-                      : c.type === 'video' ? { background: '#071228', color: '#60a5fa' }
-                      : { background: '#0f0720', color: '#c084fc' }),
+                    ...(c.type === 'image' ? { background: 'rgba(var(--orange-rgb),0.14)', color: 'var(--orange)' }
+                      : c.type === 'video' ? { background: 'rgba(var(--info-rgb),0.14)', color: 'var(--info)' }
+                      : { background: 'rgba(var(--purple-rgb),0.14)', color: 'var(--purple)' }),
                   }}>
                     {c.type === 'image' ? 'Imagen' : c.type === 'video' ? 'Video' : 'Copy'}
                   </span>
 
                   {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#f0f1f7', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{c.title}</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{c.title}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase',
-                        ...(c.status === 'active' ? { background: 'rgba(74,222,128,0.15)', color: '#4ade80' }
-                          : c.status === 'paused' ? { background: 'rgba(252,211,77,0.15)', color: '#fcd34d' }
-                          : { background: 'rgba(255,255,255,0.06)', color: '#555669' }),
+                        ...(c.status === 'active' ? { background: 'rgba(var(--success-rgb),0.15)', color: 'var(--success)' }
+                          : c.status === 'paused' ? { background: 'rgba(var(--warning-rgb),0.15)', color: 'var(--warning)' }
+                          : { background: 'rgba(var(--overlay-rgb),0.06)', color: 'var(--text-muted)' }),
                       }}>
                         {c.status === 'active' ? 'Activo' : c.status === 'paused' ? 'Pausado' : 'Archivado'}
                       </span>
-                      <span style={{ color: '#555669', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {c.url}
                       </span>
                     </div>
@@ -2366,7 +2367,7 @@ export function AdminClient() {
                   {/* Delete */}
                   <button
                     onClick={() => deleteCreative(c.id)}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 16, padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}
                   >
                     ✕
                   </button>
@@ -2374,7 +2375,7 @@ export function AdminClient() {
               ))}
 
               {addingCreative ? (
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: 16, marginTop: 8 }}>
+                <div style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, padding: 16, marginTop: 8 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                     <div>
                       <label style={labelStyle}>Título *</label>
@@ -2390,7 +2391,7 @@ export function AdminClient() {
                       <select
                         value={creativeForm.type}
                         onChange={(e) => setCreativeForm((p) => ({ ...p, type: e.target.value as ClientCreative['type'] }))}
-                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                        style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }}
                       >
                         <option value="image">Imagen</option>
                         <option value="video">Video</option>
@@ -2402,7 +2403,7 @@ export function AdminClient() {
                       <select
                         value={creativeForm.channel}
                         onChange={(e) => setCreativeForm((p) => ({ ...p, channel: e.target.value }))}
-                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                        style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }}
                       >
                         <option value="">Sin canal</option>
                         <option value="Meta Ads">Meta Ads</option>
@@ -2415,7 +2416,7 @@ export function AdminClient() {
                       <select
                         value={creativeForm.status}
                         onChange={(e) => setCreativeForm((p) => ({ ...p, status: e.target.value as ClientCreative['status'] }))}
-                        style={{ ...inputStyle, backgroundColor: '#0d0e17' }}
+                        style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }}
                       >
                         <option value="active">Activo</option>
                         <option value="paused">Pausado</option>
@@ -2427,7 +2428,7 @@ export function AdminClient() {
                   <div style={{ marginBottom: 12 }}>
                     <label style={labelStyle}>
                       URL *{' '}
-                      <span style={{ color: '#555669', fontWeight: 400 }}>
+                      <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>
                         {creativeForm.type === 'image' ? '— https://drive.google.com/... o URL directa'
                           : creativeForm.type === 'video' ? '— https://youtube.com/... o https://loom.com/...'
                           : '— Pegá el copy aquí o link a Google Doc'}
@@ -2483,13 +2484,13 @@ export function AdminClient() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       onClick={handleAddCreative}
-                      style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                     >
                       Agregar
                     </button>
                     <button
                       onClick={() => setAddingCreative(false)}
-                      style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 6, padding: '8px 16px', color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                     >
                       Cancelar
                     </button>
@@ -2501,17 +2502,17 @@ export function AdminClient() {
                   style={{
                     width: '100%',
                     backgroundColor: 'transparent',
-                    border: '2px dashed rgba(255,255,255,0.12)',
+                    border: '2px dashed rgba(var(--overlay-rgb),0.12)',
                     borderRadius: 8,
                     padding: '10px 16px',
-                    color: '#555669',
+                    color: 'var(--text-muted)',
                     fontSize: 13,
                     cursor: 'pointer',
                     fontFamily: 'DM Sans, sans-serif',
                     marginTop: creatives.length > 0 ? 8 : 0,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.3)'; e.currentTarget.style.color = 'var(--accent)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.12)'; e.currentTarget.style.color = 'var(--text-muted)' }}
                 >
                   + Agregar creativo
                 </button>
@@ -2521,27 +2522,27 @@ export function AdminClient() {
 
             {/* ANÁLISIS DE LLAMADAS */}
             <div style={{ marginBottom: 32 }}>
-              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', marginTop: '32px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', marginTop: '32px' }}>
                 ANÁLISIS DE LLAMADAS
               </p>
 
               {salesMaterials.filter((m) => m.type === 'analysis_video').map((m) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', marginBottom: '8px' }}>
-                  <span style={{ background: '#071228', color: '#60a5fa', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '4px', flexShrink: 0 }}>Video</span>
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', background: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '8px', marginBottom: '8px' }}>
+                  <span style={{ background: 'rgba(var(--info-rgb),0.14)', color: 'var(--info)', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: '4px', flexShrink: 0 }}>Video</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#f0f1f7', fontSize: 13, fontWeight: 700 }}>{m.title}</div>
-                    {m.description && <div style={{ color: '#555669', fontSize: 11, marginTop: 2 }}>{m.description}</div>}
-                    <div style={{ color: '#555669', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{m.url}</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 700 }}>{m.title}</div>
+                    {m.description && <div style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>{m.description}</div>}
+                    <div style={{ color: 'var(--text-muted)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>{m.url}</div>
                   </div>
                   <button
                     onClick={() => deleteAnalysisVideo(m.id)}
-                    style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 16, padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 16, padding: '2px 6px', flexShrink: 0, lineHeight: 1 }}
                   >✕</button>
                 </div>
               ))}
 
               {addingAnalysisVideo ? (
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
+                <div style={{ background: 'rgba(var(--overlay-rgb),0.03)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '10px', padding: '16px', marginTop: '8px' }}>
                   <div style={{ marginBottom: 12 }}>
                     <label style={labelStyle}>Título del video *</label>
                     <input
@@ -2573,13 +2574,13 @@ export function AdminClient() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       onClick={handleAddAnalysisVideo}
-                      style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                     >
                       Agregar
                     </button>
                     <button
                       onClick={() => { setAddingAnalysisVideo(false); setAnalysisForm({ title: '', url: '', description: '' }) }}
-                      style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, padding: '8px 16px', color: '#f0f1f7', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.07)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 6, padding: '8px 16px', color: 'var(--text-primary)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                     >
                       Cancelar
                     </button>
@@ -2588,40 +2589,40 @@ export function AdminClient() {
               ) : (
                 <button
                   onClick={() => setAddingAnalysisVideo(true)}
-                  style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 8, padding: '10px 16px', color: '#555669', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(229,24,43,0.3)'; e.currentTarget.style.color = '#e5182b' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = '#555669' }}
+                  style={{ width: '100%', backgroundColor: 'transparent', border: '2px dashed rgba(var(--overlay-rgb),0.12)', borderRadius: 8, padding: '10px 16px', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.3)'; e.currentTarget.style.color = 'var(--accent)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.12)'; e.currentTarget.style.color = 'var(--text-muted)' }}
                 >
                   + Agregar video de análisis
                 </button>
               )}
 
-              <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', marginTop: '24px' }}>
+              <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px', marginTop: '24px' }}>
                 NOTAS DE LLAMADAS
               </p>
-              <p style={{ color: '#555669', fontSize: '12px', marginBottom: '12px', marginTop: 0 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '12px', marginTop: 0 }}>
                 Agregá notas de feedback para cada llamada del pipeline del cliente.
               </p>
 
               {clientLeads.length === 0 ? (
-                <div style={{ color: '#555669', fontSize: 13 }}>No hay llamadas registradas todavía.</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay llamadas registradas todavía.</div>
               ) : (
                 clientLeads.map((lead) => {
                   const isExpanded = expandedLead === lead.id
                   return (
                     <div key={lead.id}>
                       <div
-                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: isExpanded ? '10px 10px 0 0' : '10px', cursor: 'pointer', marginBottom: isExpanded ? 0 : '8px' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: isExpanded ? '10px 10px 0 0' : '10px', cursor: 'pointer', marginBottom: isExpanded ? 0 : '8px' }}
                         onClick={() => setExpandedLead(isExpanded ? null : lead.id)}
                       >
                         <div style={{ flex: 1 }}>
-                          <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
-                          {lead.fecha_llamada && <div style={{ color: '#555669', fontSize: 12 }}>{formatDate(lead.fecha_llamada)}</div>}
+                          <div style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
+                          {lead.fecha_llamada && <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>{formatDate(lead.fecha_llamada)}</div>}
                         </div>
-                        <span style={{ color: '#555669', fontSize: 16 }}>{isExpanded ? '↑' : '↓'}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 16 }}>{isExpanded ? '↑' : '↓'}</span>
                       </div>
                       {isExpanded && (
-                        <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderTop: 'none', borderRadius: '0 0 10px 10px', marginBottom: '8px' }}>
+                        <div style={{ padding: '12px 16px', background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderTop: 'none', borderRadius: '0 0 10px 10px', marginBottom: '8px' }}>
                           <textarea
                             value={editingNotes[lead.id] ?? lead.notas ?? ''}
                             onChange={(e) => setEditingNotes((prev) => ({ ...prev, [lead.id]: e.target.value }))}
@@ -2632,18 +2633,18 @@ export function AdminClient() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <button
                               onClick={() => handleSaveNotes(lead.id)}
-                              style={{ backgroundColor: '#e5182b', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                              style={{ backgroundColor: 'var(--accent)', border: 'none', borderRadius: 6, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                             >
                               Guardar notas
                             </button>
                             <button
                               onClick={() => handleClearNotes(lead.id)}
-                              style={{ color: '#f87171', background: 'transparent', border: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                              style={{ color: 'var(--danger)', background: 'transparent', border: 'none', fontSize: 12, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                             >
                               Borrar nota
                             </button>
                             {notesSaved[lead.id] && (
-                              <span style={{ color: '#4ade80', fontSize: 13, fontWeight: 600 }}>✓ Guardado</span>
+                              <span style={{ color: 'var(--success)', fontSize: 13, fontWeight: 600 }}>✓ Guardado</span>
                             )}
                           </div>
                         </div>
@@ -2659,7 +2660,7 @@ export function AdminClient() {
               disabled={saving}
               style={{
                 width: '100%',
-                backgroundColor: saving ? 'rgba(229,24,43,0.5)' : '#e5182b',
+                backgroundColor: saving ? 'rgba(var(--accent-rgb),0.5)' : 'var(--accent)',
                 border: 'none',
                 borderRadius: 8,
                 padding: '14px',
@@ -2686,40 +2687,40 @@ export function AdminClient() {
                 {history.map((h) => (
                   <div key={h.id}>
                     <div
-                      style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: confirmDeleteHistoryId === h.id ? 'none' : '1px solid rgba(255,255,255,0.05)', alignItems: 'flex-start' }}
+                      style={{ display: 'flex', gap: 16, padding: '12px 0', borderBottom: confirmDeleteHistoryId === h.id ? 'none' : '1px solid rgba(var(--overlay-rgb),0.05)', alignItems: 'flex-start' }}
                     >
-                      <span style={{ color: '#555669', fontSize: 12, whiteSpace: 'nowrap', minWidth: 80 }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap', minWidth: 80 }}>
                         {formatDate(h.updated_at)}
                       </span>
                       <div style={{ flex: 1 }}>
-                        <span style={{ color: '#8a8c9e', fontSize: 12 }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                           CPBC: ${h.cpbc_current ?? '—'} · Fase: {phases.find((p) => p.id === h.active_phase_id)?.phase_name ?? '—'}
                         </span>
                         {h.current_win && (
-                          <p style={{ color: '#555669', fontSize: 12, margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {h.current_win.slice(0, 80)}{h.current_win.length > 80 ? '...' : ''}
                           </p>
                         )}
                       </div>
                       <button
                         onClick={() => setConfirmDeleteHistoryId(confirmDeleteHistoryId === h.id ? null : h.id)}
-                        style={{ background: 'none', border: 'none', color: '#555669', cursor: 'pointer', fontSize: 14, padding: '0 4px', lineHeight: 1, flexShrink: 0 }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, padding: '0 4px', lineHeight: 1, flexShrink: 0 }}
                       >
                         ✕
                       </button>
                     </div>
                     {confirmDeleteHistoryId === h.id && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <span style={{ color: '#8a8c9e', fontSize: 12 }}>¿Eliminar esta entrada?</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 12px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.05)' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>¿Eliminar esta entrada?</span>
                         <button
                           onClick={() => deleteHistoryEntry(h.id)}
-                          style={{ background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 6, padding: '3px 10px', color: '#f87171', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ background: 'rgba(var(--danger-rgb),0.15)', border: '1px solid rgba(var(--danger-rgb),0.3)', borderRadius: 6, padding: '3px 10px', color: 'var(--danger)', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
                         >
                           Sí
                         </button>
                         <button
                           onClick={() => setConfirmDeleteHistoryId(null)}
-                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 10px', color: '#8a8c9e', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 6, padding: '3px 10px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
                         >
                           No
                         </button>

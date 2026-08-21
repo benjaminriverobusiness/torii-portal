@@ -64,7 +64,7 @@ export function AcademiaLayout() {
 
   if (clientLoading || loadingTeam || !client) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#08090f' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
         <Navbar showNav />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 112px)' }}>
           <Spinner size={40} />
@@ -77,7 +77,7 @@ export function AcademiaLayout() {
     <AcademiaContext.Provider
       value={{ client, teamMembers, activeTeamMemberId, setActiveTeamMemberId, activeTeamMember, reloadTeamMembers }}
     >
-      <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
         <Navbar showNav clientName={client.name} />
 
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 24px 0' }}>
@@ -86,20 +86,20 @@ export function AcademiaLayout() {
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
               marginBottom: 24, padding: '14px 20px',
-              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14,
+              background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 14,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <span style={{ color: '#8a8c9e', fontSize: 13, fontWeight: 600 }}>Estoy cargando por:</span>
+              <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>Estoy cargando por:</span>
               {teamMembers.length === 0 ? (
-                <span style={{ color: '#555669', fontSize: 13 }}>Sin miembros de equipo activos</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sin miembros de equipo activos</span>
               ) : (
                 <select
                   value={activeTeamMemberId ?? ''}
                   onChange={(e) => setActiveTeamMemberId(e.target.value)}
                   style={{
-                    background: '#080910', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
-                    color: '#f0f1f7', fontSize: 14, fontWeight: 700, padding: '7px 12px',
+                    background: 'var(--bg)', border: '1px solid rgba(var(--overlay-rgb),0.12)', borderRadius: 8,
+                    color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, padding: '7px 12px',
                     fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
                   }}
                 >

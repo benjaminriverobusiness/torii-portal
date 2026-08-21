@@ -14,21 +14,29 @@ interface KpiCardProps {
 
 function getColor(value: number, logic: string, objective?: number | null): string {
   if (logic === 'showRate') {
-    if (value >= 60) return '#4ade80'
-    if (value >= 40) return '#fcd34d'
-    return '#f87171'
+    if (value >= 60) return 'var(--success)'
+    if (value >= 40) return 'var(--warning)'
+    return 'var(--danger)'
   }
   if (logic === 'closingRate') {
-    if (value >= 25) return '#4ade80'
-    if (value >= 15) return '#fcd34d'
-    return '#f87171'
+    if (value >= 25) return 'var(--success)'
+    if (value >= 15) return 'var(--warning)'
+    return 'var(--danger)'
   }
   if (logic === 'cpbc' && objective) {
-    if (value <= objective) return '#4ade80'
-    if (value <= objective * 1.5) return '#fcd34d'
-    return '#f87171'
+    if (value <= objective) return 'var(--success)'
+    if (value <= objective * 1.5) return 'var(--warning)'
+    return 'var(--danger)'
   }
-  return '#f0f1f7'
+  return 'var(--text-primary)'
+}
+
+// color acá siempre es un var(--token) (nunca hex plano), así que el viejo
+// truco de concatenar un sufijo de alpha en hex (`${color}66`) ya no
+// funciona — color-mix() logra el mismo efecto de opacidad sin importar el
+// tema activo.
+function withAlpha(color: string, pct: number): string {
+  return `color-mix(in srgb, ${color} ${pct}%, transparent)`
 }
 
 function getProgressColor(value: number, logic: string, objective?: number | null): string {
@@ -77,8 +85,8 @@ export function KpiCard({
   return (
     <div
       style={{
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+        border: '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: 16,
         padding: 16,
       }}
@@ -97,7 +105,7 @@ export function KpiCard({
             textTransform: 'uppercase',
             fontSize: 11,
             letterSpacing: '0.1em',
-            color: '#555669',
+            color: 'var(--text-muted)',
           }}
         >
           {label}
@@ -116,7 +124,7 @@ export function KpiCard({
               borderRadius: '50%',
               fontSize: 11,
               lineHeight: 1,
-              color: showTooltip ? '#8a8c9e' : '#555669',
+              color: showTooltip ? 'var(--text-secondary)' : 'var(--text-muted)',
               cursor: 'help',
               flexShrink: 0,
             }}
@@ -132,11 +140,11 @@ export function KpiCard({
               right: 0,
               top: 'calc(100% + 8px)',
               zIndex: 20,
-              background: '#0d0e17',
-              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'var(--surface-solid)',
+              border: '1px solid rgba(var(--overlay-rgb),0.12)',
               borderRadius: 10,
               padding: '10px 14px',
-              color: '#f0f1f7',
+              color: 'var(--text-primary)',
               fontSize: 12.5,
               fontWeight: 400,
               lineHeight: 1.5,
@@ -156,7 +164,7 @@ export function KpiCard({
           fontWeight: 800,
           color: color,
           lineHeight: 1,
-          textShadow: colorLogic !== 'neutral' ? `0 0 24px ${color}66` : 'none',
+          textShadow: colorLogic !== 'neutral' ? `0 0 24px ${withAlpha(color, 40)}` : 'none',
         }}
       >
         {prefix}
@@ -168,7 +176,7 @@ export function KpiCard({
         {suffix}
       </div>
       {objective !== null && objective !== undefined && (
-        <div style={{ color: '#555669', fontSize: 13, marginTop: 6 }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6 }}>
           objetivo: {prefix}{objective}{suffix}
         </div>
       )}
@@ -177,7 +185,7 @@ export function KpiCard({
           style={{
             height: 4,
             borderRadius: 2,
-            backgroundColor: 'rgba(255,255,255,0.07)',
+            backgroundColor: 'rgba(var(--overlay-rgb),0.07)',
             marginTop: 16,
             overflow: 'hidden',
           }}
@@ -186,10 +194,10 @@ export function KpiCard({
             style={{
               height: '100%',
               borderRadius: 3,
-              background: `linear-gradient(90deg, ${progressColor}88 0%, ${progressColor} 100%)`,
+              background: `linear-gradient(90deg, ${withAlpha(progressColor, 53)} 0%, ${progressColor} 100%)`,
               width: `${width}%`,
               transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: `0 0 6px ${progressColor}55`,
+              boxShadow: `0 0 6px ${withAlpha(progressColor, 33)}`,
             }}
           />
         </div>

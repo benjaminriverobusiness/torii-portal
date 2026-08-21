@@ -44,11 +44,11 @@ function initials(name: string): string {
 const ESTADO_CONFIRMADO = new Set(['confirmed', 'showed'])
 
 function pillEstado(call: CloserCallRow): { label: string; bg: string; color: string } {
-  if (call.cancelada) return { label: 'Cancelada', bg: 'rgba(248,113,113,0.12)', color: '#f87171' }
+  if (call.cancelada) return { label: 'Cancelada', bg: 'rgba(var(--danger-rgb),0.12)', color: 'var(--danger)' }
   if (call.estado_cita && ESTADO_CONFIRMADO.has(call.estado_cita)) {
-    return { label: 'Confirmada', bg: 'rgba(74,222,128,0.12)', color: '#4ade80' }
+    return { label: 'Confirmada', bg: 'rgba(var(--success-rgb),0.12)', color: 'var(--success)' }
   }
-  return { label: 'Pendiente', bg: 'rgba(251,191,36,0.12)', color: '#fbbf24' }
+  return { label: 'Pendiente', bg: 'rgba(var(--warning-rgb),0.12)', color: 'var(--warning)' }
 }
 
 function formatCallDate(call: CloserCallRow): string {
@@ -101,8 +101,8 @@ function ChatBubble({
           width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 10, fontWeight: 700,
-          backgroundColor: isSystem ? 'rgba(251,191,36,0.15)' : isOwn ? 'rgba(229,24,43,0.15)' : 'rgba(255,255,255,0.06)',
-          color: isSystem ? '#fbbf24' : isOwn ? '#e5182b' : '#8a8c9e',
+          backgroundColor: isSystem ? 'rgba(var(--warning-rgb),0.15)' : isOwn ? 'rgba(var(--accent-rgb),0.15)' : 'rgba(var(--overlay-rgb),0.06)',
+          color: isSystem ? 'var(--warning)' : isOwn ? 'var(--accent)' : 'var(--text-secondary)',
         }}
       >
         {isSystem ? '🤖' : initials(msg.sender_name)}
@@ -110,13 +110,13 @@ function ChatBubble({
 
       <div style={{ display: 'flex', flexDirection: 'column', maxWidth: '75%', alignItems: isOwn && !isSystem ? 'flex-end' : 'flex-start' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <span style={{ fontSize: 11, color: '#8a8c9e', fontWeight: 600 }}>{msg.sender_name}</span>
+          <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>{msg.sender_name}</span>
           {isSystem && (
-            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 99, background: 'rgba(var(--warning-rgb),0.15)', color: 'var(--warning)' }}>
               IA
             </span>
           )}
-          <span style={{ fontSize: 10, color: '#555669' }}>{formatTime(msg.created_at)}</span>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{formatTime(msg.created_at)}</span>
         </div>
 
         <div style={{ position: 'relative' }}>
@@ -129,12 +129,12 @@ function ChatBubble({
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
               background: isSystem
-                ? 'rgba(251,191,36,0.08)'
+                ? 'rgba(var(--warning-rgb),0.08)'
                 : isOwn
-                  ? 'linear-gradient(135deg, #e5182b, rgba(229,24,43,0.8))'
-                  : 'rgba(255,255,255,0.05)',
-              border: isSystem ? '1px solid rgba(251,191,36,0.25)' : '1px solid transparent',
-              color: isSystem ? '#f0f1f7' : isOwn ? 'white' : '#f0f1f7',
+                  ? 'linear-gradient(135deg, var(--accent), rgba(var(--accent-rgb),0.8))'
+                  : 'rgba(var(--overlay-rgb),0.05)',
+              border: isSystem ? '1px solid rgba(var(--warning-rgb),0.25)' : '1px solid transparent',
+              color: isSystem ? 'var(--text-primary)' : isOwn ? 'white' : 'var(--text-primary)',
             }}
           >
             {msg.texto}
@@ -147,10 +147,10 @@ function ChatBubble({
               style={{
                 position: 'absolute', top: '50%', left: -28, transform: 'translateY(-50%)',
                 background: 'transparent', border: 'none', cursor: 'pointer',
-                color: '#555669', fontSize: 14, padding: 4, lineHeight: 1,
+                color: 'var(--text-muted)', fontSize: 14, padding: 4, lineHeight: 1,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#555669' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)' }}
             >
               🗑
             </button>
@@ -319,7 +319,7 @@ export function ChatPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -331,13 +331,13 @@ export function ChatPage() {
 
           {/* Hero */}
           <div className="fade-in visible" style={{ marginBottom: 24 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e5182b', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(var(--accent-rgb),0.10)', border: '1px solid rgba(var(--accent-rgb),0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
               CHAT
             </div>
-            <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: '#f0f1f7', margin: '0 0 8px' }}>
+            <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
               Hablá con tu equipo
             </h1>
-            <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
               Mensajes en tiempo real con el equipo de Torii y tus próximas citas agendadas.
             </p>
           </div>
@@ -345,15 +345,15 @@ export function ChatPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1.55fr 1fr', gap: 20, alignItems: 'start' }} className="chat-grid">
 
             {/* Columna izquierda — chat */}
-            <div style={{ height: 640, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(229,24,43,0.15)', color: '#e5182b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>
+            <div style={{ height: 640, display: 'flex', flexDirection: 'column', background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 20px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', flexShrink: 0 }}>
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>
                   TO
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>Equipo Torii</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#8a8c9e' }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)' }} />
                     En tiempo real
                   </div>
                 </div>
@@ -361,14 +361,14 @@ export function ChatPage() {
 
               <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {groupedByDay.length === 0 ? (
-                  <p style={{ color: '#8a8c9e', fontSize: 14, textAlign: 'center', margin: 'auto 0' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, textAlign: 'center', margin: 'auto 0' }}>
                     Todavía no hay mensajes en este chat.
                   </p>
                 ) : (
                   groupedByDay.map((group) => (
                     <div key={group.day} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#8a8c9e', background: 'rgba(255,255,255,0.05)', borderRadius: 99, padding: '2px 12px' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', background: 'rgba(var(--overlay-rgb),0.05)', borderRadius: 99, padding: '2px 12px' }}>
                           {dayLabel(group.day)}
                         </span>
                       </div>
@@ -385,7 +385,7 @@ export function ChatPage() {
                 )}
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: 14, borderTop: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: 14, borderTop: '1px solid rgba(var(--overlay-rgb),0.07)', flexShrink: 0 }}>
                 <textarea
                   value={texto}
                   onChange={(e) => setTexto(e.target.value)}
@@ -399,8 +399,8 @@ export function ChatPage() {
                   rows={1}
                   style={{
                     flex: 1, resize: 'none', minHeight: 40, maxHeight: 120,
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 10, padding: '10px 14px', color: '#f0f1f7', fontSize: 14,
+                    background: 'rgba(var(--overlay-rgb),0.04)', border: '1px solid rgba(var(--overlay-rgb),0.1)',
+                    borderRadius: 10, padding: '10px 14px', color: 'var(--text-primary)', fontSize: 14,
                     fontFamily: 'DM Sans, sans-serif', outline: 'none',
                   }}
                 />
@@ -409,7 +409,7 @@ export function ChatPage() {
                   disabled={!texto.trim() || sending}
                   style={{
                     flexShrink: 0, width: 40, height: 40, borderRadius: 10, border: 'none',
-                    background: !texto.trim() || sending ? 'rgba(229,24,43,0.3)' : '#e5182b',
+                    background: !texto.trim() || sending ? 'rgba(var(--accent-rgb),0.3)' : 'var(--accent)',
                     color: 'white', cursor: !texto.trim() || sending ? 'not-allowed' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
@@ -422,20 +422,20 @@ export function ChatPage() {
             </div>
 
             {/* Columna derecha — agenda automática */}
-            <div style={{ height: 640, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+            <div style={{ height: 640, display: 'flex', flexDirection: 'column', background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="#8a8c9e" strokeWidth="1.5" /><path d="M3 9h18M8 3v4M16 3v4" stroke="#8a8c9e" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="var(--text-secondary)" strokeWidth="1.5" /><path d="M3 9h18M8 3v4M16 3v4" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round" /></svg>
                   <span style={{ fontSize: 14, fontWeight: 700 }}>Agenda automática</span>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#8a8c9e', background: 'rgba(255,255,255,0.05)', borderRadius: 99, padding: '3px 10px' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', background: 'rgba(var(--overlay-rgb),0.05)', borderRadius: 99, padding: '3px 10px' }}>
                   {proximas7dias} próx. 7 días
                 </span>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {calls.length === 0 ? (
-                  <p style={{ color: '#8a8c9e', fontSize: 14, textAlign: 'center', margin: 'auto 0' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, textAlign: 'center', margin: 'auto 0' }}>
                     Sin citas registradas todavía.
                   </p>
                 ) : (
@@ -446,16 +446,16 @@ export function ChatPage() {
                         key={call.id}
                         style={{
                           display: 'flex', alignItems: 'flex-start', gap: 10,
-                          borderRadius: 12, border: '1px solid rgba(255,255,255,0.07)',
-                          background: 'rgba(255,255,255,0.02)', padding: 12,
+                          borderRadius: 12, border: '1px solid rgba(var(--overlay-rgb),0.07)',
+                          background: 'rgba(var(--overlay-rgb),0.02)', padding: 12,
                         }}
                       >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ marginTop: 2, flexShrink: 0 }}><rect x="3" y="5" width="18" height="16" rx="2" stroke="#8a8c9e" strokeWidth="1.5" /><path d="M3 9h18M8 3v4M16 3v4" stroke="#8a8c9e" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ marginTop: 2, flexShrink: 0 }}><rect x="3" y="5" width="18" height="16" rx="2" stroke="var(--text-secondary)" strokeWidth="1.5" /><path d="M3 9h18M8 3v4M16 3v4" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round" /></svg>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 13, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {call.lead_name || 'Sin nombre'}
                           </p>
-                          <p style={{ fontSize: 12, color: '#8a8c9e', margin: '2px 0 0' }}>{formatCallDate(call)}</p>
+                          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{formatCallDate(call)}</p>
                         </div>
                         <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: pill.bg, color: pill.color, flexShrink: 0 }}>
                           {pill.label}

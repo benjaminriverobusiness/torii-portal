@@ -20,11 +20,11 @@ function daysActive(startDate: string | null): number {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
-    active: { bg: 'rgba(74,222,128,0.1)', color: '#4ade80' },
-    paused: { bg: 'rgba(255,205,77,0.1)', color: '#fcd34d' },
-    cancelled: { bg: 'rgba(248,113,113,0.1)', color: '#f87171' },
+    active: { bg: 'rgba(var(--success-rgb),0.1)', color: 'var(--success)' },
+    paused: { bg: 'rgba(var(--warning-rgb),0.1)', color: 'var(--warning)' },
+    cancelled: { bg: 'rgba(var(--danger-rgb),0.1)', color: 'var(--danger)' },
   }
-  const s = styles[status] ?? { bg: 'rgba(255,255,255,0.05)', color: '#8a8c9e' }
+  const s = styles[status] ?? { bg: 'rgba(var(--overlay-rgb),0.05)', color: 'var(--text-secondary)' }
   return (
     <span
       style={{
@@ -43,13 +43,13 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PlatformBadge({ platform }: { platform: string | null }) {
-  if (!platform) return <span style={{ color: '#555669' }}>—</span>
+  if (!platform) return <span style={{ color: 'var(--text-muted)' }}>—</span>
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    'Meta Ads': { bg: '#1a0c04', color: '#fb923c', border: '#fb923c30' },
-    'LinkedIn Outbound': { bg: '#071228', color: '#60a5fa', border: '#60a5fa30' },
-    'Híbrido': { bg: '#0f0720', color: '#c084fc', border: '#c084fc30' },
+    'Meta Ads': { bg: 'rgba(var(--orange-rgb),0.10)', color: 'var(--orange)', border: 'rgba(var(--orange-rgb),0.3)' },
+    'LinkedIn Outbound': { bg: 'rgba(var(--info-rgb),0.10)', color: 'var(--info)', border: 'rgba(var(--info-rgb),0.3)' },
+    'Híbrido': { bg: 'rgba(var(--purple-rgb),0.10)', color: 'var(--purple)', border: 'rgba(var(--purple-rgb),0.3)' },
   }
-  const s = styles[platform] ?? { bg: 'rgba(255,255,255,0.05)', color: '#8a8c9e', border: 'rgba(255,255,255,0.07)' }
+  const s = styles[platform] ?? { bg: 'rgba(var(--overlay-rgb),0.05)', color: 'var(--text-secondary)', border: 'rgba(var(--overlay-rgb),0.07)' }
   return (
     <span
       style={{
@@ -110,15 +110,15 @@ export function Admin() {
   )
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
       <Navbar isAdmin showNav={false} />
       <div style={{ display: 'flex', flex: 1 }}>
         {/* Sidebar */}
         <aside
           style={{
             width: 240,
-            backgroundColor: '#0d0e17',
-            borderRight: '1px solid rgba(255,255,255,0.07)',
+            backgroundColor: 'var(--surface-solid)',
+            borderRight: '1px solid rgba(var(--overlay-rgb),0.07)',
             minHeight: 'calc(100vh - 64px)',
             position: 'sticky',
             top: 64,
@@ -143,14 +143,14 @@ export function Admin() {
                   borderRadius: 8,
                   background: 'none',
                   border: 'none',
-                  color: '#f0f1f7',
+                  color: 'var(--text-primary)',
                   fontSize: 14,
                   cursor: 'pointer',
                   marginBottom: 4,
                   fontFamily: 'DM Sans, sans-serif',
                   transition: 'background-color 0.2s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(var(--overlay-rgb),0.05)')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 {item.label}
@@ -167,7 +167,7 @@ export function Admin() {
               borderRadius: 8,
               background: 'none',
               border: 'none',
-              color: '#555669',
+              color: 'var(--text-muted)',
               fontSize: 13,
               cursor: 'pointer',
               fontFamily: 'DM Sans, sans-serif',
@@ -188,7 +188,7 @@ export function Admin() {
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  style={{ padding: '8px 16px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f1f7', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                  style={{ padding: '8px 16px', borderRadius: 8, background: 'rgba(var(--overlay-rgb),0.06)', border: '1px solid rgba(var(--overlay-rgb),0.1)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                 >
                   {item.label}
                 </button>
@@ -196,7 +196,7 @@ export function Admin() {
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h2 style={{ color: '#f0f1f7', fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 24, margin: 0 }}>
+            <h2 style={{ color: 'var(--text-primary)', fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 24, margin: 0 }}>
               Clientes
             </h2>
             <input
@@ -206,11 +206,11 @@ export function Admin() {
               onChange={(e) => setSearch(e.target.value)}
               style={{
                 width: 300,
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.10)',
+                backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+                border: '1px solid rgba(var(--overlay-rgb),0.10)',
                 borderRadius: 8,
                 padding: '9px 14px',
-                color: '#f0f1f7',
+                color: 'var(--text-primary)',
                 fontSize: 14,
                 outline: 'none',
                 fontFamily: 'DM Sans, sans-serif',
@@ -225,8 +225,8 @@ export function Admin() {
           ) : (
             <div
               style={{
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+                border: '1px solid rgba(var(--overlay-rgb),0.07)',
                 borderRadius: 16,
                 overflow: 'hidden',
               }}
@@ -234,7 +234,7 @@ export function Admin() {
               <div className="hide-scrollbar" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#0d0e17' }}>
+                  <tr style={{ backgroundColor: 'var(--surface-solid)' }}>
                     {['CLIENTE', 'PLATAFORMA', 'FASE', 'DÍA', 'ESTADO', 'ACTUALIZADO', 'ACCIÓN'].map((col) => {
                       const mobileHidden = ['PLATAFORMA', 'FASE', 'ESTADO', 'ACTUALIZADO'].includes(col)
                       return (
@@ -243,7 +243,7 @@ export function Admin() {
                           style={{
                             padding: '12px 20px',
                             textAlign: 'left',
-                            color: '#555669',
+                            color: 'var(--text-muted)',
                             fontSize: 11,
                             fontWeight: 600,
                             textTransform: 'uppercase',
@@ -265,41 +265,41 @@ export function Admin() {
                       <tr
                         key={client.id}
                         style={{
-                          backgroundColor: i % 2 === 0 ? '#08090f' : '#0d0e17',
+                          backgroundColor: i % 2 === 0 ? 'var(--bg)' : 'var(--surface-solid)',
                           transition: 'background-color 0.15s',
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? '#08090f' : '#0d0e17')}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(var(--overlay-rgb),0.02)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = i % 2 === 0 ? 'var(--bg)' : 'var(--surface-solid)')}
                       >
                         <td style={{ padding: '14px 20px' }}>
-                          <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600 }}>{client.name}</div>
-                          <div style={{ color: '#555669', fontSize: 12, marginTop: 2 }}>{client.email}</div>
+                          <div style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>{client.name}</div>
+                          <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 2 }}>{client.email}</div>
                         </td>
                         <td style={{ padding: '14px 20px', display: isMobile ? 'none' : undefined }}>
                           <PlatformBadge platform={client.canal ?? null} />
                         </td>
-                        <td style={{ padding: '14px 20px', color: '#8a8c9e', fontSize: 13, display: isMobile ? 'none' : undefined }}>
+                        <td style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontSize: 13, display: isMobile ? 'none' : undefined }}>
                           {client.fase ?? '—'}
                         </td>
-                        <td style={{ padding: '14px 20px', color: '#f0f1f7', fontSize: 13 }}>
+                        <td style={{ padding: '14px 20px', color: 'var(--text-primary)', fontSize: 13 }}>
                           {daysActive(client.start_date)}
-                          <span style={{ color: '#555669' }}>/90</span>
+                          <span style={{ color: 'var(--text-muted)' }}>/90</span>
                         </td>
                         <td style={{ padding: '14px 20px', display: isMobile ? 'none' : undefined }}>
                           <StatusBadge status={client.status} />
                         </td>
                         <td style={{ padding: '14px 20px', fontSize: 13, display: isMobile ? 'none' : undefined }}>
                           {st ? (
-                            <span style={{ color: '#8a8c9e' }}>{formatDate(st.updated_at)}</span>
+                            <span style={{ color: 'var(--text-secondary)' }}>{formatDate(st.updated_at)}</span>
                           ) : (
-                            <span style={{ color: '#f87171', fontSize: 12 }}>Sin actualizar</span>
+                            <span style={{ color: 'var(--danger)', fontSize: 12 }}>Sin actualizar</span>
                           )}
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <Link
                             to={`/admin/client/${client.id}`}
                             style={{
-                              backgroundColor: '#e5182b',
+                              backgroundColor: 'var(--accent)',
                               color: 'white',
                               border: 'none',
                               borderRadius: 6,
@@ -320,7 +320,7 @@ export function Admin() {
                   })}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={7} style={{ padding: '40px 20px', textAlign: 'center', color: '#555669' }}>
+                      <td colSpan={7} style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                         No se encontraron clientes
                       </td>
                     </tr>

@@ -50,7 +50,7 @@ export function Login() {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#08090f',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -61,8 +61,8 @@ export function Login() {
         style={{
           width: '100%',
           maxWidth: 420,
-          backgroundColor: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+          border: '1px solid rgba(var(--overlay-rgb),0.07)',
           borderRadius: 16,
           padding: 40,
         }}
@@ -73,13 +73,13 @@ export function Login() {
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontWeight: 700,
               fontSize: 36,
-              color: '#e5182b',
+              color: 'var(--accent)',
               letterSpacing: '0.15em',
             }}
           >
             TORII
           </div>
-          <div style={{ color: '#555669', fontSize: 13, marginTop: 6 }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6 }}>
             Delivery OS
           </div>
         </div>
@@ -87,7 +87,7 @@ export function Login() {
         <div
           style={{
             height: 1,
-            backgroundColor: 'rgba(255,255,255,0.07)',
+            backgroundColor: 'rgba(var(--overlay-rgb),0.07)',
             marginBottom: 28,
           }}
         />
@@ -97,7 +97,7 @@ export function Login() {
             <label
               style={{
                 display: 'block',
-                color: '#8a8c9e',
+                color: 'var(--text-secondary)',
                 fontSize: 12,
                 marginBottom: 8,
                 fontWeight: 500,
@@ -112,18 +112,18 @@ export function Login() {
               required
               style={{
                 width: '100%',
-                backgroundColor: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.10)',
+                backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+                border: '1px solid rgba(var(--overlay-rgb),0.10)',
                 borderRadius: 8,
                 padding: '11px 14px',
-                color: '#f0f1f7',
+                color: 'var(--text-primary)',
                 fontSize: 14,
                 outline: 'none',
                 boxSizing: 'border-box',
                 transition: 'border-color 0.2s',
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(229,24,43,0.5)')}
-              onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)')}
+              onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.5)')}
+              onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.10)')}
             />
           </div>
 
@@ -131,7 +131,7 @@ export function Login() {
             <label
               style={{
                 display: 'block',
-                color: '#8a8c9e',
+                color: 'var(--text-secondary)',
                 fontSize: 12,
                 marginBottom: 8,
                 fontWeight: 500,
@@ -147,18 +147,18 @@ export function Login() {
                 required
                 style={{
                   width: '100%',
-                  backgroundColor: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.10)',
+                  backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.10)',
                   borderRadius: 8,
                   padding: '11px 44px 11px 14px',
-                  color: '#f0f1f7',
+                  color: 'var(--text-primary)',
                   fontSize: 14,
                   outline: 'none',
                   boxSizing: 'border-box',
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(229,24,43,0.5)')}
-                onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)')}
+                onFocus={(e) => (e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.5)')}
+                onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.10)')}
               />
               <button
                 type="button"
@@ -172,7 +172,7 @@ export function Login() {
                   border: 'none',
                   cursor: 'pointer',
                   padding: 4,
-                  color: '#555669',
+                  color: 'var(--text-muted)',
                   display: 'flex',
                   alignItems: 'center',
                 }}
@@ -199,7 +199,7 @@ export function Login() {
             style={{
               width: '100%',
               marginTop: 24,
-              backgroundColor: loading ? 'rgba(229,24,43,0.5)' : '#e5182b',
+              backgroundColor: loading ? 'rgba(var(--accent-rgb),0.5)' : 'var(--accent)',
               border: 'none',
               borderRadius: 8,
               padding: '12px',
@@ -215,10 +215,10 @@ export function Login() {
               fontFamily: 'DM Sans, sans-serif',
             }}
             onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = '#c91525'
+              if (!loading) e.currentTarget.style.backgroundColor = 'var(--accent-hover)'
             }}
             onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = '#e5182b'
+              if (!loading) e.currentTarget.style.backgroundColor = 'var(--accent)'
             }}
           >
             {loading ? <Spinner size={18} color="white" /> : null}
@@ -228,7 +228,7 @@ export function Login() {
           {error && (
             <p
               style={{
-                color: '#e5182b',
+                color: 'var(--accent)',
                 fontSize: 13,
                 marginTop: 12,
                 textAlign: 'center',

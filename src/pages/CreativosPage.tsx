@@ -37,9 +37,9 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
         fontSize: '13px',
         fontWeight: 600,
         cursor: 'pointer',
-        border: active ? '1px solid rgba(229,24,43,0.4)' : '1px solid rgba(255,255,255,0.08)',
-        background: active ? 'rgba(229,24,43,0.15)' : 'rgba(255,255,255,0.04)',
-        color: active ? '#e5182b' : '#555669',
+        border: active ? '1px solid rgba(var(--accent-rgb),0.4)' : '1px solid rgba(var(--overlay-rgb),0.08)',
+        background: active ? 'rgba(var(--accent-rgb),0.15)' : 'rgba(var(--overlay-rgb),0.04)',
+        color: active ? 'var(--accent)' : 'var(--text-muted)',
         fontFamily: 'DM Sans, sans-serif',
         transition: 'all 0.2s ease',
       }}
@@ -52,9 +52,9 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
 // ─── Creative card ────────────────────────────────────────────
 
 const STATUS_STYLES = {
-  active:   { bg: 'rgba(74,222,128,0.2)',    color: '#4ade80',  label: 'Activo' },
-  paused:   { bg: 'rgba(252,211,77,0.2)',    color: '#fcd34d',  label: 'Pausado' },
-  archived: { bg: 'rgba(255,255,255,0.08)',  color: '#555669',  label: 'Archivado' },
+  active:   { bg: 'rgba(var(--success-rgb),0.2)',    color: 'var(--success)',  label: 'Activo' },
+  paused:   { bg: 'rgba(var(--warning-rgb),0.2)',    color: 'var(--warning)',  label: 'Pausado' },
+  archived: { bg: 'rgba(var(--overlay-rgb),0.08)',  color: 'var(--text-muted)',  label: 'Archivado' },
 }
 
 const TYPE_LABELS: Record<ClientCreative['type'], string> = {
@@ -64,9 +64,9 @@ const TYPE_LABELS: Record<ClientCreative['type'], string> = {
 }
 
 const CHANNEL_STYLES: Record<string, { bg: string; color: string }> = {
-  'Meta Ads': { bg: '#1a0c04', color: '#fb923c' },
-  'LinkedIn':  { bg: '#071228', color: '#60a5fa' },
-  'Ambos':     { bg: '#0f0720', color: '#c084fc' },
+  'Meta Ads': { bg: 'rgba(var(--orange-rgb),0.14)', color: 'var(--orange)' },
+  'LinkedIn':  { bg: 'rgba(var(--info-rgb),0.14)', color: 'var(--info)' },
+  'Ambos':     { bg: 'rgba(var(--purple-rgb),0.14)', color: 'var(--purple)' },
 }
 
 function CreativeCard({ creative }: { creative: ClientCreative }) {
@@ -83,19 +83,19 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: hovered ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(var(--overlay-rgb),0.02)',
+        border: hovered ? '1px solid rgba(var(--accent-rgb),0.35)' : '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: '16px',
         overflow: 'hidden',
         transform: hovered ? 'translateY(-3px)' : 'none',
-        boxShadow: hovered ? '0 8px 32px rgba(229,24,43,0.1)' : 'none',
+        boxShadow: hovered ? '0 8px 32px rgba(var(--accent-rgb),0.1)' : 'none',
         transition: 'all 0.25s ease',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* ── Preview ── */}
-      <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', background: '#0d0e17' }}>
+      <div style={{ position: 'relative', aspectRatio: '16/9', overflow: 'hidden', background: 'var(--surface-solid)' }}>
 
         {creative.type === 'image' && (isImg || isDriveImg) ? (
           <img
@@ -110,11 +110,11 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
         ) : creative.type === 'image' ? (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="18" height="18" rx="2" stroke="#333" strokeWidth="1.5" />
-              <circle cx="8.5" cy="8.5" r="1.5" fill="#333" />
-              <path d="M3 15l5-5 4 4 3-3 6 6" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="var(--text-ghost)" strokeWidth="1.5" />
+              <circle cx="8.5" cy="8.5" r="1.5" fill="var(--text-ghost)" />
+              <path d="M3 15l5-5 4 4 3-3 6 6" stroke="var(--text-ghost)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span style={{ color: '#555669', fontSize: 12 }}>Ver imagen</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Ver imagen</span>
           </div>
 
         ) : creative.type === 'video' && ytId ? (
@@ -126,7 +126,7 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
               alt={creative.title}
             />
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hovered ? 1 : 0, transition: 'opacity 0.25s' }}>
-              <div style={{ width: 56, height: 56, background: '#e5182b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(229,24,43,0.6)', transform: hovered ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
+              <div style={{ width: 56, height: 56, background: 'var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(var(--accent-rgb),0.6)', transform: hovered ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polygon points="7,4 17,10 7,16" fill="white" /></svg>
               </div>
             </div>
@@ -135,10 +135,10 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
         ) : creative.type === 'video' ? (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="2" width="20" height="20" rx="4" stroke="#555669" strokeWidth="1.5" />
-              <polygon points="10,8 17,12 10,16" fill="#555669" />
+              <rect x="2" y="2" width="20" height="20" rx="4" stroke="var(--text-muted)" strokeWidth="1.5" />
+              <polygon points="10,8 17,12 10,16" fill="var(--text-muted)" />
             </svg>
-            <span style={{ color: '#555669', fontSize: 12 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
           </div>
 
         ) : (
@@ -146,7 +146,7 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
           <div style={{ position: 'absolute', inset: 0, padding: 20, overflow: 'hidden' }}>
             <p style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
-              fontSize: 14, color: '#8a8c9e', lineHeight: 1.6, margin: 0,
+              fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0,
               display: '-webkit-box',
               WebkitLineClamp: 6,
               WebkitBoxOrient: 'vertical',
@@ -171,7 +171,7 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
         <div style={{
           position: 'absolute', top: 10, right: 10,
           background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          border: '1px solid rgba(var(--overlay-rgb),0.1)',
           borderRadius: '6px', padding: '3px 8px',
           color: 'white', fontSize: 11, fontWeight: 600,
         }}>
@@ -182,7 +182,7 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
       {/* ── Content ── */}
       <div style={{ padding: '16px 20px 20px' }}>
         <div style={{
-          fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 6,
+          fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6,
           overflow: 'hidden', display: '-webkit-box',
           WebkitLineClamp: 1, WebkitBoxOrient: 'vertical',
         } as React.CSSProperties}>
@@ -196,12 +196,12 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
             </span>
           )}
           {creative.cpl != null && (
-            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: '#8a8c9e' }}>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: '4px', background: 'rgba(var(--overlay-rgb),0.05)', color: 'var(--text-secondary)' }}>
               CPL: ${creative.cpl}
             </span>
           )}
           {creative.ctr != null && (
-            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: '#8a8c9e' }}>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: '4px', background: 'rgba(var(--overlay-rgb),0.05)', color: 'var(--text-secondary)' }}>
               CTR: {creative.ctr}%
             </span>
           )}
@@ -209,7 +209,7 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
 
         {creative.notes && creative.type !== 'copy' && (
           <div style={{
-            fontSize: 12, color: '#555669', lineHeight: 1.5, marginBottom: 12,
+            fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 12,
             overflow: 'hidden', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           } as React.CSSProperties}>
@@ -219,12 +219,12 @@ function CreativeCard({ creative }: { creative: ClientCreative }) {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span
-            style={{ color: '#e5182b', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             onClick={() => window.open(creative.url, '_blank')}
           >
             Ver creativo →
           </span>
-          <span style={{ color: '#555669', fontSize: 11 }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>
             {formatDate(creative.created_at)}
           </span>
         </div>
@@ -278,7 +278,7 @@ export function CreativosPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -290,13 +290,13 @@ export function CreativosPage() {
 
           {/* Hero */}
           <div style={{ marginBottom: 40 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e5182b', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(var(--accent-rgb),0.10)', border: '1px solid rgba(var(--accent-rgb),0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
               CREATIVOS
             </div>
-            <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: '#f0f1f7', margin: '0 0 8px' }}>
+            <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
               Biblioteca de creativos
             </h1>
-            <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
               Todos los creativos de tu campaña en un solo lugar.
             </p>
           </div>
@@ -304,15 +304,15 @@ export function CreativosPage() {
           {creatives.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
               <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
-                <rect x="8" y="16" width="48" height="36" rx="4" stroke="#333" strokeWidth="2" />
-                <path d="M8 28h48" stroke="#333" strokeWidth="2" />
-                <rect x="20" y="8" width="6" height="10" rx="2" fill="#333" />
-                <rect x="38" y="8" width="6" height="10" rx="2" fill="#333" />
+                <rect x="8" y="16" width="48" height="36" rx="4" stroke="var(--text-ghost)" strokeWidth="2" />
+                <path d="M8 28h48" stroke="var(--text-ghost)" strokeWidth="2" />
+                <rect x="20" y="8" width="6" height="10" rx="2" fill="var(--text-ghost)" />
+                <rect x="38" y="8" width="6" height="10" rx="2" fill="var(--text-ghost)" />
               </svg>
-              <p style={{ color: '#8a8c9e', fontSize: 18, fontWeight: 600, margin: '0 0 8px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 18, fontWeight: 600, margin: '0 0 8px' }}>
                 Aún no hay creativos disponibles.
               </p>
-              <p style={{ color: '#555669', fontSize: 14, margin: 0 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
                 El equipo de Torii irá agregando los creativos de tu campaña aquí.
               </p>
             </div>
@@ -325,14 +325,14 @@ export function CreativosPage() {
                   <FilterPill key={v} label={label} active={filterType === v} onClick={() => setFilterType(v)} />
                 ))}
 
-                <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                <div style={{ width: 1, height: 20, background: 'rgba(var(--overlay-rgb),0.08)', margin: '0 4px' }} />
 
                 {/* Status */}
                 {([['active', 'Activos'], ['paused', 'Pausados'], ['archived', 'Archivados']] as [StatusFilter, string][]).map(([v, label]) => (
                   <FilterPill key={v} label={label} active={filterStatus === v} onClick={() => toggleStatus(v)} />
                 ))}
 
-                <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)', margin: '0 4px' }} />
+                <div style={{ width: 1, height: 20, background: 'rgba(var(--overlay-rgb),0.08)', margin: '0 4px' }} />
 
                 {/* Channel */}
                 {([['all', 'Todos'], ['Meta Ads', 'Meta Ads'], ['LinkedIn', 'LinkedIn']] as [ChannelFilter, string][]).map(([v, label]) => (
@@ -343,10 +343,10 @@ export function CreativosPage() {
               {filtered.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 24px' }}>
                   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 16px', display: 'block' }}>
-                    <rect x="6" y="6" width="36" height="36" rx="4" stroke="#333" strokeWidth="2" />
-                    <line x1="14" y1="24" x2="34" y2="24" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                    <rect x="6" y="6" width="36" height="36" rx="4" stroke="var(--text-ghost)" strokeWidth="2" />
+                    <line x1="14" y1="24" x2="34" y2="24" stroke="var(--text-ghost)" strokeWidth="2" strokeLinecap="round" />
                   </svg>
-                  <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
                     No hay creativos en esta categoría.
                   </p>
                 </div>

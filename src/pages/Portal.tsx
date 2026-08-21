@@ -18,9 +18,9 @@ class PortalErrorBoundary extends Component<{ children: ReactNode }, { error: Er
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: 40, color: '#f87171', textAlign: 'center' }}>
+        <div style={{ padding: 40, color: 'var(--danger)', textAlign: 'center' }}>
           <p style={{ fontWeight: 700, marginBottom: 8 }}>Error al renderizar el portal</p>
-          <pre style={{ fontSize: 12, color: '#555669', whiteSpace: 'pre-wrap' }}>
+          <pre style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>
             {(this.state.error as Error).message}
           </pre>
         </div>
@@ -48,9 +48,9 @@ function formatWeekRange(start?: string, end?: string): string {
 
 function SectionLabel({
   text,
-  color = '#e5182b',
-  bg = 'rgba(229,24,43,0.10)',
-  border = 'rgba(229,24,43,0.22)',
+  color = 'var(--accent)',
+  bg = 'rgba(var(--accent-rgb),0.10)',
+  border = 'rgba(var(--accent-rgb),0.22)',
 }: {
   text: string
   color?: string
@@ -79,7 +79,7 @@ function SectionLabel({
   )
 }
 
-function GlowDot({ color = '#e5182b' }: { color?: string }) {
+function GlowDot({ color = 'var(--accent)' }: { color?: string }) {
   return (
     <div
       className="glow-dot"
@@ -89,7 +89,7 @@ function GlowDot({ color = '#e5182b' }: { color?: string }) {
         borderRadius: '50%',
         backgroundColor: color,
         flexShrink: 0,
-        boxShadow: `0 0 8px ${color}, 0 0 20px ${color}66`,
+        boxShadow: `0 0 8px ${color}, 0 0 20px color-mix(in srgb, ${color} 40%, transparent)`,
       }}
     />
   )
@@ -98,11 +98,11 @@ function GlowDot({ color = '#e5182b' }: { color?: string }) {
 function PlatformBadge({ platform }: { platform: string | null }) {
   if (!platform) return null
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    'Meta Ads': { bg: 'rgba(251,146,60,0.08)', color: '#fb923c', border: 'rgba(251,146,60,0.25)' },
-    'LinkedIn Outbound': { bg: 'rgba(96,165,250,0.08)', color: '#60a5fa', border: 'rgba(96,165,250,0.25)' },
-    'Híbrido': { bg: 'rgba(192,132,252,0.08)', color: '#c084fc', border: 'rgba(192,132,252,0.25)' },
+    'Meta Ads': { bg: 'rgba(var(--orange-rgb),0.08)', color: 'var(--orange)', border: 'rgba(var(--orange-rgb),0.25)' },
+    'LinkedIn Outbound': { bg: 'rgba(var(--info-rgb),0.08)', color: 'var(--info)', border: 'rgba(var(--info-rgb),0.25)' },
+    'Híbrido': { bg: 'rgba(var(--purple-rgb),0.08)', color: 'var(--purple)', border: 'rgba(var(--purple-rgb),0.25)' },
   }
-  const s = styles[platform] ?? { bg: 'rgba(255,255,255,0.05)', color: '#8a8c9e', border: 'rgba(255,255,255,0.07)' }
+  const s = styles[platform] ?? { bg: 'rgba(var(--overlay-rgb),0.05)', color: 'var(--text-secondary)', border: 'rgba(var(--overlay-rgb),0.07)' }
   return (
     <span
       style={{
@@ -135,8 +135,8 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
   return (
     <div style={{ marginBottom: 32 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <GlowDot color="#4ade80" />
-        <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#4ade80', fontWeight: 700 }}>
+        <GlowDot color="var(--success)" />
+        <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: 'var(--success)', fontWeight: 700 }}>
           HITOS ALCANZADOS
         </span>
       </div>
@@ -146,8 +146,8 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
             key={item.label}
             className="card-hover"
             style={{
-              backgroundColor: item.done ? 'rgba(74,222,128,0.04)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${item.done ? 'rgba(74,222,128,0.25)' : 'rgba(255,255,255,0.07)'}`,
+              backgroundColor: item.done ? 'rgba(var(--success-rgb),0.04)' : 'rgba(var(--overlay-rgb),0.02)',
+              border: `1px solid ${item.done ? 'rgba(var(--success-rgb),0.25)' : 'rgba(var(--overlay-rgb),0.07)'}`,
               borderRadius: 14,
               padding: '16px 20px',
               minWidth: 180,
@@ -157,18 +157,18 @@ function HitosSection({ hitos }: { hitos: HitosCliente }) {
           >
             {item.done ? (
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ marginBottom: 10 }}>
-                <circle cx="10" cy="10" r="9" stroke="#4ade80" strokeWidth="1.5" />
-                <path d="M6 10l3 3 5-5" stroke="#4ade80" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="10" cy="10" r="9" stroke="var(--success)" strokeWidth="1.5" />
+                <path d="M6 10l3 3 5-5" stroke="var(--success)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             ) : (
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ marginBottom: 10 }}>
-                <circle cx="10" cy="10" r="9" stroke="#555669" strokeWidth="1.5" />
+                <circle cx="10" cy="10" r="9" stroke="var(--text-muted)" strokeWidth="1.5" />
               </svg>
             )}
-            <div style={{ color: item.done ? '#f0f1f7' : '#555669', fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>
+            <div style={{ color: item.done ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>
               {item.label}
             </div>
-            <div style={{ color: '#8a8c9e', fontSize: 12, marginTop: 4 }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 4 }}>
               {item.fecha
                 ? new Date(item.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : item.done ? '' : 'Pendiente'}
@@ -313,7 +313,7 @@ export function Portal() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#08090f' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)' }}>
         <Navbar />
         <div
           style={{
@@ -339,7 +339,7 @@ export function Portal() {
         minHeight: '80vh',
         gap: '16px',
       }}>
-        <div style={{ color: '#e5182b', fontSize: '14px' }}>
+        <div style={{ color: 'var(--accent)', fontSize: '14px' }}>
           Error cargando datos del cliente.
         </div>
       </div>
@@ -360,15 +360,15 @@ export function Portal() {
         <div style={{
           width: '40px',
           height: '40px',
-          border: '3px solid #1a1a1a',
-          borderTop: '3px solid #e5182b',
+          border: '3px solid rgba(var(--overlay-rgb),0.12)',
+          borderTop: '3px solid var(--accent)',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
         }} />
-        <p style={{ color: '#f0f1f7', fontSize: '18px', fontWeight: 700 }}>
+        <p style={{ color: 'var(--text-primary)', fontSize: '18px', fontWeight: 700 }}>
           Tu dashboard se actualizará pronto.
         </p>
-        <p style={{ color: '#8a8c9e', fontSize: '14px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
           El equipo de Torii está preparando tu sistema.
         </p>
       </div>
@@ -509,7 +509,7 @@ export function Portal() {
 
   return (
     <PortalErrorBoundary>
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar clientName={client?.name} showNav />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px', display: 'block', visibility: 'visible', opacity: 1 }}>
@@ -521,8 +521,8 @@ export function Portal() {
           style={{
             position: 'relative',
             overflow: 'hidden',
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            backgroundColor: 'rgba(var(--overlay-rgb),0.02)',
+            border: '1px solid rgba(var(--overlay-rgb),0.07)',
             borderRadius: 20,
             padding: 40,
             marginBottom: 32,
@@ -532,7 +532,7 @@ export function Portal() {
           <div style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: 'radial-gradient(rgba(229,24,43,0.12) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(rgba(var(--accent-rgb),0.12) 1px, transparent 1px)',
             backgroundSize: '28px 28px',
             borderRadius: 20,
             pointerEvents: 'none',
@@ -543,13 +543,13 @@ export function Portal() {
           {/* Red radial glow */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: 'radial-gradient(ellipse at 65% 0%, rgba(229,24,43,0.18) 0%, transparent 55%)',
+            background: 'radial-gradient(ellipse at 65% 0%, rgba(var(--accent-rgb),0.18) 0%, transparent 55%)',
             zIndex: 0,
           }} />
           {/* Bottom fade */}
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
-            background: 'linear-gradient(to top, rgba(8,9,15,0.6), transparent)',
+            background: 'linear-gradient(to top, rgba(var(--bg-rgb),0.6), transparent)',
             zIndex: 0,
           }} />
 
@@ -570,20 +570,20 @@ export function Portal() {
                     fontFamily: 'Bricolage Grotesque, sans-serif',
                     fontSize: 'clamp(28px, 4vw, 44px)',
                     fontWeight: 800,
-                    color: '#f0f1f7',
+                    color: 'var(--text-primary)',
                     lineHeight: 1.1,
                     margin: '0 0 14px',
                   }}
                 >
                   {activePhase?.phase_name ?? 'Sin etapa activa'}
                 </h1>
-                <p style={{ color: '#8a8c9e', fontSize: 16, lineHeight: 1.75, margin: '0 0 28px', maxWidth: 480 }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 16, lineHeight: 1.75, margin: '0 0 28px', maxWidth: 480 }}>
                   {activePhase?.phase_description ?? ''}
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <PlatformBadge platform={client?.canal ?? null} />
                   {client?.country && (
-                    <span style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#8a8c9e', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>
+                    <span style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.05)', color: 'var(--text-secondary)', border: '1px solid rgba(var(--overlay-rgb),0.08)', borderRadius: 99, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>
                       {client.country}
                     </span>
                   )}
@@ -591,25 +591,25 @@ export function Portal() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <div style={{ color: '#555669', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 2 }}>DÍA</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 2 }}>DÍA</div>
                 <div style={{
                   fontFamily: 'Bricolage Grotesque, sans-serif',
                   fontSize: 72,
                   fontWeight: 800,
-                  color: '#e5182b',
+                  color: 'var(--accent)',
                   lineHeight: 1,
-                  textShadow: '0 0 40px rgba(229,24,43,0.55), 0 0 80px rgba(229,24,43,0.25)',
+                  textShadow: '0 0 40px rgba(var(--accent-rgb),0.55), 0 0 80px rgba(var(--accent-rgb),0.25)',
                 }}>
                   {daysActive}
                 </div>
-                <div style={{ color: '#555669', fontSize: 13, letterSpacing: '0.06em' }}>DE {contractDuration}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 13, letterSpacing: '0.06em' }}>DE {contractDuration}</div>
 
                 <div style={{ marginTop: 20 }}>
                   <svg width="110" height="110" viewBox="0 0 120 120">
-                    <circle cx="60" cy="60" r="52" stroke="rgba(255,255,255,0.07)" strokeWidth="7" fill="none" />
+                    <circle cx="60" cy="60" r="52" stroke="rgba(var(--overlay-rgb),0.07)" strokeWidth="7" fill="none" />
                     <circle
                       cx="60" cy="60" r="52"
-                      stroke="#e5182b"
+                      stroke="var(--accent)"
                       strokeWidth="7"
                       fill="none"
                       strokeLinecap="round"
@@ -618,7 +618,7 @@ export function Portal() {
                       transform="rotate(-90 60 60)"
                       style={{
                         transition: 'stroke-dashoffset 1.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        filter: 'drop-shadow(0 0 6px rgba(229,24,43,0.7))',
+                        filter: 'drop-shadow(0 0 6px rgba(var(--accent-rgb),0.7))',
                       }}
                     />
                     <text x="60" y="60" textAnchor="middle" dominantBaseline="middle" fill="white" fontSize="17" fontWeight="700" fontFamily="Bricolage Grotesque, sans-serif">
@@ -636,7 +636,7 @@ export function Portal() {
         {(() => { try { return (
         <div className="fade-in visible" style={{ display: 'block', marginBottom: 32 }}>
           <SectionLabel text="TU RECORRIDO" />
-          <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '48px 40px', overflow: 'visible' }}>
+          <div style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 20, padding: '48px 40px', overflow: 'visible' }}>
             <JourneyMap phases={phases} active_phase_id={status.active_phase_id} days_in_phase={status.days_in_phase} />
           </div>
         </div>
@@ -670,18 +670,18 @@ export function Portal() {
           <div style={{
             position: 'relative',
             overflow: 'hidden',
-            backgroundColor: 'rgba(229,24,43,0.04)',
-            border: '1px solid rgba(229,24,43,0.18)',
+            backgroundColor: 'rgba(var(--accent-rgb),0.04)',
+            border: '1px solid rgba(var(--accent-rgb),0.18)',
             borderRadius: 16,
             padding: 28,
           }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, #e5182b, rgba(229,24,43,0.2))', borderRadius: '0 0 0 0' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, var(--accent), rgba(var(--accent-rgb),0.2))', borderRadius: '0 0 0 0' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <GlowDot color="#e5182b" />
-              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#e5182b', fontWeight: 700 }}>ÚLTIMO RESULTADO</span>
+              <GlowDot color="var(--accent)" />
+              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: 'var(--accent)', fontWeight: 700 }}>ÚLTIMO RESULTADO</span>
             </div>
-            <p style={{ color: '#f0f1f7', fontSize: 16, lineHeight: 1.75, margin: 0 }}>
-              {status.current_win ?? <span style={{ color: '#555669' }}>—</span>}
+            <p style={{ color: 'var(--text-primary)', fontSize: 16, lineHeight: 1.75, margin: 0 }}>
+              {status.current_win ?? <span style={{ color: 'var(--text-muted)' }}>—</span>}
             </p>
           </div>
 
@@ -689,21 +689,21 @@ export function Portal() {
           <div style={{
             position: 'relative',
             overflow: 'hidden',
-            backgroundColor: 'rgba(96,165,250,0.04)',
-            border: '1px solid rgba(96,165,250,0.18)',
+            backgroundColor: 'rgba(var(--info-rgb),0.04)',
+            border: '1px solid rgba(var(--info-rgb),0.18)',
             borderRadius: 16,
             padding: 28,
           }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, #60a5fa, rgba(96,165,250,0.2))', borderRadius: '0 0 0 0' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, width: 3, height: '100%', background: 'linear-gradient(to bottom, var(--info), rgba(var(--info-rgb),0.2))', borderRadius: '0 0 0 0' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#60a5fa', flexShrink: 0, boxShadow: '0 0 8px #60a5fa, 0 0 20px rgba(96,165,250,0.4)' }} />
-              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: '#60a5fa', fontWeight: 700 }}>PRÓXIMOS 7 DÍAS</span>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--info)', flexShrink: 0, boxShadow: '0 0 8px var(--info), 0 0 20px rgba(var(--info-rgb),0.4)' }} />
+              <span style={{ textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em', color: 'var(--info)', fontWeight: 700 }}>PRÓXIMOS 7 DÍAS</span>
             </div>
-            <p style={{ color: '#f0f1f7', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>
-              {status.next_step ?? <span style={{ color: '#555669' }}>—</span>}
+            <p style={{ color: 'var(--text-primary)', fontSize: 16, lineHeight: 1.75, margin: '0 0 16px' }}>
+              {status.next_step ?? <span style={{ color: 'var(--text-muted)' }}>—</span>}
             </p>
-            <div style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', margin: '0 0 12px' }} />
-            <p style={{ color: '#555669', fontSize: 12, margin: 0 }}>Actualizado el {formatDate(status.updated_at)}</p>
+            <div style={{ height: 1, backgroundColor: 'rgba(var(--overlay-rgb),0.06)', margin: '0 0 12px' }} />
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: 0 }}>Actualizado el {formatDate(status.updated_at)}</p>
           </div>
         </div>
         )} catch(e) { console.error('WinNextStep error:', e); return <div style={{color:'red',padding:16}}>Error en Win/NextStep</div> } })()}
@@ -740,10 +740,10 @@ export function Portal() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px',
-                  backgroundColor: selectedMetricIndex === weeklyData.length - 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor: selectedMetricIndex === weeklyData.length - 1 ? 'rgba(var(--overlay-rgb),0.02)' : 'rgba(var(--overlay-rgb),0.05)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.08)',
                   borderRadius: 8,
-                  color: selectedMetricIndex === weeklyData.length - 1 ? '#333' : '#8a8c9e',
+                  color: selectedMetricIndex === weeklyData.length - 1 ? 'var(--text-ghost)' : 'var(--text-secondary)',
                   fontSize: 13,
                   cursor: selectedMetricIndex === weeklyData.length - 1 ? 'not-allowed' : 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
@@ -755,14 +755,14 @@ export function Portal() {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 {selectedMetrics && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 600 }}>
+                    <span style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>
                       Semana {selectedMetrics.week_number} · {selectedMetrics.year}
                     </span>
                     {selectedMetricIndex === 0 && (
                       <span style={{
-                        backgroundColor: 'rgba(74,222,128,0.15)',
-                        color: '#4ade80',
-                        border: '1px solid rgba(74,222,128,0.3)',
+                        backgroundColor: 'rgba(var(--success-rgb),0.15)',
+                        color: 'var(--success)',
+                        border: '1px solid rgba(var(--success-rgb),0.3)',
                         borderRadius: 99,
                         padding: '2px 8px',
                         fontSize: 11,
@@ -774,7 +774,7 @@ export function Portal() {
                   </div>
                 )}
                 {selectedMetrics?.week_start && (
-                  <span style={{ color: '#8a8c9e', fontSize: 12 }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 12 }}>
                     {formatWeekRange(selectedMetrics.week_start, selectedMetrics.week_end)}
                   </span>
                 )}
@@ -786,10 +786,10 @@ export function Portal() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 6,
                   padding: '6px 14px',
-                  backgroundColor: selectedMetricIndex === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  backgroundColor: selectedMetricIndex === 0 ? 'rgba(var(--overlay-rgb),0.02)' : 'rgba(var(--overlay-rgb),0.05)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.08)',
                   borderRadius: 8,
-                  color: selectedMetricIndex === 0 ? '#333' : '#8a8c9e',
+                  color: selectedMetricIndex === 0 ? 'var(--text-ghost)' : 'var(--text-secondary)',
                   fontSize: 13,
                   cursor: selectedMetricIndex === 0 ? 'not-allowed' : 'pointer',
                   fontFamily: 'DM Sans, sans-serif',
@@ -810,9 +810,9 @@ export function Portal() {
                 { label: 'TASA CALIFICACIÓN', value: selectedMetrics.tasa_calificacion_real, suffix: '%' },
                 { label: 'TASA CIERRE', value: selectedMetrics.tasa_cierre_real, suffix: '%' },
               ].map((s) => (
-                <div key={s.label} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '12px 16px' }}>
-                  <div style={{ textTransform: 'uppercase', fontSize: 10, color: '#555669', letterSpacing: '0.1em', marginBottom: 6 }}>{s.label}</div>
-                  <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 700, color: '#f0f1f7' }}>
+                <div key={s.label} style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 12, padding: '12px 16px' }}>
+                  <div style={{ textTransform: 'uppercase', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em', marginBottom: 6 }}>{s.label}</div>
+                  <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>
                     {s.value !== null && s.value !== undefined ? `${s.value}${s.suffix ?? ''}` : '—'}
                   </div>
                 </div>
@@ -821,9 +821,9 @@ export function Portal() {
           )}
 
           {selectedMetrics?.notas && (
-            <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
-              <div style={{ textTransform: 'uppercase', fontSize: 10, color: '#555669', letterSpacing: '0.1em', marginBottom: 8 }}>NOTA DEL REPORTE DE ESTA SEMANA</div>
-              <p style={{ color: '#c9ced9', fontSize: 13, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedMetrics.notas}</p>
+            <div style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+              <div style={{ textTransform: 'uppercase', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em', marginBottom: 8 }}>NOTA DEL REPORTE DE ESTA SEMANA</div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedMetrics.notas}</p>
             </div>
           )}
 
@@ -861,20 +861,20 @@ export function Portal() {
                   <div style={{
                     position: 'absolute', left: 7, top: 20,
                     width: 2, bottom: 0,
-                    backgroundColor: 'rgba(255,255,255,0.06)',
+                    backgroundColor: 'rgba(var(--overlay-rgb),0.06)',
                   }} />
                 )}
                 {/* Timeline dot */}
                 <div style={{
                   position: 'absolute', left: 0, top: 6,
                   width: 16, height: 16, borderRadius: '50%',
-                  backgroundColor: i === 0 ? '#e5182b' : 'rgba(255,255,255,0.06)',
-                  border: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: i === 0 ? '0 0 10px rgba(229,24,43,0.5)' : 'none',
+                  backgroundColor: i === 0 ? 'var(--accent)' : 'rgba(var(--overlay-rgb),0.06)',
+                  border: i === 0 ? 'none' : '1px solid rgba(var(--overlay-rgb),0.12)',
+                  boxShadow: i === 0 ? '0 0 10px rgba(var(--accent-rgb),0.5)' : 'none',
                 }} />
                 <div style={{
-                  backgroundColor: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  backgroundColor: 'rgba(var(--overlay-rgb),0.02)',
+                  border: '1px solid rgba(var(--overlay-rgb),0.07)',
                   borderRadius: 12,
                   padding: '14px 20px',
                   display: 'flex',
@@ -882,7 +882,7 @@ export function Portal() {
                   gap: 16,
                   flexWrap: 'wrap',
                 }}>
-                  <span style={{ color: '#8a8c9e', fontSize: 13, minWidth: 56, fontWeight: 600 }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 13, minWidth: 56, fontWeight: 600 }}>
                     {r.fecha_inicio
                       ? new Date(r.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
                       : `S${r.semana ?? i + 1}`}
@@ -896,11 +896,11 @@ export function Portal() {
                       <span
                         key={pill.label}
                         style={{
-                          backgroundColor: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.08)',
+                          backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+                          border: '1px solid rgba(var(--overlay-rgb),0.08)',
                           borderRadius: 20,
                           padding: '4px 12px',
-                          color: '#8a8c9e',
+                          color: 'var(--text-secondary)',
                           fontSize: 12,
                         }}
                       >
@@ -916,7 +916,7 @@ export function Portal() {
         ) : null } catch(e) { console.error('Historial error:', e); return <div style={{color:'red',padding:16}}>Error en Historial</div> } })()}
 
         <footer style={{ paddingTop: 40, textAlign: 'center' }}>
-          <p style={{ color: '#1e1e2e', fontSize: 12 }}>Torii Delivery OS</p>
+          <p style={{ color: 'var(--text-ghost)', fontSize: 12 }}>Torii Delivery OS</p>
         </footer>
       </div>
 

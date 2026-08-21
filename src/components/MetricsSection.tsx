@@ -24,21 +24,21 @@ interface MetricsSectionProps {
 }
 
 const tooltipContentStyle = {
-  background: '#0d0e17',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'var(--surface-solid)',
+  border: '1px solid rgba(var(--overlay-rgb),0.1)',
   borderRadius: '8px',
-  color: '#f0f1f7',
+  color: 'var(--text-primary)',
 }
 
 const axisStyle = {
-  stroke: '#555669' as const,
+  stroke: 'var(--text-muted)' as const,
   fontSize: 11,
-  tick: { fill: '#555669' },
+  tick: { fill: 'var(--text-muted)' },
 }
 
 const gridStyle = {
   strokeDasharray: '3 3' as const,
-  stroke: 'rgba(255,255,255,0.05)' as const,
+  stroke: 'rgba(var(--overlay-rgb),0.05)' as const,
 }
 
 function SectionPill({ text, style }: { text: string; style?: React.CSSProperties }) {
@@ -50,9 +50,9 @@ function SectionPill({ text, style }: { text: string; style?: React.CSSPropertie
         textTransform: 'uppercase',
         fontSize: 11,
         letterSpacing: '0.1em',
-        color: '#e5182b',
-        backgroundColor: 'rgba(229,24,43,0.10)',
-        border: '1px solid rgba(229,24,43,0.22)',
+        color: 'var(--accent)',
+        backgroundColor: 'rgba(var(--accent-rgb),0.10)',
+        border: '1px solid rgba(var(--accent-rgb),0.22)',
         borderRadius: 99,
         padding: '5px 14px',
         fontWeight: 700,
@@ -85,8 +85,8 @@ function MetricCard({
   return (
     <div
       style={{
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        backgroundColor: 'rgba(var(--overlay-rgb),0.02)',
+        border: '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: '12px',
         padding: '12px 16px',
       }}
@@ -95,7 +95,7 @@ function MetricCard({
         style={{
           textTransform: 'uppercase',
           fontSize: 10,
-          color: '#555669',
+          color: 'var(--text-muted)',
           letterSpacing: '0.1em',
           marginBottom: 8,
         }}
@@ -130,8 +130,8 @@ function ChartBox({
   return (
     <div
       style={{
-        backgroundColor: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        backgroundColor: 'rgba(var(--overlay-rgb),0.02)',
+        border: '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: '16px',
         padding: '24px',
         marginBottom: '20px',
@@ -142,7 +142,7 @@ function ChartBox({
           fontFamily: 'Bricolage Grotesque, sans-serif',
           fontSize: 16,
           fontWeight: 700,
-          color: '#f0f1f7',
+          color: 'var(--text-primary)',
           marginBottom: '16px',
         }}
       >
@@ -152,7 +152,7 @@ function ChartBox({
       {note && (
         <div
           style={{
-            color: '#555669',
+            color: 'var(--text-muted)',
             fontSize: '12px',
             fontStyle: 'italic',
             marginTop: '12px',
@@ -179,15 +179,15 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
           fill="none"
           style={{ marginBottom: '16px' }}
         >
-          <rect x="4" y="28" width="8" height="16" rx="2" fill="#333" />
-          <rect x="16" y="18" width="8" height="26" rx="2" fill="#333" />
-          <rect x="28" y="22" width="8" height="22" rx="2" fill="#333" />
-          <rect x="40" y="10" width="8" height="34" rx="2" fill="#333" />
+          <rect x="4" y="28" width="8" height="16" rx="2" fill="var(--text-ghost)" />
+          <rect x="16" y="18" width="8" height="26" rx="2" fill="var(--text-ghost)" />
+          <rect x="28" y="22" width="8" height="22" rx="2" fill="var(--text-ghost)" />
+          <rect x="40" y="10" width="8" height="34" rx="2" fill="var(--text-ghost)" />
         </svg>
-        <p style={{ color: '#8a8c9e', fontSize: '16px', fontWeight: 600, margin: 0 }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '16px', fontWeight: 600, margin: 0 }}>
           Las métricas semanales aparecerán aquí a medida que avance el programa.
         </p>
-        <p style={{ color: '#555669', fontSize: '13px', marginTop: '8px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '8px' }}>
           El equipo de Torii actualiza esta sección cada semana.
         </p>
       </div>
@@ -249,8 +249,8 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
           alignItems: 'flex-start',
           gap: '14px',
           padding: '16px 20px',
-          background: 'rgba(201,168,76,0.06)',
-          border: '1px solid rgba(201,168,76,0.2)',
+          background: 'rgba(var(--gold-rgb),0.06)',
+          border: '1px solid rgba(var(--gold-rgb),0.2)',
           borderRadius: '12px',
           marginBottom: '32px',
         }}
@@ -262,12 +262,12 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
           fill="none"
           style={{ flexShrink: 0, marginTop: 2 }}
         >
-          <circle cx="10" cy="10" r="9" stroke="#c9a84c" strokeWidth="1.5" />
+          <circle cx="10" cy="10" r="9" stroke="var(--gold)" strokeWidth="1.5" />
           <text
             x="10"
             y="14"
             textAnchor="middle"
-            fill="#c9a84c"
+            fill="var(--gold)"
             fontSize="12"
             fontWeight="700"
             fontFamily="sans-serif"
@@ -275,7 +275,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
             i
           </text>
         </svg>
-        <p style={{ color: '#c9a84c', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: 'var(--gold)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
           El sistema de captación mejora con el tiempo. Las primeras semanas son de calibración —
           cada semana el algoritmo aprende más sobre tu cliente ideal y los resultados se vuelven
           más consistentes y predecibles.
@@ -301,21 +301,21 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <MetricCard
                 label="INVERSIÓN SEMANAL"
                 value={selectedMetric?.ads_investment}
-                color="#c9a84c"
+                color="var(--gold)"
                 prefix="$"
               />
             )}
             {config.show_ads_leads && (
-              <MetricCard label="AGENDAS (ADS)" value={selectedMetric?.ads_leads} color="#f0f1f7" />
+              <MetricCard label="AGENDAS (ADS)" value={selectedMetric?.ads_leads} color="var(--text-primary)" />
             )}
             {config.show_ads_cpl && (
-              <MetricCard label="CPL" value={selectedMetric?.ads_cpl} color="#f0f1f7" prefix="$" />
+              <MetricCard label="CPL" value={selectedMetric?.ads_cpl} color="var(--text-primary)" prefix="$" />
             )}
             {config.show_ads_qualified && (
               <MetricCard
                 label="AGENDAS CALIFICADAS"
                 value={selectedMetric?.ads_qualified_leads}
-                color="#60a5fa"
+                color="var(--info)"
               />
             )}
             {config.show_ads_cpbc && (
@@ -325,9 +325,9 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                 color={
                   cpbc_objective
                     ? (selectedMetric?.ads_cpbc ?? 0) <= cpbc_objective
-                      ? '#4ade80'
-                      : '#e5182b'
-                    : '#f0f1f7'
+                      ? 'var(--success)'
+                      : 'var(--accent)'
+                    : 'var(--text-primary)'
                 }
                 prefix="$"
               />
@@ -336,7 +336,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <MetricCard
                 label="SHOW RATE"
                 value={showRate}
-                color={showRate >= 60 ? '#4ade80' : '#e5182b'}
+                color={showRate >= 60 ? 'var(--success)' : 'var(--accent)'}
                 suffix="%"
               />
             )}
@@ -344,7 +344,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <MetricCard
                 label="CLOSE RATE"
                 value={closeRate}
-                color={closeRate >= 25 ? '#4ade80' : '#e5182b'}
+                color={closeRate >= 25 ? 'var(--success)' : 'var(--accent)'}
                 suffix="%"
               />
             )}
@@ -363,7 +363,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                 <Tooltip contentStyle={tooltipContentStyle} />
                 <Bar
                   dataKey="agendas"
-                  fill="#e5182b"
+                  fill="var(--accent)"
                   fillOpacity={0.8}
                   radius={[4, 4, 0, 0]}
                   name="Agendas"
@@ -371,7 +371,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                 <Line
                   type="monotone"
                   dataKey="agendas"
-                  stroke="#c9a84c"
+                  stroke="var(--gold)"
                   strokeWidth={2}
                   dot={false}
                   name="Tendencia"
@@ -392,17 +392,17 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                   <Line
                     type="monotone"
                     dataKey="cpbc"
-                    stroke="#c9a84c"
+                    stroke="var(--gold)"
                     strokeWidth={2.5}
-                    dot={{ fill: '#c9a84c', r: 4 }}
+                    dot={{ fill: 'var(--gold)', r: 4 }}
                     name="CPBC ($)"
                   />
                   {cpbc_objective && (
                     <ReferenceLine
                       y={cpbc_objective}
-                      stroke="rgba(229,24,43,0.5)"
+                      stroke="rgba(var(--accent-rgb),0.5)"
                       strokeDasharray="4 4"
-                      label={{ value: 'Objetivo', fill: '#e5182b', fontSize: 11 }}
+                      label={{ value: 'Objetivo', fill: 'var(--accent)', fontSize: 11 }}
                     />
                   )}
                 </LineChart>
@@ -420,20 +420,20 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                   <YAxis yAxisId="left" {...axisStyle} />
                   <YAxis yAxisId="right" orientation="right" {...axisStyle} />
                   <Tooltip contentStyle={tooltipContentStyle} />
-                  <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px' }} />
+                  <Legend wrapperStyle={{ color: 'var(--text-secondary)', fontSize: '12px' }} />
                   <Area
                     type="monotone"
                     dataKey="inversion"
                     yAxisId="left"
-                    fill="rgba(201,168,76,0.1)"
-                    stroke="#c9a84c"
+                    fill="rgba(var(--gold-rgb),0.1)"
+                    stroke="var(--gold)"
                     strokeWidth={2}
                     name="Inversión ($)"
                   />
                   <Bar
                     dataKey="leads"
                     yAxisId="right"
-                    fill="rgba(96,165,250,0.7)"
+                    fill="rgba(var(--info-rgb),0.7)"
                     radius={[3, 3, 0, 0]}
                     name="Leads"
                   />
@@ -477,30 +477,30 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <div style={{ marginBottom: '32px' }}>
                 {/* Promedios calculados */}
                 <div style={{
-                  backgroundColor: 'rgba(192,132,252,0.06)',
-                  border: '1px solid rgba(192,132,252,0.2)',
+                  backgroundColor: 'rgba(var(--purple-rgb),0.06)',
+                  border: '1px solid rgba(var(--purple-rgb),0.2)',
                   borderRadius: 12,
                   padding: '16px 20px',
                   marginBottom: 16,
                 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#c084fc', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--purple)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
                     PROMEDIOS CALCULADOS
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                     {liMetricFields.map(({ key, label }) => {
                       const val = avgField(key)
                       return (
-                        <div key={key} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 14px' }}>
-                          <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{label}</div>
-                          <div style={{ fontSize: 22, fontWeight: 700, color: val != null ? '#c084fc' : '#333', fontFamily: 'Bricolage Grotesque, sans-serif' }}>
+                        <div key={key} style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, padding: '10px 14px' }}>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{label}</div>
+                          <div style={{ fontSize: 22, fontWeight: 700, color: val != null ? 'var(--purple)' : 'var(--text-ghost)', fontFamily: 'Bricolage Grotesque, sans-serif' }}>
                             {val != null ? `${val}%` : '—'}
                           </div>
                         </div>
                       )
                     })}
-                    <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 14px' }}>
-                      <div style={{ fontSize: 10, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>AGENDAS TOTALES</div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: '#c084fc', fontFamily: 'Bricolage Grotesque, sans-serif' }}>
+                    <div style={{ backgroundColor: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, padding: '10px 14px' }}>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>AGENDAS TOTALES</div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--purple)', fontFamily: 'Bricolage Grotesque, sans-serif' }}>
                         {totalBookings}
                       </div>
                     </div>
@@ -510,7 +510,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                 {/* Ver detalle por cuenta */}
                 <button
                   onClick={() => setLiDetailOpen(v => !v)}
-                  style={{ background: 'transparent', border: 'none', color: '#c084fc', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 16, padding: 0, fontFamily: 'DM Sans, sans-serif' }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--purple)', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginTop: 16, padding: 0, fontFamily: 'DM Sans, sans-serif' }}
                 >
                   {liDetailOpen ? 'Ocultar detalle por cuenta ↑' : 'Ver detalle por cuenta ↓'}
                 </button>
@@ -521,7 +521,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                       <thead>
                         <tr>
                           {['CUENTA', 'ACCEPT %', 'REPLY %', 'OFFER %', 'BOOKING %', 'AGENDAS'].map(h => (
-                            <th key={h} style={{ textAlign: 'left', color: '#555669', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                            <th key={h} style={{ textAlign: 'left', color: 'var(--text-muted)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 12px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.06)' }}>
                               {h}
                             </th>
                           ))}
@@ -529,13 +529,13 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                       </thead>
                       <tbody>
                         {liAccountMetrics.map((a, i) => (
-                          <tr key={a.id} style={{ backgroundColor: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent' }}>
-                            <td style={{ padding: '8px 12px', color: '#f0f1f7', fontWeight: 600 }}>{a.account_name}</td>
-                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.accept_rate != null ? `${a.accept_rate}%` : '—'}</td>
-                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.reply_rate != null ? `${a.reply_rate}%` : '—'}</td>
-                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.offer_rate != null ? `${a.offer_rate}%` : '—'}</td>
-                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.booking_rate != null ? `${a.booking_rate}%` : '—'}</td>
-                            <td style={{ padding: '8px 12px', color: '#8a8c9e' }}>{a.bookings ?? '—'}</td>
+                          <tr key={a.id} style={{ backgroundColor: i % 2 === 0 ? 'rgba(var(--overlay-rgb),0.02)' : 'transparent' }}>
+                            <td style={{ padding: '8px 12px', color: 'var(--text-primary)', fontWeight: 600 }}>{a.account_name}</td>
+                            <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{a.accept_rate != null ? `${a.accept_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{a.reply_rate != null ? `${a.reply_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{a.offer_rate != null ? `${a.offer_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{a.booking_rate != null ? `${a.booking_rate}%` : '—'}</td>
+                            <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{a.bookings ?? '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -557,7 +557,7 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <MetricCard
                 label="ACCEPT RATE"
                 value={acceptRate}
-                color={acceptRate >= 25 ? '#4ade80' : '#e5182b'}
+                color={acceptRate >= 25 ? 'var(--success)' : 'var(--accent)'}
                 suffix="%"
               />
             )}
@@ -565,18 +565,18 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <MetricCard
                 label="REPLY RATE"
                 value={replyRate}
-                color={replyRate >= 8 ? '#4ade80' : '#e5182b'}
+                color={replyRate >= 8 ? 'var(--success)' : 'var(--accent)'}
                 suffix="%"
               />
             )}
             {config.show_li_offer_rate && (
-              <MetricCard label="OFFER RATE" value={selectedMetric?.li_offer_rate} color="#c084fc" suffix="%" />
+              <MetricCard label="OFFER RATE" value={selectedMetric?.li_offer_rate} color="var(--purple)" suffix="%" />
             )}
             {config.show_li_calendly_rate && (
               <MetricCard
                 label="CALENDLY RATE"
                 value={selectedMetric?.li_calendly_rate}
-                color="#60a5fa"
+                color="var(--info)"
                 suffix="%"
               />
             )}
@@ -584,12 +584,12 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
               <MetricCard
                 label="BOOKING RATE"
                 value={selectedMetric?.li_booking_rate}
-                color="#4ade80"
+                color="var(--success)"
                 suffix="%"
               />
             )}
             {config.show_li_bookings && (
-              <MetricCard label="AGENDAS GENERADAS" value={selectedMetric?.li_bookings} color="#f0f1f7" />
+              <MetricCard label="AGENDAS GENERADAS" value={selectedMetric?.li_bookings} color="var(--text-primary)" />
             )}
           </div>
           )}
@@ -598,17 +598,17 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
           <ChartBox title="Agendas por semana">
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={liChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="semana" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(var(--overlay-rgb),0.05)" />
+                <XAxis dataKey="semana" stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
+                <YAxis stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
+                <Tooltip contentStyle={{ background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px' }} />
                 <Line
                   type="monotone"
                   dataKey="agendas"
-                  stroke="#c084fc"
+                  stroke="var(--purple)"
                   strokeWidth={2.5}
-                  dot={{ fill: '#c084fc', r: 4, strokeWidth: 2, stroke: '#08090f' }}
-                  activeDot={{ r: 6, fill: '#c084fc' }}
+                  dot={{ fill: 'var(--purple)', r: 4, strokeWidth: 2, stroke: 'var(--bg)' }}
+                  activeDot={{ r: 6, fill: 'var(--purple)' }}
                   name="Agendas"
                 />
               </LineChart>
@@ -623,31 +623,31 @@ export function MetricsSection({ metrics, config, cpbc_objective, liAccountMetri
                 <XAxis dataKey="semana" {...axisStyle} />
                 <YAxis {...axisStyle} domain={[0, 100]} />
                 <Tooltip contentStyle={tooltipContentStyle} />
-                <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px' }} />
+                <Legend wrapperStyle={{ color: 'var(--text-secondary)', fontSize: '12px' }} />
                 <Line
                   dataKey="accept_rate"
-                  stroke="#60a5fa"
+                  stroke="var(--info)"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                   name="Accept rate %"
                 />
                 <Line
                   dataKey="reply_rate"
-                  stroke="#c084fc"
+                  stroke="var(--purple)"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                   name="Reply rate %"
                 />
                 <Line
                   dataKey="offer_rate"
-                  stroke="#c9a84c"
+                  stroke="var(--gold)"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                   name="Offer rate %"
                 />
                 <Line
                   dataKey="booking_rate"
-                  stroke="#4ade80"
+                  stroke="var(--success)"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                   name="Booking rate %"

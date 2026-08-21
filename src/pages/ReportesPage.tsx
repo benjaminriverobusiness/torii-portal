@@ -54,9 +54,9 @@ function SectionPill({ text }: { text: string }) {
         fontWeight: 700,
         letterSpacing: '0.14em',
         textTransform: 'uppercase',
-        color: '#e5182b',
-        background: 'rgba(229,24,43,0.10)',
-        border: '1px solid rgba(229,24,43,0.22)',
+        color: 'var(--accent)',
+        background: 'rgba(var(--accent-rgb),0.10)',
+        border: '1px solid rgba(var(--accent-rgb),0.22)',
         borderRadius: 99,
         padding: '5px 14px',
         marginBottom: 24,
@@ -82,8 +82,8 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
       <div
         style={{
           width: '100%', maxWidth: 960,
-          background: '#0d0e17',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'var(--surface-solid)',
+          border: '1px solid rgba(var(--overlay-rgb),0.1)',
           borderRadius: 20,
           overflow: 'hidden',
         }}
@@ -92,14 +92,14 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#e5182b', boxShadow: '0 0 8px #e5182b' }} />
-            <span style={{ color: '#f0f1f7', fontSize: 15, fontWeight: 600 }}>{title}</span>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />
+            <span style={{ color: 'var(--text-primary)', fontSize: 15, fontWeight: 600 }}>{title}</span>
           </div>
           <button
-            style={{ background: 'none', border: 'none', color: '#555669', fontSize: 22, cursor: 'pointer', lineHeight: 1, fontFamily: 'DM Sans, sans-serif' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 22, cursor: 'pointer', lineHeight: 1, fontFamily: 'DM Sans, sans-serif' }}
             onClick={onClose}
           >✕</button>
         </div>
@@ -124,12 +124,12 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
   return (
     <div
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: hovered ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(var(--overlay-rgb),0.02)',
+        border: hovered ? '1px solid rgba(var(--accent-rgb),0.35)' : '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: 16,
         overflow: 'hidden',
         transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hovered ? '0 12px 40px rgba(229,24,43,0.12)' : 'none',
+        boxShadow: hovered ? '0 12px 40px rgba(var(--accent-rgb),0.12)' : 'none',
         transition: 'all 0.25s ease',
         cursor: 'pointer',
       }}
@@ -138,7 +138,7 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
       onClick={() => onPlay(video.video_url, video.title)}
     >
       {/* Thumbnail */}
-      <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#0d0e17', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', paddingBottom: '56.25%', background: 'var(--surface-solid)', overflow: 'hidden' }}>
         {ytId ? (
           <img
             src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
@@ -154,23 +154,23 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
         ) : isLoom ? (
           <div style={{
             position: 'absolute', inset: 0,
-            background: '#111220',
+            background: 'var(--surface-solid-2)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexDirection: 'column', gap: 12,
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="2" width="20" height="20" rx="4" stroke="#555669" strokeWidth="1.5" />
-              <polygon points="10,8 17,12 10,16" fill="#555669" />
+              <rect x="2" y="2" width="20" height="20" rx="4" stroke="var(--text-muted)" strokeWidth="1.5" />
+              <polygon points="10,8 17,12 10,16" fill="var(--text-muted)" />
             </svg>
-            <span style={{ color: '#555669', fontSize: 13 }}>Ver en Loom</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Ver en Loom</span>
           </div>
         ) : (
           <div style={{
-            position: 'absolute', inset: 0, background: '#0d0e17',
+            position: 'absolute', inset: 0, background: 'var(--surface-solid)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <polygon points="5,3 19,12 5,21" fill="#555669" />
+              <polygon points="5,3 19,12 5,21" fill="var(--text-muted)" />
             </svg>
           </div>
         )}
@@ -185,10 +185,10 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
         }}>
           <div style={{
             width: 56, height: 56,
-            background: '#e5182b',
+            background: 'var(--accent)',
             borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 32px rgba(229,24,43,0.6)',
+            boxShadow: '0 0 32px rgba(var(--accent-rgb),0.6)',
             transform: hovered ? 'scale(1)' : 'scale(0.8)',
             transition: 'transform 0.25s ease',
           }}>
@@ -204,7 +204,7 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
             position: 'absolute', top: 10, right: 10,
             background: 'rgba(0,0,0,0.72)',
             backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(var(--overlay-rgb),0.1)',
             borderRadius: 8, padding: '4px 10px',
             color: 'white', fontSize: 11, fontWeight: 600,
           }}>
@@ -216,7 +216,7 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
       {/* Content */}
       <div style={{ padding: '18px 20px 22px' }}>
         <div style={{
-          fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 6,
+          fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6,
           overflow: 'hidden', display: '-webkit-box',
           WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
         } as React.CSSProperties}>
@@ -224,7 +224,7 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
         </div>
         {video.description && (
           <div style={{
-            fontSize: 13, color: '#8a8c9e', lineHeight: 1.5, marginBottom: 14,
+            fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 14,
             overflow: 'hidden', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           } as React.CSSProperties}>
@@ -234,9 +234,9 @@ function VideoCard({ video, onPlay }: { video: ClientVideo; onPlay: (url: string
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <polygon points="2,1 9,5 2,9" fill="#e5182b" />
+              <polygon points="2,1 9,5 2,9" fill="var(--accent)" />
             </svg>
-            <span style={{ color: '#e5182b', fontSize: 13, fontWeight: 600 }}>Ver informe →</span>
+            <span style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>Ver informe →</span>
           </div>
         </div>
       </div>
@@ -248,9 +248,9 @@ function DocIcon({ fileType }: { fileType: string | null }) {
   if (fileType === 'pdf') {
     return (
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="4" y="2" width="18" height="22" rx="2" stroke="#e5182b" strokeWidth="1.5" />
-        <path d="M18 2v6h6" stroke="#e5182b" strokeWidth="1.5" strokeLinejoin="round" />
-        <rect x="2" y="18" width="20" height="10" rx="2" fill="#e5182b" />
+        <rect x="4" y="2" width="18" height="22" rx="2" stroke="var(--accent)" strokeWidth="1.5" />
+        <path d="M18 2v6h6" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round" />
+        <rect x="2" y="18" width="20" height="10" rx="2" fill="var(--accent)" />
         <text x="12" y="26" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold" fontFamily="Arial">PDF</text>
       </svg>
     )
@@ -258,20 +258,20 @@ function DocIcon({ fileType }: { fileType: string | null }) {
   if (fileType === 'google_doc') {
     return (
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="4" y="2" width="18" height="22" rx="2" stroke="#60a5fa" strokeWidth="1.5" />
-        <path d="M18 2v6h6" stroke="#60a5fa" strokeWidth="1.5" strokeLinejoin="round" />
-        <line x1="8" y1="14" x2="22" y2="14" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="8" y1="18" x2="22" y2="18" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="8" y1="22" x2="16" y2="22" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="4" y="2" width="18" height="22" rx="2" stroke="var(--info)" strokeWidth="1.5" />
+        <path d="M18 2v6h6" stroke="var(--info)" strokeWidth="1.5" strokeLinejoin="round" />
+        <line x1="8" y1="14" x2="22" y2="14" stroke="var(--info)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="8" y1="18" x2="22" y2="18" stroke="var(--info)" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="8" y1="22" x2="16" y2="22" stroke="var(--info)" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     )
   }
   return (
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-      <rect x="4" y="2" width="18" height="22" rx="2" stroke="#8a8c9e" strokeWidth="1.5" />
-      <path d="M18 2v6h6" stroke="#8a8c9e" strokeWidth="1.5" strokeLinejoin="round" />
-      <line x1="8" y1="14" x2="22" y2="14" stroke="#8a8c9e" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="8" y1="18" x2="22" y2="18" stroke="#8a8c9e" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="4" y="2" width="18" height="22" rx="2" stroke="var(--text-secondary)" strokeWidth="1.5" />
+      <path d="M18 2v6h6" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinejoin="round" />
+      <line x1="8" y1="14" x2="22" y2="14" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="18" x2="22" y2="18" stroke="var(--text-secondary)" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
@@ -285,12 +285,12 @@ function DocCard({ doc, onPreview }: { doc: Document; onPreview: (d: Document) =
       style={{
         display: 'flex', alignItems: 'center', gap: 16,
         padding: '16px 20px',
-        background: 'rgba(255,255,255,0.02)',
-        border: hovered ? '1px solid rgba(229,24,43,0.3)' : '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(var(--overlay-rgb),0.02)',
+        border: hovered ? '1px solid rgba(var(--accent-rgb),0.3)' : '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: 12, marginBottom: 8,
         cursor: 'pointer',
         transition: 'all 0.2s ease',
-        backgroundColor: hovered ? 'rgba(229,24,43,0.04)' : 'rgba(255,255,255,0.02)',
+        backgroundColor: hovered ? 'rgba(var(--accent-rgb),0.04)' : 'rgba(var(--overlay-rgb),0.02)',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -299,13 +299,13 @@ function DocCard({ doc, onPreview }: { doc: Document; onPreview: (d: Document) =
       <DocIcon fileType={doc.file_type} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 4 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
           {doc.name}
         </div>
         {doc.description && (
-          <div style={{ fontSize: 13, color: '#8a8c9e' }}>{doc.description}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{doc.description}</div>
         )}
-        <div style={{ fontSize: 12, color: '#555669', marginTop: 4 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
           {formatDate(doc.upload_date)}
         </div>
       </div>
@@ -313,10 +313,10 @@ function DocCard({ doc, onPreview }: { doc: Document; onPreview: (d: Document) =
       <button
         style={{
           padding: '6px 14px',
-          background: btnHovered ? 'rgba(229,24,43,0.1)' : 'rgba(255,255,255,0.05)',
-          border: btnHovered ? '1px solid rgba(229,24,43,0.3)' : '1px solid rgba(255,255,255,0.1)',
+          background: btnHovered ? 'rgba(var(--accent-rgb),0.1)' : 'rgba(var(--overlay-rgb),0.05)',
+          border: btnHovered ? '1px solid rgba(var(--accent-rgb),0.3)' : '1px solid rgba(var(--overlay-rgb),0.1)',
           borderRadius: 8,
-          color: btnHovered ? '#e5182b' : '#f0f1f7',
+          color: btnHovered ? 'var(--accent)' : 'var(--text-primary)',
           fontSize: 13,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
@@ -349,8 +349,8 @@ function PreviewModal({ doc, onClose }: { doc: Document; onClose: () => void }) 
         style={{
           width: '100%', maxWidth: 900,
           height: '85vh',
-          background: '#0d0e17',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: 'var(--surface-solid)',
+          border: '1px solid rgba(var(--overlay-rgb),0.1)',
           borderRadius: 16,
           overflow: 'hidden',
           display: 'flex', flexDirection: 'column',
@@ -361,14 +361,14 @@ function PreviewModal({ doc, onClose }: { doc: Document; onClose: () => void }) 
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 20px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)',
           flexShrink: 0,
         }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7' }}>{doc.name}</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{doc.name}</span>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <button
               style={{
-                color: '#e5182b', fontSize: 13, fontWeight: 600,
+                color: 'var(--accent)', fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', background: 'transparent', border: 'none',
                 fontFamily: 'DM Sans, sans-serif',
               }}
@@ -378,7 +378,7 @@ function PreviewModal({ doc, onClose }: { doc: Document; onClose: () => void }) 
             </button>
             <button
               style={{
-                color: '#555669', fontSize: 20,
+                color: 'var(--text-muted)', fontSize: 20,
                 cursor: 'pointer', background: 'transparent', border: 'none',
                 marginLeft: 16, lineHeight: 1,
               }}
@@ -451,7 +451,7 @@ export function ReportesPage() {
   const hasContent = videos.length > 0 || documents.length > 0
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -466,9 +466,9 @@ export function ReportesPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: '#e5182b',
-              background: 'rgba(229,24,43,0.10)',
-              border: '1px solid rgba(229,24,43,0.22)',
+              textTransform: 'uppercase', color: 'var(--accent)',
+              background: 'rgba(var(--accent-rgb),0.10)',
+              border: '1px solid rgba(var(--accent-rgb),0.22)',
               borderRadius: 99, padding: '5px 14px', marginBottom: 16,
             }}>
               INFORMES Y RECURSOS
@@ -476,14 +476,14 @@ export function ReportesPage() {
             <h1 style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: 800, color: '#f0f1f7',
+              fontWeight: 800, color: 'var(--text-primary)',
               margin: '0 0 8px',
               animation: 'fade-up 0.5s ease both',
             }}>
               Tus informes
             </h1>
             <p style={{
-              color: '#8a8c9e', fontSize: 16, margin: 0,
+              color: 'var(--text-secondary)', fontSize: 16, margin: 0,
               animation: 'fade-up 0.5s ease 0.1s both',
             }}>
               Accedé a todos los informes semanales y documentos de tu programa.
@@ -494,15 +494,15 @@ export function ReportesPage() {
           {!hasContent && (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
               <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style={{ margin: '0 auto 20px', display: 'block' }}>
-                <rect x="8" y="16" width="40" height="36" rx="4" stroke="#333" strokeWidth="2" />
-                <path d="M8 28h40" stroke="#333" strokeWidth="2" />
-                <circle cx="48" cy="48" r="12" fill="#0d0e17" stroke="#333" strokeWidth="2" />
-                <path d="M44 48h8M48 44v8" stroke="#333" strokeWidth="2" strokeLinecap="round" />
+                <rect x="8" y="16" width="40" height="36" rx="4" stroke="var(--text-ghost)" strokeWidth="2" />
+                <path d="M8 28h40" stroke="var(--text-ghost)" strokeWidth="2" />
+                <circle cx="48" cy="48" r="12" fill="var(--surface-solid)" stroke="var(--text-ghost)" strokeWidth="2" />
+                <path d="M44 48h8M48 44v8" stroke="var(--text-ghost)" strokeWidth="2" strokeLinecap="round" />
               </svg>
-              <p style={{ color: '#8a8c9e', fontSize: 18, fontWeight: 600, margin: '0 0 8px' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 18, fontWeight: 600, margin: '0 0 8px' }}>
                 Aún no hay informes disponibles.
               </p>
-              <p style={{ color: '#555669', fontSize: 14, margin: 0 }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
                 El equipo de Torii actualizará esta sección con tus informes semanales.
               </p>
             </div>
