@@ -157,7 +157,7 @@ export function ModuleView() {
   }
 
   if (!activeTeamMemberId) {
-    return <div style={{ textAlign: 'center', padding: 60, color: '#8a8c9e' }}>Elegí un miembro del equipo arriba para ver este módulo.</div>
+    return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-secondary)' }}>Elegí un miembro del equipo arriba para ver este módulo.</div>
   }
 
   if (loading || !mod) {
@@ -172,36 +172,36 @@ export function ModuleView() {
   const selectedVideoExams = selected?.kind === 'video' ? exams.filter((e) => e.video_id === selected.video.id) : []
 
   const lbl: React.CSSProperties = {
-    fontSize: 12, fontWeight: 600, color: '#8a8c9e', marginBottom: 6, display: 'block',
+    fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, display: 'block',
     textTransform: 'uppercase', letterSpacing: '0.05em',
   }
   const card: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 20,
+    background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 14, padding: 20,
   }
   const btn: React.CSSProperties = {
-    padding: '9px 16px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8,
+    padding: '9px 16px', background: 'var(--accent)', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8,
     border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
   }
   const btnOutline: React.CSSProperties = {
-    padding: '7px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 8, color: '#f0f1f7', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+    padding: '7px 14px', background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.1)',
+    borderRadius: 8, color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
     textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6,
   }
 
   return (
     <div style={{ paddingBottom: 48 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <button onClick={() => navigate('/portal/academia')} style={{ background: 'transparent', border: 'none', color: '#8a8c9e', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>←</button>
+        <button onClick={() => navigate('/portal/academia')} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: 20, cursor: 'pointer', lineHeight: 1 }}>←</button>
         <div>
           <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 24, fontWeight: 800, margin: 0 }}>{mod.title}</h1>
-          {mod.description && <p style={{ color: '#8a8c9e', fontSize: 14, margin: '4px 0 0' }}>{mod.description}</p>}
+          {mod.description && <p style={{ color: 'var(--text-secondary)', fontSize: 14, margin: '4px 0 0' }}>{mod.description}</p>}
         </div>
       </div>
-      <p style={{ color: '#555669', fontSize: 12, margin: '0 0 20px' }}>Cargando el progreso de {activeTeamMember?.full_name}</p>
+      <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: '0 0 20px' }}>Cargando el progreso de {activeTeamMember?.full_name}</p>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-        <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progressPct}%`, background: '#e5182b', transition: 'width 0.3s' }} />
+        <div style={{ flex: 1, height: 8, background: 'rgba(var(--overlay-rgb),0.06)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${progressPct}%`, background: 'var(--accent)', transition: 'width 0.3s' }} />
         </div>
         <span style={{ fontSize: 13, fontWeight: 700 }}>{progressPct}%</span>
       </div>
@@ -209,7 +209,7 @@ export function ModuleView() {
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 24 }} className="academia-modview-grid">
         {/* Lista de lecciones */}
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#555669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Lecciones</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Lecciones</div>
           {videos.map((video, i) => {
             const isSelected = selected?.kind === 'video' && selected.video.id === video.id
             return (
@@ -218,11 +218,11 @@ export function ModuleView() {
                 onClick={() => { setSelected({ kind: 'video', video }); setCurrentExamAnswers({}); setExamError(null) }}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
-                  marginBottom: 6, border: `1px solid ${isSelected ? 'rgba(229,24,43,0.4)' : 'rgba(255,255,255,0.07)'}`,
-                  background: isSelected ? 'rgba(229,24,43,0.06)' : 'rgba(255,255,255,0.02)',
+                  marginBottom: 6, border: `1px solid ${isSelected ? 'rgba(var(--accent-rgb),0.4)' : 'rgba(var(--overlay-rgb),0.07)'}`,
+                  background: isSelected ? 'rgba(var(--accent-rgb),0.06)' : 'rgba(var(--overlay-rgb),0.02)',
                 }}
               >
-                <span style={{ color: videoProgress[video.id] ? '#4ade80' : '#555669', fontSize: 16 }}>{videoProgress[video.id] ? '✓' : '○'}</span>
+                <span style={{ color: videoProgress[video.id] ? 'var(--success)' : 'var(--text-muted)', fontSize: 16 }}>{videoProgress[video.id] ? '✓' : '○'}</span>
                 <span style={{ fontSize: 13 }}>{i + 1}. {video.title}</span>
               </div>
             )
@@ -235,11 +235,11 @@ export function ModuleView() {
                 onClick={() => setSelected({ kind: 'material', material: mat, index: idx })}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
-                  marginBottom: 6, border: `1px solid ${isSelected ? 'rgba(229,24,43,0.4)' : 'rgba(255,255,255,0.07)'}`,
-                  background: isSelected ? 'rgba(229,24,43,0.06)' : 'rgba(255,255,255,0.02)',
+                  marginBottom: 6, border: `1px solid ${isSelected ? 'rgba(var(--accent-rgb),0.4)' : 'rgba(var(--overlay-rgb),0.07)'}`,
+                  background: isSelected ? 'rgba(var(--accent-rgb),0.06)' : 'rgba(var(--overlay-rgb),0.02)',
                 }}
               >
-                <span style={{ color: '#c084fc', fontSize: 15 }}>📄</span>
+                <span style={{ color: 'var(--purple)', fontSize: 15 }}>📄</span>
                 <span style={{ fontSize: 13 }}>{videos.length + idx + 1}. {mat.title}</span>
               </div>
             )
@@ -249,7 +249,7 @@ export function ModuleView() {
         {/* Contenido */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {!selected ? (
-            <div style={{ ...card, textAlign: 'center', color: '#555669', padding: 48 }}>No hay videos en este módulo.</div>
+            <div style={{ ...card, textAlign: 'center', color: 'var(--text-muted)', padding: 48 }}>No hay videos en este módulo.</div>
           ) : selected.kind === 'material' ? (
             <>
               <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
@@ -294,7 +294,7 @@ export function ModuleView() {
                     {savingVideoId === selected.video.id ? 'Guardando...' : '✓ Completado'}
                   </button>
                 ) : (
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80', background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 99, padding: '5px 14px' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', background: 'rgba(var(--success-rgb),0.12)', border: '1px solid rgba(var(--success-rgb),0.3)', borderRadius: 99, padding: '5px 14px' }}>
                     Completado
                   </span>
                 )}
@@ -304,10 +304,10 @@ export function ModuleView() {
                 <div style={card}>
                   <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>📄 Material del video</div>
                   {selectedVideoMaterials.map((mat) => (
-                    <div key={mat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div key={mat.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, padding: '8px 0', borderTop: '1px solid rgba(var(--overlay-rgb),0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 13 }}>{mat.title}</span>
-                        <span style={{ fontSize: 11, color: '#555669' }}>({mat.file_name})</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>({mat.file_name})</span>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {isPdf(mat) && <button style={btnOutline} onClick={() => setPreviewMaterial(mat)}>👁 Previsualizar</button>}
@@ -330,9 +330,9 @@ export function ModuleView() {
                       {submission && (
                         <span style={{
                           fontSize: 11, fontWeight: 700, borderRadius: 99, padding: '4px 12px',
-                          color: submission.is_graded ? '#4ade80' : '#8a8c9e',
-                          background: submission.is_graded ? 'rgba(74,222,128,0.12)' : 'rgba(255,255,255,0.06)',
-                          border: `1px solid ${submission.is_graded ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.1)'}`,
+                          color: submission.is_graded ? 'var(--success)' : 'var(--text-secondary)',
+                          background: submission.is_graded ? 'rgba(var(--success-rgb),0.12)' : 'rgba(var(--overlay-rgb),0.06)',
+                          border: `1px solid ${submission.is_graded ? 'rgba(var(--success-rgb),0.3)' : 'rgba(var(--overlay-rgb),0.1)'}`,
                         }}>
                           {submission.is_graded ? `${submission.score}/${submission.total_questions}` : 'Pendiente de revisión'}
                         </span>
@@ -341,18 +341,18 @@ export function ModuleView() {
 
                     {submission ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                        <p style={{ color: '#8a8c9e', fontSize: 13, margin: 0 }}>Examen enviado.</p>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: 13, margin: 0 }}>Examen enviado.</p>
                         {questions.map((q, i) => {
                           const answer = submission.answers?.[q.id]
                           const isCorrect = q.question_type === 'multiple_choice' && answer === q.correct_answer
                           return (
                             <div key={q.id}>
                               <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 4px' }}>{i + 1}. {q.question_text}</p>
-                              <p style={{ fontSize: 13, margin: 0, color: q.question_type === 'multiple_choice' ? (isCorrect ? '#4ade80' : '#f87171') : '#8a8c9e' }}>
+                              <p style={{ fontSize: 13, margin: 0, color: q.question_type === 'multiple_choice' ? (isCorrect ? 'var(--success)' : 'var(--danger)') : 'var(--text-secondary)' }}>
                                 Tu respuesta: {answer || 'Sin respuesta'}
                               </p>
                               {q.question_type === 'multiple_choice' && !isCorrect && (
-                                <p style={{ fontSize: 13, margin: 0, color: '#4ade80' }}>Correcta: {q.correct_answer}</p>
+                                <p style={{ fontSize: 13, margin: 0, color: 'var(--success)' }}>Correcta: {q.correct_answer}</p>
                               )}
                             </div>
                           )
@@ -366,7 +366,7 @@ export function ModuleView() {
                             {q.question_type === 'multiple_choice' ? (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                 {(q.options ?? []).map((opt, j) => (
-                                  <label key={j} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#f0f1f7', cursor: 'pointer' }}>
+                                  <label key={j} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-primary)', cursor: 'pointer' }}>
                                     <input
                                       type="radio"
                                       name={`q-${q.id}`}
@@ -383,12 +383,12 @@ export function ModuleView() {
                                 onChange={(e) => setCurrentExamAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
                                 placeholder="Escribí tu respuesta..."
                                 rows={3}
-                                style={{ width: '100%', background: '#080910', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', color: '#f0f1f7', fontSize: 13, fontFamily: 'DM Sans, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
+                                style={{ width: '100%', background: 'var(--bg)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, padding: '10px 12px', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'DM Sans, sans-serif', resize: 'vertical', boxSizing: 'border-box' }}
                               />
                             )}
                           </div>
                         ))}
-                        {examError && <p style={{ color: '#f87171', fontSize: 12, margin: 0 }}>{examError}</p>}
+                        {examError && <p style={{ color: 'var(--danger)', fontSize: 12, margin: 0 }}>{examError}</p>}
                         <button
                           style={{ ...btn, width: '100%', opacity: savingExamId === exam.id ? 0.7 : 1, cursor: savingExamId === exam.id ? 'not-allowed' : 'pointer' }}
                           onClick={() => submitExam(exam.id)}
@@ -414,7 +414,7 @@ export function ModuleView() {
               placeholder="Escribí tu reflexión..."
               rows={5}
               disabled={!!existingReflection?.is_reviewed}
-              style={{ width: '100%', background: '#080910', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', color: '#f0f1f7', fontSize: 13, fontFamily: 'DM Sans, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: 12 }}
+              style={{ width: '100%', background: 'var(--bg)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, padding: '10px 12px', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'DM Sans, sans-serif', resize: 'vertical', boxSizing: 'border-box', marginBottom: 12 }}
             />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <button
@@ -429,7 +429,7 @@ export function ModuleView() {
                 {savingReflection ? 'Enviando...' : existingReflection ? 'Actualizar' : 'Enviar'}
               </button>
               {existingReflection?.is_reviewed && (
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 99, padding: '4px 12px' }}>Revisada</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', border: '1px solid rgba(var(--success-rgb),0.3)', borderRadius: 99, padding: '4px 12px' }}>Revisada</span>
               )}
             </div>
           </div>
@@ -441,10 +441,10 @@ export function ModuleView() {
           style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
           onClick={() => setPreviewMaterial(null)}
         >
-          <div style={{ width: '100%', maxWidth: 900, height: '85vh', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+          <div style={{ width: '100%', maxWidth: 900, height: '85vh', background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', flexShrink: 0 }}>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{previewMaterial.title}</span>
-              <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={() => setPreviewMaterial(null)}>✕</button>
+              <button style={{ color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={() => setPreviewMaterial(null)}>✕</button>
             </div>
             <div
               style={{ flex: 1 }}

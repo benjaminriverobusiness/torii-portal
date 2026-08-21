@@ -51,20 +51,20 @@ function PhaseCard({
     return () => window.removeEventListener('resize', handler)
   }, [])
   const borderColor = isActive
-    ? 'rgba(229,24,43,0.4)'
+    ? 'rgba(var(--accent-rgb),0.4)'
     : isCompleted
-    ? 'rgba(74,222,128,0.2)'
-    : 'rgba(255,255,255,0.06)'
+    ? 'rgba(var(--success-rgb),0.2)'
+    : 'rgba(var(--overlay-rgb),0.06)'
 
   const bgColor = isActive
-    ? 'rgba(229,24,43,0.04)'
+    ? 'rgba(var(--accent-rgb),0.04)'
     : isCompleted
-    ? 'rgba(74,222,128,0.03)'
-    : 'rgba(255,255,255,0.01)'
+    ? 'rgba(var(--success-rgb),0.03)'
+    : 'rgba(var(--overlay-rgb),0.01)'
 
-  const labelColor = isActive ? '#e5182b' : isCompleted ? '#4ade80' : '#555669'
-  const nameColor = isActive || isCompleted ? '#f0f1f7' : '#8a8c9e'
-  const descColor = isFuture ? '#555669' : '#8a8c9e'
+  const labelColor = isActive ? 'var(--accent)' : isCompleted ? 'var(--success)' : 'var(--text-muted)'
+  const nameColor = isActive || isCompleted ? 'var(--text-primary)' : 'var(--text-secondary)'
+  const descColor = isFuture ? 'var(--text-muted)' : 'var(--text-secondary)'
 
   return (
     <div
@@ -93,25 +93,25 @@ function PhaseCard({
             justifyContent: 'center',
             flexShrink: 0,
             ...(isCompleted
-              ? { background: 'rgba(74,222,128,0.15)', border: '2px solid rgba(74,222,128,0.4)' }
+              ? { background: 'rgba(var(--success-rgb),0.15)', border: '2px solid rgba(var(--success-rgb),0.4)' }
               : isActive
               ? {
-                  background: '#e5182b',
+                  background: 'var(--accent)',
                   border: 'none',
-                  boxShadow: '0 0 24px rgba(229,24,43,0.4)',
+                  boxShadow: '0 0 24px rgba(var(--accent-rgb),0.4)',
                   animation: 'glow-pulse 2s ease-in-out infinite',
                 }
-              : { background: 'transparent', border: '2px solid rgba(255,255,255,0.1)' }),
+              : { background: 'transparent', border: '2px solid rgba(var(--overlay-rgb),0.1)' }),
           }}
         >
           {isCompleted ? (
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M4 10l4.5 4.5L16 6" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M4 10l4.5 4.5L16 6" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           ) : (
             <span
               style={{
-                color: isActive ? '#08090f' : '#555669',
+                color: isActive ? 'var(--bg)' : 'var(--text-muted)',
                 fontWeight: 800,
                 fontSize: 18,
                 fontFamily: 'Bricolage Grotesque, sans-serif',
@@ -134,10 +134,10 @@ function PhaseCard({
             textAlign: 'center',
             whiteSpace: 'nowrap',
             ...(isCompleted
-              ? { color: '#4ade80', background: 'rgba(74,222,128,0.1)' }
+              ? { color: 'var(--success)', background: 'rgba(var(--success-rgb),0.1)' }
               : isActive
-              ? { color: '#e5182b', background: 'rgba(229,24,43,0.1)' }
-              : { color: '#555669', background: 'rgba(255,255,255,0.04)' }),
+              ? { color: 'var(--accent)', background: 'rgba(var(--accent-rgb),0.1)' }
+              : { color: 'var(--text-muted)', background: 'rgba(var(--overlay-rgb),0.04)' }),
           }}
         >
           {isCompleted ? 'Completada' : isActive ? 'Activa' : 'Pendiente'}
@@ -162,9 +162,9 @@ function PhaseCard({
               style={{
                 fontSize: 12,
                 fontWeight: 600,
-                color: '#e5182b',
-                background: 'rgba(229,24,43,0.1)',
-                border: '1px solid rgba(229,24,43,0.2)',
+                color: 'var(--accent)',
+                background: 'rgba(var(--accent-rgb),0.1)',
+                border: '1px solid rgba(var(--accent-rgb),0.2)',
                 borderRadius: 99,
                 padding: '4px 12px',
                 whiteSpace: 'nowrap',
@@ -186,15 +186,15 @@ function PhaseCard({
 
         {/* Video embed */}
         {phase.video_url ? (
-          <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.07)', marginTop: 16 }}>
+          <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(var(--overlay-rgb),0.07)', marginTop: 16 }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 14px',
-              background: 'rgba(229,24,43,0.08)',
-              borderBottom: '1px solid rgba(229,24,43,0.15)',
+              background: 'rgba(var(--accent-rgb),0.08)',
+              borderBottom: '1px solid rgba(var(--accent-rgb),0.15)',
             }}>
-              <div className="glow-dot" style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#e5182b', boxShadow: '0 0 8px #e5182b' }} />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e5182b' }}>
+              <div className="glow-dot" style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)' }}>
                 VIDEO DE ESTA ETAPA
               </span>
             </div>
@@ -209,16 +209,16 @@ function PhaseCard({
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '12px 16px',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(var(--overlay-rgb),0.02)',
+            border: '1px solid rgba(var(--overlay-rgb),0.06)',
             borderRadius: 10,
             marginTop: 16,
           }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="3" width="16" height="14" rx="2" stroke="#333" strokeWidth="1.5" />
-              <polygon points="8,7 14,10 8,13" fill="#333" />
+              <rect x="2" y="3" width="16" height="14" rx="2" stroke="var(--text-ghost)" strokeWidth="1.5" />
+              <polygon points="8,7 14,10 8,13" fill="var(--text-ghost)" />
             </svg>
-            <span style={{ color: '#555669', fontSize: 13 }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>
               El video explicativo de esta etapa estará disponible pronto.
             </span>
           </div>
@@ -279,7 +279,7 @@ export function RecorridoPage() {
   const activeIndex = phases.findIndex((p) => p.id === status?.active_phase_id)
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -294,9 +294,9 @@ export function RecorridoPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: '#e5182b',
-              background: 'rgba(229,24,43,0.10)',
-              border: '1px solid rgba(229,24,43,0.22)',
+              textTransform: 'uppercase', color: 'var(--accent)',
+              background: 'rgba(var(--accent-rgb),0.10)',
+              border: '1px solid rgba(var(--accent-rgb),0.22)',
               borderRadius: 99, padding: '5px 14px', marginBottom: 16,
             }}>
               TU RECORRIDO
@@ -304,14 +304,14 @@ export function RecorridoPage() {
             <h1 style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: 800, color: '#f0f1f7',
+              fontWeight: 800, color: 'var(--text-primary)',
               margin: '0 0 8px',
               animation: 'fade-up 0.5s ease both',
             }}>
               El camino de tu sistema
             </h1>
             <p style={{
-              color: '#8a8c9e', fontSize: 16, margin: 0,
+              color: 'var(--text-secondary)', fontSize: 16, margin: 0,
               animation: 'fade-up 0.5s ease 0.1s both',
             }}>
               Cada etapa tiene un objetivo claro. Entendé en qué momento estás y qué viene después.
@@ -320,7 +320,7 @@ export function RecorridoPage() {
 
           {phases.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-              <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
                 Las etapas de tu recorrido serán configuradas pronto por el equipo de Torii.
               </p>
             </div>
@@ -328,8 +328,8 @@ export function RecorridoPage() {
             <>
               {/* Journey Map overview */}
               <div className="fade-in visible" style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(var(--overlay-rgb),0.02)',
+                border: '1px solid rgba(var(--overlay-rgb),0.07)',
                 borderRadius: 20,
                 padding: '40px 48px 56px',
                 marginBottom: 48,
@@ -347,9 +347,9 @@ export function RecorridoPage() {
                 <div style={{
                   display: 'inline-flex', alignItems: 'center',
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-                  textTransform: 'uppercase', color: '#e5182b',
-                  background: 'rgba(229,24,43,0.10)',
-                  border: '1px solid rgba(229,24,43,0.22)',
+                  textTransform: 'uppercase', color: 'var(--accent)',
+                  background: 'rgba(var(--accent-rgb),0.10)',
+                  border: '1px solid rgba(var(--accent-rgb),0.22)',
                   borderRadius: 99, padding: '5px 14px', marginBottom: 24,
                 }}>
                   DETALLE DE CADA ETAPA

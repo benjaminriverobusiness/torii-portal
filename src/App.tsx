@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { Login } from './pages/Login'
 import { Portal } from './pages/Portal'
 import { Admin } from './pages/Admin'
@@ -31,7 +32,7 @@ function ProtectedRoute({
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#08090f',
+          backgroundColor: 'var(--bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -61,7 +62,7 @@ function AppRoutes() {
       <div
         style={{
           minHeight: '100vh',
-          backgroundColor: '#08090f',
+          backgroundColor: 'var(--bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -190,10 +191,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }

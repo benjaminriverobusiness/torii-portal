@@ -2,23 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme tokens ────────────────────────────────────────────
+   Dark es el look original (valores idénticos a los hex que ya
+   estaban hardcodeados en cada página) — cero cambio visual para
+   quien no cambia de tema. Light se activa con [data-theme="light"]
+   en <html>, seteado por ThemeContext.
+
+   Los tokens "-rgb" (tripletas sin alpha) se usan como
+   rgba(var(--x-rgb), N) en vez de duplicar cada valor de alpha ya
+   afinado a mano en el código — se mantienen CONSTANTES entre temas
+   a propósito: un wash traslúcido al 10-15% se ve bien tanto sobre
+   fondo oscuro como claro sin necesidad de un segundo juego de
+   valores. Los tokens sólidos (--success, --danger, etc., sin "-rgb")
+   sí cambian por tema — son los que se usan como color de texto/ícono
+   en opacidad plena, donde el contraste sobre el fondo importa. */
 :root {
   --bg: #08090f;
+  --bg-rgb: 8,9,15;
+  --overlay-rgb: 255,255,255;
+  --surface-solid: #0d0e17;
+  --surface-solid-2: #111220;
   --bg-card: rgba(255,255,255,0.03);
   --bg-card-hover: rgba(255,255,255,0.05);
   --border: rgba(255,255,255,0.07);
   --border-hover: rgba(255,255,255,0.14);
+
   --accent: #e5182b;
+  --accent-rgb: 229,24,43;
+  --accent-hover: #c91525;
   --accent-glow: rgba(229,24,43,0.4);
   --accent-dim: rgba(229,24,43,0.12);
+
   --text-primary: #f0f1f7;
   --text-secondary: #8a8c9e;
   --text-muted: #555669;
+  --text-ghost: #333333;
+
+  --success: #4ade80;
+  --success-rgb: 74,222,128;
+  --danger: #f87171;
+  --danger-rgb: 248,113,113;
+  --warning: #fbbf24;
+  --warning-rgb: 251,191,36;
+  --info: #60a5fa;
+  --info-rgb: 96,165,250;
+  --purple: #c084fc;
+  --purple-rgb: 192,132,252;
+  --gold: #c9a84c;
+  --gold-rgb: 201,168,76;
+  --orange: #fb923c;
+  --orange-rgb: 251,146,60;
+  --lavender: #a78bfa;
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f5f9;
+  --bg-rgb: 244,245,249;
+  --overlay-rgb: 15,17,26;
+  --surface-solid: #ffffff;
+  --surface-solid-2: #eef0f5;
+  --bg-card: rgba(15,17,26,0.03);
+  --bg-card-hover: rgba(15,17,26,0.05);
+  --border: rgba(15,17,26,0.09);
+  --border-hover: rgba(15,17,26,0.16);
+
+  --accent: #e5182b;
+  --accent-rgb: 229,24,43;
+  --accent-hover: #c91525;
+  --accent-glow: rgba(229,24,43,0.25);
+  --accent-dim: rgba(229,24,43,0.08);
+
+  --text-primary: #14151f;
+  --text-secondary: #52546a;
+  --text-muted: #6b6d85;
+  --text-ghost: #c3c5d1;
+
+  --success: #15803d;
+  --success-rgb: 74,222,128;
+  --danger: #dc2626;
+  --danger-rgb: 248,113,113;
+  --warning: #a16207;
+  --warning-rgb: 251,191,36;
+  --info: #1d4ed8;
+  --info-rgb: 96,165,250;
+  --purple: #7c3aed;
+  --purple-rgb: 192,132,252;
+  --gold: #8a6d1f;
+  --gold-rgb: 201,168,76;
+  --orange: #c2410c;
+  --orange-rgb: 251,146,60;
+  --lavender: #6d5bd0;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
+
+/* Controla el theming nativo del navegador (date/select pickers, etc.) —
+   reemplaza los colorScheme:'dark' que estaban hardcodeados a mano en
+   varios <input type="date">, ahora heredan del tema real. */
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
 
 html, body {
   margin: 0;
@@ -41,8 +125,8 @@ input, textarea, select {
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(var(--overlay-rgb),0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--overlay-rgb),0.2); }
 
 /* ─── Animations ─────────────────────────────────────────── */
 

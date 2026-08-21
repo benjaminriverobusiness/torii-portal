@@ -61,23 +61,23 @@ const ESTADO_LABELS: Record<string, string> = {
 }
 
 const ESTADO_COLORS: Record<string, string> = {
-  pendiente_datos: '#8a8c9e',
-  pendiente_contacto: '#fb923c',
-  contactado: '#60a5fa',
-  en_proceso: '#c084fc',
-  cerrado: '#4ade80',
-  no_califico: '#555669',
+  pendiente_datos: 'var(--text-secondary)',
+  pendiente_contacto: 'var(--orange)',
+  contactado: 'var(--info)',
+  en_proceso: 'var(--purple)',
+  cerrado: 'var(--success)',
+  no_califico: 'var(--text-muted)',
 }
 
 function EstadoBadge({ estado }: { estado: string }) {
-  const color = ESTADO_COLORS[estado] ?? '#8a8c9e'
+  const color = ESTADO_COLORS[estado] ?? 'var(--text-secondary)'
   return (
     <span
       style={{
         display: 'inline-block',
-        backgroundColor: `${color}1a`,
+        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
         color,
-        border: `1px solid ${color}40`,
+        border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
         borderRadius: 99,
         padding: '4px 12px',
         fontSize: 12,
@@ -91,8 +91,8 @@ function EstadoBadge({ estado }: { estado: string }) {
 }
 
 function WarmIntroMark({ value }: { value: boolean }) {
-  if (!value) return <span style={{ color: '#555669' }}>—</span>
-  return <span style={{ color: '#4ade80', fontWeight: 700 }}>✓</span>
+  if (!value) return <span style={{ color: 'var(--text-muted)' }}>—</span>
+  return <span style={{ color: 'var(--success)', fontWeight: 700 }}>✓</span>
 }
 
 function formatDate(dateStr: string): string {
@@ -134,11 +134,11 @@ const GRID_COLUMNS = '2fr 1.4fr 2fr 90px 1.4fr 110px 90px'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  backgroundColor: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.10)',
+  backgroundColor: 'rgba(var(--overlay-rgb),0.04)',
+  border: '1px solid rgba(var(--overlay-rgb),0.10)',
   borderRadius: 8,
   padding: '11px 14px',
-  color: '#f0f1f7',
+  color: 'var(--text-primary)',
   fontSize: 14,
   outline: 'none',
   boxSizing: 'border-box',
@@ -148,7 +148,7 @@ const inputStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  color: '#8a8c9e',
+  color: 'var(--text-secondary)',
   fontSize: 12,
   marginBottom: 8,
   fontWeight: 500,
@@ -178,14 +178,14 @@ function ReferidoModal({
       onClick={onClose}
     >
       <div
-        style={{ width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}
+        style={{ width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 20, padding: 32 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 22, fontWeight: 800, color: '#f0f1f7', margin: 0 }}>
+          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
             {isEditing ? 'Editar referido' : 'Agregar referido'}
           </h2>
-          <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
+          <button style={{ color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
         </div>
 
         <label style={labelStyle}>Nombre del referido *</label>
@@ -201,7 +201,7 @@ function ReferidoModal({
         <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={3} value={form.perfil_referido} onChange={(e) => setForm((f) => ({ ...f, perfil_referido: e.target.value }))} />
 
         <label style={labelStyle}>Incentivo</label>
-        <select style={{ ...inputStyle, backgroundColor: '#0d0e17' }} value={form.incentivo} onChange={(e) => setForm((f) => ({ ...f, incentivo: e.target.value }))}>
+        <select style={{ ...inputStyle, backgroundColor: 'var(--surface-solid)' }} value={form.incentivo} onChange={(e) => setForm((f) => ({ ...f, incentivo: e.target.value }))}>
           <option value="">Sin especificar</option>
           {INCENTIVO_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -209,20 +209,20 @@ function ReferidoModal({
         </select>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8, cursor: 'pointer' }} onClick={() => setForm((f) => ({ ...f, warm_intro: !f.warm_intro }))}>
-          <div style={{ width: 40, height: 22, borderRadius: 11, background: form.warm_intro ? '#e5182b' : 'rgba(255,255,255,0.1)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-            <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', position: 'absolute', top: 2, left: form.warm_intro ? 20 : 2, transition: 'left 0.2s' }} />
+          <div style={{ width: 40, height: 22, borderRadius: 11, background: form.warm_intro ? 'var(--accent)' : 'rgba(var(--overlay-rgb),0.1)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+            <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', position: 'absolute', top: 2, left: form.warm_intro ? 20 : 2, transition: 'left 0.2s' }} />
           </div>
-          <span style={{ fontSize: 14, color: '#f0f1f7', userSelect: 'none' }}>Warm intro (ya hubo contacto directo)</span>
+          <span style={{ fontSize: 14, color: 'var(--text-primary)', userSelect: 'none' }}>Warm intro (ya hubo contacto directo)</span>
         </div>
 
-        {error && <p style={{ color: '#f87171', fontSize: 13, margin: '16px 0 0' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 13, margin: '16px 0 0' }}>{error}</p>}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-          <button style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8a8c9e', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={onClose}>
+          <button style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(var(--overlay-rgb),0.1)', color: 'var(--text-secondary)', borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={onClose}>
             Cancelar
           </button>
           <button
-            style={{ padding: '10px 24px', background: '#e5182b', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+            style={{ padding: '10px 24px', background: 'var(--accent)', color: 'white', fontWeight: 700, borderRadius: 8, border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
             onClick={onSave}
             disabled={saving}
           >
@@ -373,7 +373,7 @@ export function ReferidosPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -388,9 +388,9 @@ export function ReferidosPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: '#e5182b',
-              background: 'rgba(229,24,43,0.10)',
-              border: '1px solid rgba(229,24,43,0.22)',
+              textTransform: 'uppercase', color: 'var(--accent)',
+              background: 'rgba(var(--accent-rgb),0.10)',
+              border: '1px solid rgba(var(--accent-rgb),0.22)',
               borderRadius: 99, padding: '5px 14px', marginBottom: 16,
             }}>
               MIS REFERIDOS
@@ -398,12 +398,12 @@ export function ReferidosPage() {
             <h1 style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: 800, color: '#f0f1f7',
+              fontWeight: 800, color: 'var(--text-primary)',
               margin: '0 0 8px',
             }}>
               El funnel de tus referidos
             </h1>
-            <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
               Cada persona que presentaste, desde que se pidió el referido hasta el cierre.
             </p>
           </div>
@@ -412,7 +412,7 @@ export function ReferidosPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
             <button
               onClick={openNew}
-              style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+              style={{ padding: '8px 18px', background: 'var(--accent)', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
             >
               + Agregar referido
             </button>
@@ -420,14 +420,14 @@ export function ReferidosPage() {
 
           {referidos.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-              <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
                 Todavía no generaste referidos.
               </p>
             </div>
           ) : (
             <div style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(var(--overlay-rgb),0.02)',
+              border: '1px solid rgba(var(--overlay-rgb),0.07)',
               borderRadius: 16,
               overflow: 'hidden',
             }}>
@@ -437,8 +437,8 @@ export function ReferidosPage() {
                 gridTemplateColumns: GRID_COLUMNS,
                 gap: 12,
                 padding: '12px 20px',
-                background: '#0d0e17',
-                color: '#555669',
+                background: 'var(--surface-solid)',
+                color: 'var(--text-muted)',
                 fontSize: 11,
                 fontWeight: 700,
                 textTransform: 'uppercase',
@@ -466,36 +466,36 @@ export function ReferidosPage() {
                       gridTemplateColumns: GRID_COLUMNS,
                       gap: 12,
                       padding: '16px 20px',
-                      borderTop: '1px solid rgba(255,255,255,0.05)',
+                      borderTop: '1px solid rgba(var(--overlay-rgb),0.05)',
                       alignItems: 'center',
                       cursor: 'pointer',
-                      background: expanded ? 'rgba(255,255,255,0.02)' : 'transparent',
+                      background: expanded ? 'rgba(var(--overlay-rgb),0.02)' : 'transparent',
                     }}
                   >
                     <div style={{ fontWeight: 700, fontSize: 14 }}>{r.referido_nombre}</div>
-                    <div style={{ color: '#8a8c9e', fontSize: 13 }}>{r.presentado_por || '—'}</div>
-                    <div style={{ color: '#8a8c9e', fontSize: 13, lineHeight: 1.5 }}>{r.perfil_referido || '—'}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{r.presentado_por || '—'}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5 }}>{r.perfil_referido || '—'}</div>
                     <div><WarmIntroMark value={r.warm_intro} /></div>
                     <div><EstadoBadge estado={r.estado} /></div>
-                    <div style={{ color: '#8a8c9e', fontSize: 13 }}>{formatDate(r.fecha_pedido)}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{formatDate(r.fecha_pedido)}</div>
                     <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
                       <button
                         title="Editar"
                         onClick={() => openEdit(r)}
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#f0f1f7', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                        style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 6, color: 'var(--text-primary)', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                       >
                         ✎
                       </button>
                       {confirmDeleteId === r.id ? (
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button title="Confirmar" onClick={() => handleDelete(r)} style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6, color: '#4ade80', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✓</button>
-                          <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#8a8c9e', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✕</button>
+                          <button title="Confirmar" onClick={() => handleDelete(r)} style={{ background: 'rgba(var(--success-rgb),0.12)', border: '1px solid rgba(var(--success-rgb),0.3)', borderRadius: 6, color: 'var(--success)', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✓</button>
+                          <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 6, color: 'var(--text-secondary)', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>✕</button>
                         </div>
                       ) : (
                         <button
                           title="Eliminar"
                           onClick={() => setConfirmDeleteId(r.id)}
-                          style={{ background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.25)', borderRadius: 6, color: '#e5182b', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          style={{ background: 'rgba(var(--accent-rgb),0.10)', border: '1px solid rgba(var(--accent-rgb),0.25)', borderRadius: 6, color: 'var(--accent)', fontSize: 13, padding: '5px 9px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
                         >
                           🗑
                         </button>
@@ -504,7 +504,7 @@ export function ReferidosPage() {
                   </div>
 
                   {expanded && (
-                    <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.015)' }}>
+                    <div style={{ padding: '20px 24px', borderTop: '1px solid rgba(var(--overlay-rgb),0.05)', background: 'rgba(var(--overlay-rgb),0.015)' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 18 }} className="referido-detail-grid">
                         {[
                           { label: 'Teléfono', value: r.referido_telefono || '—' },
@@ -513,21 +513,21 @@ export function ReferidosPage() {
                           { label: 'Fecha de cierre', value: formatDateTime(r.fecha_cierre) },
                         ].map((f) => (
                           <div key={f.label}>
-                            <div style={{ color: '#555669', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{f.label}</div>
-                            <div style={{ color: '#f0f1f7', fontSize: 13 }}>{f.value}</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{f.label}</div>
+                            <div style={{ color: 'var(--text-primary)', fontSize: 13 }}>{f.value}</div>
                           </div>
                         ))}
                       </div>
 
                       <div style={{ marginBottom: 18 }}>
-                        <div style={{ color: '#555669', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notas</div>
-                        <div style={{ color: '#f0f1f7', fontSize: 13, lineHeight: 1.5 }}>{r.notas || '—'}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notas</div>
+                        <div style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.5 }}>{r.notas || '—'}</div>
                       </div>
 
-                      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px' }}>
-                        <p style={{ color: '#c9ced9', fontSize: 13, lineHeight: 1.6, margin: guidance.bot ? '0 0 8px' : 0 }}>{guidance.missing}</p>
+                      <div style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 10, padding: '14px 16px' }}>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.6, margin: guidance.bot ? '0 0 8px' : 0 }}>{guidance.missing}</p>
                         {guidance.bot && (
-                          <p style={{ color: '#8a8c9e', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{guidance.bot}</p>
+                          <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{guidance.bot}</p>
                         )}
                       </div>
                     </div>

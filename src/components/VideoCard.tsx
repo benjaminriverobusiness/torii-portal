@@ -40,19 +40,19 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
   return (
     <div
       style={{
-        backgroundColor: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
+        backgroundColor: 'rgba(var(--overlay-rgb),0.03)',
+        border: '1px solid rgba(var(--overlay-rgb),0.07)',
         borderRadius: 16,
         overflow: 'hidden',
         cursor: 'pointer',
         transition: 'border-color 0.2s, transform 0.2s',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(229,24,43,0.22)'
+        e.currentTarget.style.borderColor = 'rgba(var(--accent-rgb),0.22)'
         e.currentTarget.style.transform = 'translateY(-2px)'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+        e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.07)'
         e.currentTarget.style.transform = 'translateY(0)'
       }}
     >
@@ -75,7 +75,7 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
             style={{
               width: '100%',
               aspectRatio: '16/9',
-              backgroundColor: '#0d0e17',
+              backgroundColor: 'var(--surface-solid)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -85,10 +85,10 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
             onClick={openVideo}
           >
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="20" fill="rgba(229,24,43,0.15)" />
-              <path d="M16 13l12 7-12 7V13z" fill="#e5182b" />
+              <circle cx="20" cy="20" r="20" fill="rgba(var(--accent-rgb),0.15)" />
+              <path d="M16 13l12 7-12 7V13z" fill="var(--accent)" />
             </svg>
-            <span style={{ color: '#8a8c9e', fontSize: 13 }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
               {isLoom ? 'Ver en Loom' : 'Ver video'}
             </span>
           </div>
@@ -117,7 +117,7 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
       <div style={{ padding: '16px 20px' }}>
         <div
           style={{
-            color: '#f0f1f7',
+            color: 'var(--text-primary)',
             fontSize: 14,
             fontWeight: 700,
             marginBottom: 6,
@@ -132,7 +132,7 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
         {video.description && (
           <div
             style={{
-              color: '#8a8c9e',
+              color: 'var(--text-secondary)',
               fontSize: 13,
               lineHeight: 1.5,
               display: '-webkit-box',
@@ -155,11 +155,11 @@ export function VideoCard({ video, onPlay }: VideoCardProps) {
           onClick={openVideo}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M3 2l8 5-8 5V2z" fill="#e5182b" />
+            <path d="M3 2l8 5-8 5V2z" fill="var(--accent)" />
           </svg>
           <span
             style={{
-              color: '#e5182b',
+              color: 'var(--accent)',
               fontSize: 13,
               fontWeight: 600,
               transition: 'opacity 0.2s',

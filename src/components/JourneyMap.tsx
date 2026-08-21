@@ -17,7 +17,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
 
   if (!phases || phases.length === 0) {
     return (
-      <p style={{ color: '#555669', fontSize: 14, textAlign: 'center', padding: '40px 0' }}>
+      <p style={{ color: 'var(--text-muted)', fontSize: 14, textAlign: 'center', padding: '40px 0' }}>
         Las etapas de tu recorrido serán configuradas pronto.
       </p>
     )
@@ -56,7 +56,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
     return (
       <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', padding: '0 16px', width: '100%', boxSizing: 'border-box', paddingRight: '16px' }}>
         {/* Vertical connector line */}
-        <div style={{ position: 'absolute', left: '36px', top: 0, bottom: 0, width: '2px', background: 'linear-gradient(to bottom, #e5182b, rgba(229,24,43,0.1))' }} />
+        <div style={{ position: 'absolute', left: '36px', top: 0, bottom: 0, width: '2px', background: 'linear-gradient(to bottom, var(--accent), rgba(var(--accent-rgb),0.1))' }} />
 
         {phases.map((phase, i) => {
           const status = getStatus(i)
@@ -69,18 +69,18 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                 width: 52, height: 52, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, zIndex: 2,
-                backgroundColor: status === 'future' ? 'rgba(255,255,255,0.04)' : '#e5182b',
-                border: status === 'future' ? '2px solid rgba(255,255,255,0.09)' : 'none',
+                backgroundColor: status === 'future' ? 'rgba(var(--overlay-rgb),0.04)' : 'var(--accent)',
+                border: status === 'future' ? '2px solid rgba(var(--overlay-rgb),0.09)' : 'none',
                 boxShadow: isActive
-                  ? '0 0 20px rgba(229,24,43,0.5), 0 0 40px rgba(229,24,43,0.2)'
-                  : isCompleted ? '0 0 10px rgba(229,24,43,0.3)' : 'none',
+                  ? '0 0 20px rgba(var(--accent-rgb),0.5), 0 0 40px rgba(var(--accent-rgb),0.2)'
+                  : isCompleted ? '0 0 10px rgba(var(--accent-rgb),0.3)' : 'none',
               }}>
                 {isCompleted ? (
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M3 8l3.5 3.5L13 5" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : (
-                  <span style={{ color: status === 'future' ? '#555669' : 'white', fontWeight: 800, fontSize: 16, fontFamily: 'Bricolage Grotesque, sans-serif' }}>
+                  <span style={{ color: status === 'future' ? 'var(--text-muted)' : 'white', fontWeight: 800, fontSize: 16, fontFamily: 'Bricolage Grotesque, sans-serif' }}>
                     {phase.phase_order}
                   </span>
                 )}
@@ -88,28 +88,28 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
 
               {/* Content */}
               <div style={{ flex: 1, paddingTop: 6, minWidth: 0, overflow: 'hidden', paddingRight: '8px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: isActive ? '#f0f1f7' : isCompleted ? '#f0f1f7' : '#555669', marginBottom: '4px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: isActive ? 'var(--text-primary)' : isCompleted ? 'var(--text-primary)' : 'var(--text-muted)', marginBottom: '4px' }}>
                   {phase.phase_name}
                 </div>
                 {isActive && (
                   <>
-                    <div style={{ fontSize: '12px', color: '#e5182b', fontWeight: 600, marginBottom: '6px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600, marginBottom: '6px' }}>
                       Día {days_in_phase ?? 1} en esta etapa
                     </div>
                     {phase.phase_description && (
-                      <div style={{ fontSize: '13px', color: '#8a8c9e', lineHeight: 1.5, whiteSpace: 'pre-line', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, whiteSpace: 'pre-line', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                         {phase.phase_description}
                       </div>
                     )}
                   </>
                 )}
                 {isCompleted && (
-                  <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: 700, color: '#4ade80', background: 'rgba(74,222,128,0.1)', borderRadius: 99, padding: '2px 8px' }}>
+                  <span style={{ display: 'inline-block', fontSize: '11px', fontWeight: 700, color: 'var(--success)', background: 'rgba(var(--success-rgb),0.1)', borderRadius: 99, padding: '2px 8px' }}>
                     Completada
                   </span>
                 )}
                 {!isActive && !isCompleted && phase.phase_description && (
-                  <div style={{ fontSize: '12px', color: '#555669', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                     {phase.phase_description}
                   </div>
                 )}
@@ -165,15 +165,15 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
             const statusA = getStatus(i)
             const statusB = getStatus(i + 1)
 
-            let stroke = 'rgba(255,255,255,0.08)'
+            let stroke = 'rgba(var(--overlay-rgb),0.08)'
             let isDashed = false
             let useGlow = false
 
             if (statusA === 'completed' && statusB === 'completed') {
-              stroke = '#e5182b'
+              stroke = 'var(--accent)'
               useGlow = true
             } else if (statusA === 'completed' && statusB === 'active') {
-              stroke = '#e5182b'
+              stroke = 'var(--accent)'
               isDashed = true
               useGlow = true
             }
@@ -242,9 +242,9 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                   left: cardLeft,
                   right: cardRight,
                   transform: cardTransform,
-                  backgroundColor: '#0f0f1a',
-                  border: '1px solid rgba(229,24,43,0.5)',
-                  boxShadow: '0 0 24px rgba(229,24,43,0.15), 0 8px 32px rgba(0,0,0,0.4)',
+                  backgroundColor: 'var(--surface-solid)',
+                  border: '1px solid rgba(var(--accent-rgb),0.5)',
+                  boxShadow: '0 0 24px rgba(var(--accent-rgb),0.15), 0 8px 32px rgba(0,0,0,0.4)',
                   borderRadius: 12,
                   padding: '16px 20px',
                   minWidth: 180,
@@ -256,7 +256,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
               >
                 <div
                   style={{
-                    color: '#e5182b',
+                    color: 'var(--accent)',
                     fontSize: 11,
                     fontWeight: 700,
                     textTransform: 'uppercase',
@@ -266,11 +266,11 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                 >
                   {phase.phase_name}
                 </div>
-                <div style={{ color: '#8a8c9e', fontSize: 12, marginBottom: phase.phase_description ? 8 : 0 }}>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: phase.phase_description ? 8 : 0 }}>
                   Día {days_in_phase ?? 1} en esta etapa
                 </div>
                 {phase.phase_description && (
-                  <div style={{ color: '#f0f1f7', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                  <div style={{ color: 'var(--text-primary)', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                     {phase.phase_description}
                   </div>
                 )}
@@ -286,7 +286,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                     height: 0,
                     borderLeft: '8px solid transparent',
                     borderRight: '8px solid transparent',
-                    borderTop: '8px solid rgba(229,24,43,0.5)',
+                    borderTop: '8px solid rgba(var(--accent-rgb),0.5)',
                   }}
                 />
               </div>
@@ -313,7 +313,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                     width: 72,
                     height: 72,
                     borderRadius: '50%',
-                    border: '2px solid rgba(229,24,43,0.35)',
+                    border: '2px solid rgba(var(--accent-rgb),0.35)',
                     pointerEvents: 'none',
                   }}
                 />
@@ -327,13 +327,13 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: status === 'future' ? 'rgba(255,255,255,0.04)' : '#e5182b',
-                  border: status === 'future' ? '2px solid rgba(255,255,255,0.09)' : 'none',
+                  backgroundColor: status === 'future' ? 'rgba(var(--overlay-rgb),0.04)' : 'var(--accent)',
+                  border: status === 'future' ? '2px solid rgba(var(--overlay-rgb),0.09)' : 'none',
                   boxShadow:
                     status === 'active'
-                      ? '0 0 20px rgba(229,24,43,0.5), 0 0 40px rgba(229,24,43,0.2)'
+                      ? '0 0 20px rgba(var(--accent-rgb),0.5), 0 0 40px rgba(var(--accent-rgb),0.2)'
                       : status === 'completed'
-                      ? '0 0 10px rgba(229,24,43,0.3)'
+                      ? '0 0 10px rgba(var(--accent-rgb),0.3)'
                       : 'none',
                   position: 'relative',
                   zIndex: 2,
@@ -352,7 +352,7 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                 ) : (
                   <span
                     style={{
-                      color: status === 'future' ? '#555669' : 'white',
+                      color: status === 'future' ? 'var(--text-muted)' : 'white',
                       fontWeight: 800,
                       fontSize: 16,
                       fontFamily: 'Bricolage Grotesque, sans-serif',
@@ -376,10 +376,10 @@ export function JourneyMap({ phases, active_phase_id, days_in_phase }: JourneyMa
                 fontWeight: status !== 'future' ? 700 : 400,
                 color:
                   status === 'active'
-                    ? '#ffffff'
+                    ? 'var(--text-primary)'
                     : status === 'completed'
-                    ? '#e5182b'
-                    : '#555669',
+                    ? 'var(--accent)'
+                    : 'var(--text-muted)',
                 lineHeight: 1.3,
                 whiteSpace: 'normal',
               }}

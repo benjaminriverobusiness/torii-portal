@@ -183,8 +183,8 @@ function SectionPill({ text }: { text: string }) {
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 8,
       fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-      textTransform: 'uppercase', color: '#e5182b',
-      background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.22)',
+      textTransform: 'uppercase', color: 'var(--accent)',
+      background: 'rgba(var(--accent-rgb),0.10)', border: '1px solid rgba(var(--accent-rgb),0.22)',
       borderRadius: 99, padding: '5px 14px',
     }}>
       {text}
@@ -194,13 +194,13 @@ function SectionPill({ text }: { text: string }) {
 
 function StageBadge({ etapa }: { etapa: string }) {
   const map: Record<string, { bg: string; color: string }> = {
-    'Agendado':           { bg: '#071228', color: '#60a5fa' },
-    'Llamada realizada':  { bg: '#0f0720', color: '#c084fc' },
-    'Seguimiento':        { bg: '#1a1500', color: '#fcd34d' },
-    'Cerrado':            { bg: '#071a0f', color: '#4ade80' },
-    'No calificado':      { bg: '#1a0707', color: '#f87171' },
+    'Agendado':           { bg: 'rgba(var(--info-rgb),0.14)', color: 'var(--info)' },
+    'Llamada realizada':  { bg: 'rgba(var(--purple-rgb),0.14)', color: 'var(--purple)' },
+    'Seguimiento':        { bg: 'rgba(var(--warning-rgb),0.14)', color: 'var(--warning)' },
+    'Cerrado':            { bg: 'rgba(var(--success-rgb),0.14)', color: 'var(--success)' },
+    'No calificado':      { bg: 'rgba(var(--danger-rgb),0.14)', color: 'var(--danger)' },
   }
-  const s = map[etapa] ?? { bg: '#111', color: '#8a8c9e' }
+  const s = map[etapa] ?? { bg: 'rgba(var(--overlay-rgb),0.06)', color: 'var(--text-secondary)' }
   return (
     <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: s.bg, color: s.color }}>
       {shortEtapa(etapa)}
@@ -209,9 +209,9 @@ function StageBadge({ etapa }: { etapa: string }) {
 }
 
 function BoolIcon({ value }: { value: boolean | null | undefined }) {
-  if (value === true)  return <span style={{ color: '#4ade80', fontWeight: 700 }}>✓</span>
-  if (value === false) return <span style={{ color: '#f87171', fontWeight: 700 }}>✗</span>
-  return <span style={{ color: '#555669' }}>—</span>
+  if (value === true)  return <span style={{ color: 'var(--success)', fontWeight: 700 }}>✓</span>
+  if (value === false) return <span style={{ color: 'var(--danger)', fontWeight: 700 }}>✗</span>
+  return <span style={{ color: 'var(--text-muted)' }}>—</span>
 }
 
 // ─── EditableCell — el único componente que sabe editar una celda ─────────
@@ -247,8 +247,8 @@ function EditableCell({
 
   const feedback = (
     <>
-      {saving && <Spinner size={11} color="#8a8c9e" />}
-      {errored && <span style={{ color: '#f87171', fontSize: 11 }} title="No se pudo guardar, probá de nuevo">!</span>}
+      {saving && <Spinner size={11} color="var(--text-secondary)" />}
+      {errored && <span style={{ color: 'var(--danger)', fontSize: 11 }} title="No se pudo guardar, probá de nuevo">!</span>}
     </>
   )
 
@@ -314,7 +314,7 @@ function EditableCell({
           value={draft}
           disabled={saving || !editable}
           onChange={(e) => { setDraft(e.target.value); onSave(e.target.value) }}
-          style={{ colorScheme: 'dark' }}
+          
         />
         {feedback}
       </div>
@@ -591,33 +591,33 @@ function MaterialVideoCard({ m }: { m: SalesMaterial }) {
   const isLoom = m.url.includes('loom.com')
   return (
     <div
-      style={{ background: 'rgba(255,255,255,0.02)', border: hov ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', transform: hov ? 'translateY(-4px)' : 'translateY(0)', boxShadow: hov ? '0 12px 40px rgba(229,24,43,0.12)' : 'none', transition: 'all 0.25s ease', cursor: 'pointer' }}
+      style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: hov ? '1px solid rgba(var(--accent-rgb),0.35)' : '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, overflow: 'hidden', transform: hov ? 'translateY(-4px)' : 'translateY(0)', boxShadow: hov ? '0 12px 40px rgba(var(--accent-rgb),0.12)' : 'none', transition: 'all 0.25s ease', cursor: 'pointer' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       onClick={() => window.open(m.url, '_blank')}
     >
-      <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#0d0e17', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', paddingBottom: '56.25%', background: 'var(--surface-solid)', overflow: 'hidden' }}>
         {ytId ? (
           <img src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
             onError={(e) => { e.currentTarget.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` }}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s', transform: hov ? 'scale(1.05)' : 'scale(1)' }} alt={m.title} />
         ) : (
-          <div style={{ position: 'absolute', inset: 0, background: '#111220', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#555669" strokeWidth="1.5"/><polygon points="10,8 17,12 10,16" fill="#555669"/></svg>
-            <span style={{ color: '#555669', fontSize: 13 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
+          <div style={{ position: 'absolute', inset: 0, background: 'var(--surface-solid-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="var(--text-muted)" strokeWidth="1.5"/><polygon points="10,8 17,12 10,16" fill="var(--text-muted)"/></svg>
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
           </div>
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hov ? 1 : 0, transition: 'opacity 0.25s' }}>
-          <div style={{ width: 56, height: 56, background: '#e5182b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(229,24,43,0.6)', transform: hov ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
+          <div style={{ width: 56, height: 56, background: 'var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(var(--accent-rgb),0.6)', transform: hov ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><polygon points="7,4 17,10 7,16" fill="white"/></svg>
           </div>
         </div>
       </div>
       <div style={{ padding: '18px 20px 22px' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 6 }}>{m.title}</div>
-        {m.description && <div style={{ fontSize: 13, color: '#8a8c9e', lineHeight: 1.5, marginBottom: 14 }}>{m.description}</div>}
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>{m.title}</div>
+        {m.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 14 }}>{m.description}</div>}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polygon points="2,1 9,5 2,9" fill="#e5182b"/></svg>
-          <span style={{ color: '#e5182b', fontSize: 13, fontWeight: 600 }}>Ver material →</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polygon points="2,1 9,5 2,9" fill="var(--accent)"/></svg>
+          <span style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>Ver material →</span>
         </div>
       </div>
     </div>
@@ -628,19 +628,19 @@ function MaterialDocCard({ m, onPreview }: { m: SalesMaterial; onPreview: (m: Sa
   const [hov, setHov] = useState(false)
   const [btnHov, setBtnHov] = useState(false)
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', background: hov ? 'rgba(229,24,43,0.04)' : 'rgba(255,255,255,0.02)', border: hov ? '1px solid rgba(229,24,43,0.3)' : '1px solid rgba(255,255,255,0.07)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', background: hov ? 'rgba(var(--accent-rgb),0.04)' : 'rgba(var(--overlay-rgb),0.02)', border: hov ? '1px solid rgba(var(--accent-rgb),0.3)' : '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onPreview(m)}>
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect x="4" y="2" width="18" height="22" rx="2" stroke="#60a5fa" strokeWidth="1.5"/>
-        <path d="M18 2v6h6" stroke="#60a5fa" strokeWidth="1.5" strokeLinejoin="round"/>
-        <line x1="8" y1="14" x2="22" y2="14" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="8" y1="18" x2="22" y2="18" stroke="#60a5fa" strokeWidth="1.5" strokeLinecap="round"/>
+        <rect x="4" y="2" width="18" height="22" rx="2" stroke="var(--info)" strokeWidth="1.5"/>
+        <path d="M18 2v6h6" stroke="var(--info)" strokeWidth="1.5" strokeLinejoin="round"/>
+        <line x1="8" y1="14" x2="22" y2="14" stroke="var(--info)" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="8" y1="18" x2="22" y2="18" stroke="var(--info)" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 4 }}>{m.title}</div>
-        {m.description && <div style={{ fontSize: 13, color: '#8a8c9e' }}>{m.description}</div>}
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{m.title}</div>
+        {m.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{m.description}</div>}
       </div>
-      <button style={{ padding: '6px 14px', background: btnHov ? 'rgba(229,24,43,0.1)' : 'rgba(255,255,255,0.05)', border: btnHov ? '1px solid rgba(229,24,43,0.3)' : '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: btnHov ? '#e5182b' : '#f0f1f7', fontSize: 13, cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'DM Sans, sans-serif' }}
+      <button style={{ padding: '6px 14px', background: btnHov ? 'rgba(var(--accent-rgb),0.1)' : 'rgba(var(--overlay-rgb),0.05)', border: btnHov ? '1px solid rgba(var(--accent-rgb),0.3)' : '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, color: btnHov ? 'var(--accent)' : 'var(--text-primary)', fontSize: 13, cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'DM Sans, sans-serif' }}
         onMouseEnter={() => setBtnHov(true)} onMouseLeave={() => setBtnHov(false)}
         onClick={(e) => { e.stopPropagation(); onPreview(m) }}>
         Previsualizar
@@ -652,18 +652,18 @@ function MaterialDocCard({ m, onPreview }: { m: SalesMaterial; onPreview: (m: Sa
 function LinkCard({ m }: { m: SalesMaterial }) {
   const [hov, setHov] = useState(false)
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, borderRadius: 14, background: 'rgba(255,255,255,0.02)', border: hov ? '1px solid rgba(229,24,43,0.3)' : '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', transition: 'all 0.2s' }}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, borderRadius: 14, background: 'rgba(var(--overlay-rgb),0.02)', border: hov ? '1px solid rgba(var(--accent-rgb),0.3)' : '1px solid rgba(var(--overlay-rgb),0.07)', cursor: 'pointer', transition: 'all 0.2s' }}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       onClick={() => window.open(m.url, '_blank')}>
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="#e5182b" strokeWidth="1.8" strokeLinecap="round"/>
-        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="#e5182b" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round"/>
       </svg>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7' }}>{m.title}</div>
-        {m.description && <div style={{ fontSize: 13, color: '#8a8c9e', marginTop: 2 }}>{m.description}</div>}
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{m.title}</div>
+        {m.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{m.description}</div>}
       </div>
-      <span style={{ color: '#e5182b', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>Abrir →</span>
+      <span style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>Abrir →</span>
     </div>
   )
 }
@@ -674,13 +674,13 @@ function AnalysisVideoCard({ material, onPlay }: { material: SalesMaterial; onPl
   const isLoom = material.url.includes('loom.com')
   return (
     <div
-      style={{ background: 'rgba(255,255,255,0.02)', border: hov ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.25s ease' }}
+      style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: hov ? '1px solid rgba(var(--accent-rgb),0.35)' : '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', transition: 'all 0.25s ease' }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       onClick={() => onPlay(material.url, material.title)}
     >
       {/* Thumbnail */}
-      <div style={{ position: 'relative', aspectRatio: '16/9', background: '#0d0e17', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', aspectRatio: '16/9', background: 'var(--surface-solid)', overflow: 'hidden' }}>
         {ytId ? (
           <img
             src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
@@ -689,22 +689,22 @@ function AnalysisVideoCard({ material, onPlay }: { material: SalesMaterial; onPl
             alt={material.title}
           />
         ) : (
-          <div style={{ width: '100%', height: '100%', background: '#111220', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#555669" strokeWidth="1.5"/><polygon points="10,8 17,12 10,16" fill="#555669"/></svg>
-            <span style={{ color: '#555669', fontSize: 13 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
+          <div style={{ width: '100%', height: '100%', background: 'var(--surface-solid-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="var(--text-muted)" strokeWidth="1.5"/><polygon points="10,8 17,12 10,16" fill="var(--text-muted)"/></svg>
+            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{isLoom ? 'Ver en Loom' : 'Ver video'}</span>
           </div>
         )}
         {/* Play overlay */}
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: hov ? 1 : 0, transition: 'opacity 0.25s' }}>
-          <div style={{ width: 52, height: 52, background: '#e5182b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(229,24,43,0.6)', transform: hov ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
+          <div style={{ width: 52, height: 52, background: 'var(--accent)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(var(--accent-rgb),0.6)', transform: hov ? 'scale(1)' : 'scale(0.8)', transition: 'transform 0.25s' }}>
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><polygon points="7,4 17,10 7,16" fill="white"/></svg>
           </div>
         </div>
       </div>
       {/* Content */}
       <div style={{ padding: '12px 16px' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f1f7', marginBottom: material.description ? 4 : 0 }}>{material.title}</div>
-        {material.description && <div style={{ fontSize: 12, color: '#8a8c9e', lineHeight: 1.5 }}>{material.description}</div>}
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: material.description ? 4 : 0 }}>{material.title}</div>
+        {material.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{material.description}</div>}
       </div>
     </div>
   )
@@ -713,12 +713,12 @@ function AnalysisVideoCard({ material, onPlay }: { material: SalesMaterial; onPl
 function MaterialPreviewModal({ material, onClose }: { material: SalesMaterial; onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
-      <div style={{ width: '100%', maxWidth: 900, height: '85vh', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#f0f1f7' }}>{material.title}</span>
+      <div style={{ width: '100%', maxWidth: 900, height: '85vh', background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)', flexShrink: 0 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>{material.title}</span>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button style={{ color: '#e5182b', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'DM Sans, sans-serif' }} onClick={() => window.open(material.url, '_blank')}>Abrir en Drive →</button>
-            <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', marginLeft: 16, lineHeight: 1 }} onClick={onClose}>✕</button>
+            <button style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: 'transparent', border: 'none', fontFamily: 'DM Sans, sans-serif' }} onClick={() => window.open(material.url, '_blank')}>Abrir en Drive →</button>
+            <button style={{ color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', marginLeft: 16, lineHeight: 1 }} onClick={onClose}>✕</button>
           </div>
         </div>
         <iframe src={getDriveEmbedUrl(material.url)} allow="autoplay" title={material.title} style={{ flex: 1, width: '100%', border: 'none' }} />
@@ -730,13 +730,13 @@ function MaterialPreviewModal({ material, onClose }: { material: SalesMaterial; 
 function VideoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '960px', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '960px', background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '20px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid rgba(var(--overlay-rgb),0.07)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#e5182b', animation: 'glow-pulse 2s ease-in-out infinite' }} />
-            <span style={{ color: '#f0f1f7', fontSize: '15px', fontWeight: 700 }}>{title}</span>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', animation: 'glow-pulse 2s ease-in-out infinite' }} />
+            <span style={{ color: 'var(--text-primary)', fontSize: '15px', fontWeight: 700 }}>{title}</span>
           </div>
-          <button onClick={onClose} style={{ color: '#555669', fontSize: '22px', cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ color: 'var(--text-muted)', fontSize: '22px', cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }}>✕</button>
         </div>
         <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, background: '#000' }}>
           <iframe
@@ -856,11 +856,11 @@ function AddRow({ placeholder, onAdd }: { placeholder: string; onAdd: (value: st
         placeholder={placeholder}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
-        style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 12px', color: '#f0f1f7', fontSize: 13, fontFamily: 'DM Sans, sans-serif', outline: 'none' }}
+        style={{ flex: 1, background: 'rgba(var(--overlay-rgb),0.04)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, padding: '8px 12px', color: 'var(--text-primary)', fontSize: 13, fontFamily: 'DM Sans, sans-serif', outline: 'none' }}
       />
       <button
         onClick={submit}
-        style={{ padding: '8px 16px', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.3)', borderRadius: 8, color: '#e5182b', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+        style={{ padding: '8px 16px', background: 'rgba(var(--accent-rgb),0.10)', border: '1px solid rgba(var(--accent-rgb),0.3)', borderRadius: 8, color: 'var(--accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
       >
         + Agregar
       </button>
@@ -883,9 +883,9 @@ function ListasModal({
   onDeleteSituacion: (tipo: SituacionOption['tipo'], opt: SituacionOption) => void
   onClose: () => void
 }) {
-  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, marginBottom: 6 }
-  const sectionTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }
-  const deleteBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: 13, padding: '2px 6px' }
+  const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 8, marginBottom: 6 }
+  const sectionTitle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }
+  const deleteBtn: React.CSSProperties = { background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 13, padding: '2px 6px' }
 
   return (
     <div
@@ -893,27 +893,27 @@ function ListasModal({
       onClick={onClose}
     >
       <div
-        style={{ width: '100%', maxWidth: 560, maxHeight: '85vh', overflowY: 'auto', background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: 32 }}
+        style={{ width: '100%', maxWidth: 560, maxHeight: '85vh', overflowY: 'auto', background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 20, padding: 32 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 800, color: '#f0f1f7', margin: 0 }}>
+          <h2 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
             Gestionar listas
           </h2>
-          <button style={{ color: '#555669', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
+          <button style={{ color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', background: 'transparent', border: 'none', lineHeight: 1 }} onClick={onClose}>✕</button>
         </div>
 
         {/* Closers */}
         <div style={{ marginBottom: 32 }}>
           <div style={sectionTitle}>Closers</div>
-          {closers.length === 0 && <p style={{ color: '#555669', fontSize: 13 }}>Sin closers cargados.</p>}
+          {closers.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sin closers cargados.</p>}
           {closers.map((c) => (
             <div key={c.id} style={rowStyle}>
-              <span style={{ color: c.active ? '#f0f1f7' : '#555669', fontSize: 13 }}>{c.name}</span>
+              <span style={{ color: c.active ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: 13 }}>{c.name}</span>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <button
                   onClick={() => onToggleCloserActive(c)}
-                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: c.active ? '#4ade80' : '#8a8c9e', cursor: 'pointer', fontSize: 12, padding: '3px 8px', fontFamily: 'DM Sans, sans-serif' }}
+                  style={{ background: 'transparent', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 6, color: c.active ? 'var(--success)' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 12, padding: '3px 8px', fontFamily: 'DM Sans, sans-serif' }}
                 >
                   {c.active ? 'Activo' : 'Inactivo'}
                 </button>
@@ -927,10 +927,10 @@ function ListasModal({
         {/* Situación 1ra cita */}
         <div style={{ marginBottom: 32 }}>
           <div style={sectionTitle}>Situación 1ra cita</div>
-          {situacionPrimera.length === 0 && <p style={{ color: '#555669', fontSize: 13 }}>Sin opciones cargadas.</p>}
+          {situacionPrimera.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sin opciones cargadas.</p>}
           {situacionPrimera.map((o) => (
             <div key={o.id} style={rowStyle}>
-              <span style={{ color: '#f0f1f7', fontSize: 13 }}>{o.valor}</span>
+              <span style={{ color: 'var(--text-primary)', fontSize: 13 }}>{o.valor}</span>
               <button onClick={() => onDeleteSituacion('primera_cita', o)} style={deleteBtn}>Eliminar</button>
             </div>
           ))}
@@ -940,10 +940,10 @@ function ListasModal({
         {/* Situación 2da cita */}
         <div>
           <div style={sectionTitle}>Situación 2da cita</div>
-          {situacionSegunda.length === 0 && <p style={{ color: '#555669', fontSize: 13 }}>Sin opciones cargadas.</p>}
+          {situacionSegunda.length === 0 && <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sin opciones cargadas.</p>}
           {situacionSegunda.map((o) => (
             <div key={o.id} style={rowStyle}>
-              <span style={{ color: '#f0f1f7', fontSize: 13 }}>{o.valor}</span>
+              <span style={{ color: 'var(--text-primary)', fontSize: 13 }}>{o.valor}</span>
               <button onClick={() => onDeleteSituacion('segunda_cita', o)} style={deleteBtn}>Eliminar</button>
             </div>
           ))}
@@ -1137,8 +1137,8 @@ export function VentasPage() {
   const closeRate = totalAsistieron > 0 ? Math.round((totalCerrados / totalAsistieron) * 100) : 0
   const totalMonto = leads.filter((l) => isTrue(l.cerrado) && l.monto).reduce((s, l) => s + (l.monto ?? 0), 0)
 
-  const showRateColor = showRate >= 60 ? '#4ade80' : showRate >= 40 ? '#fcd34d' : '#f87171'
-  const closeRateColor = closeRate >= 25 ? '#4ade80' : closeRate >= 15 ? '#fcd34d' : '#f87171'
+  const showRateColor = showRate >= 60 ? 'var(--success)' : showRate >= 40 ? 'var(--warning)' : 'var(--danger)'
+  const closeRateColor = closeRate >= 25 ? 'var(--success)' : closeRate >= 15 ? 'var(--warning)' : 'var(--danger)'
 
   const leadsConGrabacion = leads.filter((l) => l.recording_url)
   const analysisVideos = materials.filter((m) => m.type === 'analysis_video')
@@ -1230,7 +1230,7 @@ export function VentasPage() {
   const GRID = [`${ROWNUM_MIN_PX}px`, ...ALL_COLUMNS.map((c) => `${c.minPx}px`), `${DELETE_COL_MIN_PX}px`].join(' ')
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -1242,13 +1242,13 @@ export function VentasPage() {
 
           {/* Hero */}
           <div className="fade-in visible" style={{ marginBottom: 24 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#e5182b', background: 'rgba(229,24,43,0.10)', border: '1px solid rgba(229,24,43,0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', background: 'rgba(var(--accent-rgb),0.10)', border: '1px solid rgba(var(--accent-rgb),0.22)', borderRadius: 99, padding: '5px 14px', marginBottom: 16 }}>
               VENTAS
             </div>
-            <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: '#f0f1f7', margin: '0 0 8px', animation: 'fade-up 0.5s ease both' }}>
+            <h1 style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px', animation: 'fade-up 0.5s ease both' }}>
               Tu pipeline de ventas
             </h1>
-            <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0, animation: 'fade-up 0.5s ease 0.1s both' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0, animation: 'fade-up 0.5s ease 0.1s both' }}>
               Registrá tus llamadas, seguí tus cierres y accedé al material de apoyo.
             </p>
           </div>
@@ -1256,15 +1256,15 @@ export function VentasPage() {
           {/* Metrics */}
           <div className="fade-in ventas-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
             {[
-              { label: 'TOTAL LLAMADAS', value: totalLeads, color: '#f0f1f7', sub: null },
+              { label: 'TOTAL LLAMADAS', value: totalLeads, color: 'var(--text-primary)', sub: null },
               { label: 'SHOW RATE', value: `${showRate}%`, color: showRateColor, sub: null },
               { label: 'TASA DE CIERRE', value: `${closeRate}%`, color: closeRateColor, sub: null },
-              { label: 'INGRESOS GENERADOS', value: `$${totalMonto.toLocaleString()}`, color: '#c9a84c', sub: 'de cierres confirmados' },
+              { label: 'INGRESOS GENERADOS', value: `$${totalMonto.toLocaleString()}`, color: 'var(--gold)', sub: 'de cierres confirmados' },
             ].map((m) => (
-              <div key={m.label} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 24px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#555669', marginBottom: 8 }}>{m.label}</div>
+              <div key={m.label} style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 14, padding: '20px 24px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>{m.label}</div>
                 <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 36, fontWeight: 800, color: m.color, lineHeight: 1 }}>{m.value}</div>
-                {m.sub && <div style={{ fontSize: 13, color: '#555669', marginTop: 6 }}>{m.sub}</div>}
+                {m.sub && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>{m.sub}</div>}
               </div>
             ))}
           </div>
@@ -1277,30 +1277,30 @@ export function VentasPage() {
               </div>
 
               {/* Gráfico unificado */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: '#f0f1f7', marginBottom: 20 }}>Evolución del pipeline</div>
+              <div style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+                <div style={{ fontFamily: 'Bricolage Grotesque, sans-serif', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20 }}>Evolución del pipeline</div>
                 {salesChartData.length < 2 ? (
-                  <div style={{ color: '#555669', fontSize: '13px', textAlign: 'center', padding: '40px' }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '13px', textAlign: 'center', padding: '40px' }}>
                     Agendá más llamadas para ver la evolución de tus tasas de conversión.
                   </div>
                 ) : (
                   <>
                   <ResponsiveContainer width="100%" height={240}>
                     <ComposedChart data={salesChartData} margin={{ top: 4, right: 8, bottom: 16, left: -8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                      <XAxis dataKey="agenda" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} label={{ value: 'Agenda #', position: 'insideBottom', offset: -5, fill: '#555669', fontSize: 11 }} />
-                      <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} width={36} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(var(--overlay-rgb),0.05)" />
+                      <XAxis dataKey="agenda" stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} label={{ value: 'Agenda #', position: 'insideBottom', offset: -5, fill: 'var(--text-muted)', fontSize: 11 }} />
+                      <YAxis stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} width={36} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                       <Tooltip
-                        contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }}
+                        contentStyle={{ background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px' }}
                         formatter={(value) => `${value}%`}
                       />
-                      <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                      <Line type="linear" dataKey="show_rate" stroke="#a78bfa" strokeWidth={2.5} strokeDasharray="8 4" dot={{ fill: '#a78bfa', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Show rate %" />
-                      <Line type="linear" dataKey="calificacion" stroke="#c9a84c" strokeWidth={2.5} dot={{ fill: '#c9a84c', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Calificación %" />
-                      <Line type="linear" dataKey="close_rate" stroke="#4ade80" strokeWidth={2.5} dot={{ fill: '#4ade80', r: 3, strokeWidth: 2, stroke: '#08090f' }} activeDot={{ r: 5 }} name="Close rate %" />
+                      <Legend wrapperStyle={{ color: 'var(--text-secondary)', fontSize: '12px', paddingTop: '12px' }} />
+                      <Line type="linear" dataKey="show_rate" stroke="var(--lavender)" strokeWidth={2.5} strokeDasharray="8 4" dot={{ fill: 'var(--lavender)', r: 3, strokeWidth: 2, stroke: 'var(--bg)' }} activeDot={{ r: 5 }} name="Show rate %" />
+                      <Line type="linear" dataKey="calificacion" stroke="var(--gold)" strokeWidth={2.5} dot={{ fill: 'var(--gold)', r: 3, strokeWidth: 2, stroke: 'var(--bg)' }} activeDot={{ r: 5 }} name="Calificación %" />
+                      <Line type="linear" dataKey="close_rate" stroke="var(--success)" strokeWidth={2.5} dot={{ fill: 'var(--success)', r: 3, strokeWidth: 2, stroke: 'var(--bg)' }} activeDot={{ r: 5 }} name="Close rate %" />
                     </ComposedChart>
                   </ResponsiveContainer>
-                  <div style={{ color: '#555669', fontSize: '11px', fontStyle: 'italic', marginTop: '12px' }}>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '11px', fontStyle: 'italic', marginTop: '12px' }}>
                     Las tasas se calculan de forma acumulada. Show rate = asistieron / agendas totales. Calificación = calificados / agendas totales.
                   </div>
                   </>
@@ -1328,16 +1328,16 @@ export function VentasPage() {
                     <div style={{ marginBottom: 20 }}>
                       <SectionPill text="RENDIMIENTO POR CLOSER" />
                     </div>
-                    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
+                    <div style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, padding: '24px', marginBottom: 16 }}>
                       <ResponsiveContainer width="100%" height={220}>
                         <ComposedChart data={closerChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                          <XAxis dataKey="closer" stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                          <YAxis stroke="#555669" fontSize={11} tick={{ fill: '#555669' }} />
-                          <Tooltip contentStyle={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#f0f1f7', fontSize: '12px' }} />
-                          <Legend wrapperStyle={{ color: '#8a8c9e', fontSize: '12px', paddingTop: '12px' }} />
-                          <Bar dataKey="agendas" fill="rgba(96,165,250,0.6)" radius={[3, 3, 0, 0]} name="Agendas" />
-                          <Bar dataKey="cerrados" fill="rgba(74,222,128,0.8)" radius={[3, 3, 0, 0]} name="Cerrados" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(var(--overlay-rgb),0.05)" />
+                          <XAxis dataKey="closer" stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
+                          <YAxis stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
+                          <Tooltip contentStyle={{ background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: '8px', color: 'var(--text-primary)', fontSize: '12px' }} />
+                          <Legend wrapperStyle={{ color: 'var(--text-secondary)', fontSize: '12px', paddingTop: '12px' }} />
+                          <Bar dataKey="agendas" fill="rgba(var(--info-rgb),0.6)" radius={[3, 3, 0, 0]} name="Agendas" />
+                          <Bar dataKey="cerrados" fill="rgba(var(--success-rgb),0.8)" radius={[3, 3, 0, 0]} name="Cerrados" />
                         </ComposedChart>
                       </ResponsiveContainer>
                     </div>
@@ -1353,12 +1353,12 @@ export function VentasPage() {
             <div style={{ display: 'flex', gap: 10 }}>
               <button
                 onClick={() => setListasModalOpen(true)}
-                style={{ padding: '8px 18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#f0f1f7', fontWeight: 600, fontSize: 13, borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                style={{ padding: '8px 18px', background: 'rgba(var(--overlay-rgb),0.05)', border: '1px solid rgba(var(--overlay-rgb),0.1)', color: 'var(--text-primary)', fontWeight: 600, fontSize: 13, borderRadius: 8, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
               >
                 ⚙ Gestionar listas
               </button>
               <button
-                style={{ padding: '8px 18px', background: '#e5182b', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: addingRow ? 'not-allowed' : 'pointer', opacity: addingRow ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
+                style={{ padding: '8px 18px', background: 'var(--accent)', color: 'white', fontWeight: 700, fontSize: 13, borderRadius: 8, border: 'none', cursor: addingRow ? 'not-allowed' : 'pointer', opacity: addingRow ? 0.7 : 1, fontFamily: 'DM Sans, sans-serif' }}
                 onClick={handleAddRow}
                 disabled={addingRow}
               >
@@ -1369,15 +1369,15 @@ export function VentasPage() {
 
           {/* Orden — dropdown genérico (numéricas/fecha) + accesos rápidos */}
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
-            <span style={{ color: '#555669', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Ordenar por
             </span>
             <select
               value={sortField && SORT_FIELD_OPTIONS.some((o) => o.key === sortField) ? sortField : ''}
               onChange={(e) => handleSortFieldChange(e.target.value as SortableKey | '')}
               style={{
-                background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
-                color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
+                background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8,
+                color: 'var(--text-primary)', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
               }}
             >
               <option value="">Sin ordenar</option>
@@ -1388,15 +1388,15 @@ export function VentasPage() {
               disabled={!sortField}
               title={sortDir === 'asc' ? 'Ascendente' : 'Descendente'}
               style={{
-                padding: '6px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8, color: sortField ? '#f0f1f7' : '#333', fontSize: 13, cursor: sortField ? 'pointer' : 'not-allowed',
+                padding: '6px 12px', background: 'rgba(var(--overlay-rgb),0.04)', border: '1px solid rgba(var(--overlay-rgb),0.1)',
+                borderRadius: 8, color: sortField ? 'var(--text-primary)' : 'var(--text-ghost)', fontSize: 13, cursor: sortField ? 'pointer' : 'not-allowed',
                 fontFamily: 'DM Sans, sans-serif',
               }}
             >
               {sortDir === 'asc' ? '↑ Asc' : '↓ Desc'}
             </button>
 
-            <span style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+            <span style={{ width: 1, height: 20, background: 'rgba(var(--overlay-rgb),0.1)', margin: '0 4px' }} />
 
             {QUICK_SORT_OPTIONS.map((o) => {
               const active = sortField === o.key
@@ -1406,10 +1406,10 @@ export function VentasPage() {
                   onClick={() => handleQuickSort(o.key)}
                   style={{
                     padding: '6px 12px',
-                    background: active ? 'rgba(229,24,43,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: active ? '1px solid rgba(229,24,43,0.35)' : '1px solid rgba(255,255,255,0.1)',
+                    background: active ? 'rgba(var(--accent-rgb),0.12)' : 'rgba(var(--overlay-rgb),0.04)',
+                    border: active ? '1px solid rgba(var(--accent-rgb),0.35)' : '1px solid rgba(var(--overlay-rgb),0.1)',
                     borderRadius: 8,
-                    color: active ? '#e5182b' : '#8a8c9e',
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
                     fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
                   }}
                 >
@@ -1421,7 +1421,7 @@ export function VentasPage() {
             {sortField && (
               <button
                 onClick={() => setSortField(null)}
-                style={{ padding: '6px 10px', background: 'transparent', border: 'none', color: '#555669', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'DM Sans, sans-serif' }}
+                style={{ padding: '6px 10px', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'DM Sans, sans-serif' }}
               >
                 Limpiar orden
               </button>
@@ -1430,40 +1430,40 @@ export function VentasPage() {
 
           {/* Filtros — independientes del orden: ocultan filas en vez de solo reordenarlas */}
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
-            <span style={{ color: '#555669', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Filtrar por
             </span>
             <select
               value={filterCalificacion}
               onChange={(e) => setFilterCalificacion(e.target.value as CalificacionFilter)}
-              style={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+              style={{ background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
             >
               {CALIFICACION_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>Calificación: {o.label}</option>)}
             </select>
             <select
               value={filterAsistio}
               onChange={(e) => setFilterAsistio(e.target.value as BoolFilter)}
-              style={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+              style={{ background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
             >
               {BOOL_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>Se presentó: {o.label}</option>)}
             </select>
             <select
               value={filterCerrado}
               onChange={(e) => setFilterCerrado(e.target.value as BoolFilter)}
-              style={{ background: '#0d0e17', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#f0f1f7', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+              style={{ background: 'var(--surface-solid)', border: '1px solid rgba(var(--overlay-rgb),0.1)', borderRadius: 8, color: 'var(--text-primary)', fontSize: 13, padding: '6px 10px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
             >
               {BOOL_FILTER_OPTIONS.map((o) => <option key={o.value} value={o.value}>Cerró: {o.label}</option>)}
             </select>
             {(filterCalificacion !== 'all' || filterAsistio !== 'all' || filterCerrado !== 'all') && (
               <button
                 onClick={() => { setFilterCalificacion('all'); setFilterAsistio('all'); setFilterCerrado('all') }}
-                style={{ padding: '6px 10px', background: 'transparent', border: 'none', color: '#555669', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'DM Sans, sans-serif' }}
+                style={{ padding: '6px 10px', background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'DM Sans, sans-serif' }}
               >
                 Limpiar filtros
               </button>
             )}
             {filteredLeads.length !== leads.length && (
-              <span style={{ color: '#555669', fontSize: 12 }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
                 {filteredLeads.length} de {leads.length}
               </span>
             )}
@@ -1471,51 +1471,51 @@ export function VentasPage() {
 
           {/* Leads table / cards */}
           {leads.length === 0 ? (
-            <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
+            <div className="fade-in visible" style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ margin: '0 auto 16px', display: 'block' }}>
-                <rect x="6" y="10" width="36" height="32" rx="4" stroke="#333" strokeWidth="2"/>
-                <path d="M6 20h36" stroke="#333" strokeWidth="2"/>
-                <rect x="14" y="6" width="4" height="8" rx="2" fill="#333"/>
-                <rect x="30" y="6" width="4" height="8" rx="2" fill="#333"/>
+                <rect x="6" y="10" width="36" height="32" rx="4" stroke="var(--text-ghost)" strokeWidth="2"/>
+                <path d="M6 20h36" stroke="var(--text-ghost)" strokeWidth="2"/>
+                <rect x="14" y="6" width="4" height="8" rx="2" fill="var(--text-ghost)"/>
+                <rect x="30" y="6" width="4" height="8" rx="2" fill="var(--text-ghost)"/>
               </svg>
-              <p style={{ color: '#8a8c9e', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Aún no hay llamadas registradas.</p>
-              <p style={{ color: '#555669', fontSize: 13, margin: 0 }}>Hacé click en '+ Nueva llamada' para empezar.</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Aún no hay llamadas registradas.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>Hacé click en '+ Nueva llamada' para empezar.</p>
             </div>
           ) : displayedLeads.length === 0 ? (
-            <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
-              <p style={{ color: '#8a8c9e', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Ningún resultado con estos filtros.</p>
-              <p style={{ color: '#555669', fontSize: 13, margin: 0 }}>Probá cambiarlos o limpiarlos arriba.</p>
+            <div className="fade-in visible" style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12, padding: '60px 20px', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>Ningún resultado con estos filtros.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>Probá cambiarlos o limpiarlos arriba.</p>
             </div>
           ) : isMobile ? (
             <div style={{ marginBottom: 12 }}>
               {displayedLeads.map((lead) => (
-                <div key={lead.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px', marginBottom: '8px' }}>
+                <div key={lead.id} style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: '12px', padding: '16px', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div style={{ color: '#f0f1f7', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
+                    <div style={{ color: 'var(--text-primary)', fontSize: 14, fontWeight: 700 }}>{lead.lead_nombre}</div>
                     <StageBadge etapa={lead.etapa} />
                   </div>
                   {lead.closer && (
-                    <div style={{ color: '#8a8c9e', fontSize: 13, marginBottom: 6 }}>👤 {lead.closer}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 6 }}>👤 {lead.closer}</div>
                   )}
                   {lead.fecha_llamada && (
-                    <div style={{ color: '#8a8c9e', fontSize: 13, marginBottom: 10 }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 10 }}>
                       📅 {formatDate(lead.fecha_llamada)}
                     </div>
                   )}
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
-                    <span style={{ fontSize: 12, color: lead.asistio ? '#4ade80' : '#f87171' }}>
+                    <span style={{ fontSize: 12, color: lead.asistio ? 'var(--success)' : 'var(--danger)' }}>
                       {lead.asistio ? '✓' : '✗'} Asistió
                     </span>
-                    <span style={{ fontSize: 12, color: lead.calificacion ? '#4ade80' : '#555669' }}>
+                    <span style={{ fontSize: 12, color: lead.calificacion ? 'var(--success)' : 'var(--text-muted)' }}>
                       {lead.calificacion ?? 'Sin clasificar'}
                     </span>
                     {lead.cerrado
-                      ? <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: '#071a0f', color: '#4ade80' }}>Cerrado</span>
-                      : <span style={{ fontSize: 12, color: '#555669' }}>Pendiente</span>}
+                      ? <span style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: 'rgba(var(--success-rgb),0.14)', color: 'var(--success)' }}>Cerrado</span>
+                      : <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Pendiente</span>}
                   </div>
                   {lead.recording_url && (
                     <div
-                      style={{ fontSize: 13, color: '#c084fc', fontWeight: 600, marginBottom: 10, cursor: 'pointer' }}
+                      style={{ fontSize: 13, color: 'var(--purple)', fontWeight: 600, marginBottom: 10, cursor: 'pointer' }}
                       onClick={() => {
                         if (lead.recording_url!.includes('fathom')) { window.open(lead.recording_url!, '_blank'); return }
                         setPlayingVideo({ url: lead.recording_url!, title: lead.lead_nombre })
@@ -1528,7 +1528,7 @@ export function VentasPage() {
               ))}
             </div>
           ) : (
-            <div className="fade-in visible" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+            <div className="fade-in visible" style={{ background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
               {/* Fuerza bruta a propósito: contenedor exterior con overflowX:auto + width:100%,
                   contenedor interior con minWidth FIJO derivado (TABLE_MIN_WIDTH_PX, suma de los
                   minPx de ALL_COLUMNS), y cada columna es un track de ancho fijo en px (ver GRID).
@@ -1540,30 +1540,30 @@ export function VentasPage() {
                   transparente) para tapar el contenido que pasa por debajo al scrollear. */}
               <div style={{ overflowX: 'auto', width: '100%' }}>
                 <div style={{ minWidth: `${TABLE_MIN_WIDTH_PX}px` }}>
-                  <div style={{ background: '#0d0e17', display: 'grid', gridTemplateColumns: GRID, borderBottom: '1px solid rgba(255,255,255,0.12)', color: '#555669', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    <div style={{ flexShrink: 0, minWidth: ROWNUM_MIN_PX, padding: '10px 12px', borderRight: '1px solid rgba(255,255,255,0.07)' }}>#</div>
+                  <div style={{ background: 'var(--surface-solid)', display: 'grid', gridTemplateColumns: GRID, borderBottom: '1px solid rgba(var(--overlay-rgb),0.12)', color: 'var(--text-muted)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    <div style={{ flexShrink: 0, minWidth: ROWNUM_MIN_PX, padding: '10px 12px', borderRight: '1px solid rgba(var(--overlay-rgb),0.07)' }}>#</div>
                     {ALL_COLUMNS.map((c) => (
-                      <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, padding: '10px 12px', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.label.toUpperCase()}</div>
+                      <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, padding: '10px 12px', borderRight: '1px solid rgba(var(--overlay-rgb),0.07)' }}>{c.label.toUpperCase()}</div>
                     ))}
-                    <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '10px 12px', position: 'sticky', right: 0, background: '#e5182b', borderLeft: '1px solid rgba(255,255,255,0.12)' }} />
+                    <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '10px 12px', position: 'sticky', right: 0, background: 'var(--accent)', borderLeft: '1px solid rgba(var(--overlay-rgb),0.12)' }} />
                   </div>
                   {displayedLeads.map((lead, i) => {
-                    const rowBg = i % 2 === 0 ? '#08090f' : 'rgba(255,255,255,0.01)'
+                    const rowBg = i % 2 === 0 ? 'var(--bg)' : 'rgba(var(--overlay-rgb),0.01)'
                     return (
                     <div
                       key={lead.id}
-                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'stretch', borderBottom: '1px solid rgba(255,255,255,0.06)', background: rowBg }}
+                      style={{ display: 'grid', gridTemplateColumns: GRID, alignItems: 'stretch', borderBottom: '1px solid rgba(var(--overlay-rgb),0.06)', background: rowBg }}
                     >
-                      <div style={{ flexShrink: 0, minWidth: ROWNUM_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', color: '#555669', fontSize: 13, borderRight: '1px solid rgba(255,255,255,0.07)' }}>
+                      <div style={{ flexShrink: 0, minWidth: ROWNUM_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', fontSize: 13, borderRight: '1px solid rgba(var(--overlay-rgb),0.07)' }}>
                         {i + 1}
                       </div>
                       {ALL_COLUMNS.map((c) => (
-                        <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, overflow: 'hidden', padding: '6px 10px', display: 'flex', alignItems: 'center', borderRight: '1px solid rgba(255,255,255,0.07)' }}>{c.render(lead, rowCtx)}</div>
+                        <div key={c.key} style={{ flexShrink: 0, minWidth: c.minPx, overflow: 'hidden', padding: '6px 10px', display: 'flex', alignItems: 'center', borderRight: '1px solid rgba(var(--overlay-rgb),0.07)' }}>{c.render(lead, rowCtx)}</div>
                       ))}
-                      <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', right: 0, background: '#e5182b', borderLeft: '1px solid rgba(255,255,255,0.12)' }}>
+                      <div style={{ flexShrink: 0, minWidth: DELETE_COL_MIN_PX, padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'sticky', right: 0, background: 'var(--accent)', borderLeft: '1px solid rgba(var(--overlay-rgb),0.12)' }}>
                         {confirmDeleteId === lead.id ? (
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button title="Confirmar" onClick={() => handleDeleteLead(lead)} style={{ background: 'transparent', border: 'none', color: '#bbf7d0', fontWeight: 800, fontSize: 15, cursor: 'pointer', padding: 0 }}>✓</button>
+                            <button title="Confirmar" onClick={() => handleDeleteLead(lead)} style={{ background: 'transparent', border: 'none', color: 'var(--success)', fontWeight: 800, fontSize: 15, cursor: 'pointer', padding: 0 }}>✓</button>
                             <button title="Cancelar" onClick={() => setConfirmDeleteId(null)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: 15, cursor: 'pointer', padding: 0 }}>✕</button>
                           </div>
                         ) : (
@@ -1588,30 +1588,30 @@ export function VentasPage() {
                 {leadsConGrabacion.map((lead) => (
                   <div
                     key={lead.id}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(192,132,252,0.35)'; e.currentTarget.style.background = 'rgba(192,132,252,0.04)' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(var(--overlay-rgb),0.02)', border: '1px solid rgba(var(--overlay-rgb),0.07)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--purple-rgb),0.35)'; e.currentTarget.style.background = 'rgba(var(--purple-rgb),0.04)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(var(--overlay-rgb),0.07)'; e.currentTarget.style.background = 'rgba(var(--overlay-rgb),0.02)' }}
                     onClick={() => {
                       const url = lead.recording_url!
                       if (url.includes('fathom')) { window.open(url, '_blank'); return }
                       setPlayingVideo({ url, title: lead.lead_nombre })
                     }}
                   >
-                    <div style={{ width: 36, height: 36, background: 'rgba(192,132,252,0.1)', border: '1px solid rgba(192,132,252,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#c084fc" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="#c084fc"/></svg>
+                    <div style={{ width: 36, height: 36, background: 'rgba(var(--purple-rgb),0.1)', border: '1px solid rgba(var(--purple-rgb),0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--purple)" strokeWidth="1.8"/><circle cx="12" cy="12" r="4" fill="var(--purple)"/></svg>
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f1f7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.lead_nombre}</div>
-                      {lead.fecha_llamada && <div style={{ fontSize: 12, color: '#555669', marginTop: 2 }}>{formatDate(lead.fecha_llamada)}</div>}
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.lead_nombre}</div>
+                      {lead.fecha_llamada && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{formatDate(lead.fecha_llamada)}</div>}
                     </div>
-                    <span style={{ color: '#c084fc', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>Ver grabación →</span>
+                    <span style={{ color: 'var(--purple)', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>Ver grabación →</span>
                   </div>
                 ))}
               </div>
 
               {analysisVideos.length > 0 && (
                 <>
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#8a8c9e', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', marginTop: '24px' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', marginTop: '24px' }}>
                     Videos de análisis
                   </p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }} className="ventas-analysis-grid">
@@ -1676,12 +1676,12 @@ export function VentasPage() {
         }
         .ec-input {
           width: 100%; background: transparent; border: 1px solid transparent; border-radius: 6px;
-          color: #f0f1f7; font-size: 13px; padding: 4px 6px; font-family: 'DM Sans', sans-serif;
+          color: var(--text-primary); font-size: 13px; padding: 4px 6px; font-family: 'DM Sans', sans-serif;
           outline: none; box-sizing: border-box;
         }
-        .ec-input:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.02); }
-        .ec-input:focus { border-color: #e5182b; background: #080910; }
-        .ec-input::placeholder { color: #555669; }
+        .ec-input:hover { border-color: rgba(var(--overlay-rgb),0.15); background: rgba(var(--overlay-rgb),0.02); }
+        .ec-input:focus { border-color: var(--accent); background: var(--bg); }
+        .ec-input::placeholder { color: var(--text-muted); }
         .ec-input:disabled { opacity: 0.5; cursor: default; }
         select.ec-input { cursor: pointer; }
       `}</style>

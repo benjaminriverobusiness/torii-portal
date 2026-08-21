@@ -128,7 +128,7 @@ export function ReportesMensualesPage() {
   }, [user])
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#08090f', color: '#f0f1f7', fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
       <Navbar showNav />
 
       {loading ? (
@@ -143,9 +143,9 @@ export function ReportesMensualesPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center',
               fontSize: 11, fontWeight: 700, letterSpacing: '0.1em',
-              textTransform: 'uppercase', color: '#e5182b',
-              background: 'rgba(229,24,43,0.10)',
-              border: '1px solid rgba(229,24,43,0.22)',
+              textTransform: 'uppercase', color: 'var(--accent)',
+              background: 'rgba(var(--accent-rgb),0.10)',
+              border: '1px solid rgba(var(--accent-rgb),0.22)',
               borderRadius: 99, padding: '5px 14px', marginBottom: 16,
             }}>
               REPORTES
@@ -153,26 +153,26 @@ export function ReportesMensualesPage() {
             <h1 style={{
               fontFamily: 'Bricolage Grotesque, sans-serif',
               fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: 800, color: '#f0f1f7',
+              fontWeight: 800, color: 'var(--text-primary)',
               margin: '0 0 8px',
             }}>
               Tus reportes
             </h1>
-            <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
               Informes de performance, videos y documentos publicados por el equipo de Torii.
             </p>
           </div>
 
           {feedItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-              <p style={{ color: '#8a8c9e', fontSize: 16, margin: 0 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 16, margin: 0 }}>
                 Todavía no hay reportes publicados.
               </p>
             </div>
           ) : (
             <div style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(var(--overlay-rgb),0.02)',
+              border: '1px solid rgba(var(--overlay-rgb),0.07)',
               borderRadius: 16,
               overflow: 'hidden',
             }}>
@@ -187,7 +187,7 @@ export function ReportesMensualesPage() {
                       justifyContent: 'space-between',
                       gap: 16,
                       padding: '18px 24px',
-                      borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                      borderTop: i === 0 ? 'none' : '1px solid rgba(var(--overlay-rgb),0.05)',
                       flexWrap: 'wrap',
                     }}
                   >
@@ -196,7 +196,7 @@ export function ReportesMensualesPage() {
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 15 }}>{item.label}</div>
                         {isFinite(item.dateTs) && (
-                          <div style={{ color: '#8a8c9e', fontSize: 13, marginTop: 2 }}>
+                          <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginTop: 2 }}>
                             {formatDate(new Date(item.dateTs).toISOString().slice(0, 10))}
                           </div>
                         )}
@@ -209,16 +209,16 @@ export function ReportesMensualesPage() {
                         rel="noopener noreferrer"
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 8,
-                          background: 'rgba(229,24,43,0.10)',
-                          border: '1px solid rgba(229,24,43,0.3)',
-                          borderRadius: 8, color: '#e5182b', fontSize: 13, fontWeight: 700,
+                          background: 'rgba(var(--accent-rgb),0.10)',
+                          border: '1px solid rgba(var(--accent-rgb),0.3)',
+                          borderRadius: 8, color: 'var(--accent)', fontSize: 13, fontWeight: 700,
                           padding: '8px 16px', textDecoration: 'none', flexShrink: 0,
                         }}
                       >
                         {meta.linkLabel}
                       </a>
                     ) : (
-                      <span style={{ color: '#555669', fontSize: 13 }}>Sin PDF</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Sin PDF</span>
                     )}
                   </div>
                 )
